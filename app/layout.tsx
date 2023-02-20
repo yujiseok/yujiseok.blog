@@ -8,8 +8,20 @@ import Navbar from "@/components/navbar";
 import ThemeProviders from "@/components/providers";
 
 const pretendard = localFont({
-  src: "../public/fonts/Pretendard-Regular.woff2",
-  weight: "400",
+  src: [
+    {
+      path: "../public/fonts/Pretendard-Regular.woff2",
+      weight: "400",
+    },
+    {
+      path: "../public/fonts/Pretendard-SemiBold.woff2",
+      weight: "600",
+    },
+    {
+      path: "../public/fonts/Pretendard-Bold.woff2",
+      weight: "700",
+    },
+  ],
   variable: "--font-pretendard",
   display: "swap",
 });
@@ -28,7 +40,7 @@ export const metadata: Metadata = {
       absolute: "유지석",
     },
     description: "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그",
-    url: "https://yujiseok-blog.vercel.app/",
+    url: "https://www.yujiseok.blog/",
     locale: "ko-KR",
     type: "website",
   },
