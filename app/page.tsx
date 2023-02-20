@@ -3,9 +3,9 @@ import { name, avatar, intro, bottomIntro } from "lib/home";
 
 export default function Home() {
   return (
-    <section>
+    <section className="break-keep">
       <div className="my-4 flex items-center gap-8">
-        <div className="flex h-[125px] w-[125px]">
+        <div className="flex h-[100px] w-[100px] flex-shrink-0 md:h-[125px] md:w-[125px]">
           <Image
             src={avatar}
             width={125}
