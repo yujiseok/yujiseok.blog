@@ -24,8 +24,10 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function Navbar() {
-  const pathname = usePathname();
-  console.log(pathname);
+  let pathname = usePathname();
+
+  if (pathname?.includes("/blog/")) pathname = "/blog";
+
   return (
     <nav className="mt-12 h-14 w-full">
       <div className="mx-auto flex h-full w-full max-w-2xl items-center justify-between px-4 py-4">
@@ -36,7 +38,7 @@ function Navbar() {
           {NAV_ITEMS.map(({ name, href }) => (
             <li
               key={name}
-              className={`${pathname?.includes(name) ? "underline" : ""} `}
+              className={`${pathname === href ? "underline" : ""} `}
             >
               <Link href={href}>{name}</Link>
             </li>
