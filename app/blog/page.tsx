@@ -21,11 +21,10 @@ function BlogPage() {
         .map((blog) => (
           <article key={blog.slug} className="mb-4">
             <Link href={`/blog/${blog.slug}`}>
-              <h3 className="text-xl font-semibold">{blog.title}</h3>
+              <h2 className="text-xl font-semibold">{blog.title}</h2>
               <h6 className="font-light text-gray-500">{blog.summary}</h6>
               <p>
                 <small className="mr-2">{blog.publishedAt}</small>
-                <small>{blog.readingTime.text}</small>
               </p>
             </Link>
           </article>
