@@ -4,8 +4,8 @@ import DarkModeBtn from "./darkModeBtn";
 import { usePathname } from "next/navigation";
 
 interface NavItem {
-  name: "home" | "about" | "blog";
-  href: "/" | "/about" | "/blog";
+  name: "home" | "about" | "post";
+  href: "/" | "/about" | "/post";
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -18,15 +18,15 @@ const NAV_ITEMS: NavItem[] = [
     href: "/about",
   },
   {
-    name: "blog",
-    href: "/blog",
+    name: "post",
+    href: "/post",
   },
 ];
 
 function Navbar() {
   let pathname = usePathname();
 
-  if (pathname?.includes("/blog/")) pathname = "/blog";
+  if (pathname?.includes("/post/")) pathname = "/post";
 
   return (
     <nav className="mt-12 h-14 w-full">

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { allBlogs } from "contentlayer/generated";
+import { allPosts } from "contentlayer/generated";
 import { useMDXComponent } from "next-contentlayer/hooks";
 import Balancer from "react-wrap-balancer";
 
 export async function generateStaticParams() {
-  return allBlogs.map((blog) => ({
-    slug: blog.slug,
+  return allPosts.map((post) => ({
+    slug: post.slug,
   }));
 }
 
@@ -14,8 +14,8 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata | undefined> {
-  const blog = allBlogs.find((blog) => blog.slug === params.slug);
-  if (!blog) {
+  const post = allPosts.find((post) => post.slug === params.slug);
+  if (!post) {
     return;
   }
   const {
@@ -23,7 +23,7 @@ export async function generateMetadata({
     publishedAt: publishedTime,
     summary: description,
     slug,
-  } = blog;
+  } = post;
 
   return {
     title,
@@ -38,23 +38,25 @@ export async function generateMetadata({
   };
 }
 
-const Blog = ({ params }: { params: { slug: string } }) => {
-  const blog = allBlogs.find((blog) => blog.slug === params.slug);
-  if (!blog) {
+const Post = ({ params }: { params: { slug: string } }) => {
+  const post = allPosts.find((post) => post.slug === params.slug);
+  if (!post) {
     return false;
   }
-  const MDXContent = useMDXComponent(blog.body.code);
+  const MDXContent = useMDXComponent(post.body.code);
 
   return (
     <section>
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">
-          <Balancer>{blog.title}</Balancer>
+          <Balancer>{post.title}</Balancer>
         </h1>
-        <h4 className="font-light text-gray-700">{blog.summary}</h4>
+        <h4 className="font-light text-gray-700 dark:text-gray-400">
+          {post.summary}
+        </h4>
         <p>
-          <small>{blog.publishedAt}</small>{" "}
-          <small>{blog.readingTime.text}</small>
+          <small>{post.publishedAt}</small>{" "}
+          <small>{post.readingTime.text}</small>
         </p>
       </div>
 
@@ -64,4 +66,4 @@ const Blog = ({ params }: { params: { slug: string } }) => {
     </section>
   );
 };
-export default Blog;
+export default Post;
