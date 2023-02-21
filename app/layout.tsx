@@ -4,7 +4,7 @@ import "./globals.css";
 import localFont from "@next/font/local";
 import type { Metadata } from "next";
 import Navbar from "@/components/navbar";
-// import Footer from "@/components/footer";
+import Footer from "@/components/footer";
 import ThemeProviders from "@/components/providers";
 import { AnalyticsWrapper } from "@/components/analytics";
 
@@ -61,7 +61,7 @@ export default function RootLayout({
           <main className="mx-auto mt-14 w-full max-w-2xl px-4">
             {children}
           </main>
-          {/* <Footer /> */}
+          <Footer />
         </ThemeProviders>
         <AnalyticsWrapper />
       </body>
