@@ -34,7 +34,7 @@ function Navbar() {
         <h1 className="text-3xl font-bold">
           <Link href="/">Yujiseok</Link>
         </h1>
-        <ul className="flex items-center gap-4">
+        <ul className="flex items-center gap-3 md:gap-4">
           {NAV_ITEMS.map(({ name, href }) => (
             <li
               key={name}
