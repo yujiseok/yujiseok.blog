@@ -41,15 +41,15 @@ function About() {
               LinkedIn
             </a>
           </li>
-          <li>
+          {/* <li>
             <a
-              href="mailto:koesijuy@gamil.com"
+              href="#"
               rel="noopener noreferrer"
               className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
             >
-              Contact
+              Portfolio
             </a>
-          </li>
+          </li> */}
         </ul>
       </section>
 
