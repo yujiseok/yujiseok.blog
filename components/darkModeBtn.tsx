@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import { HiOutlineSun, HiOutlineMoon } from "react-icons/hi2";
 import { useTheme } from "next-themes";
