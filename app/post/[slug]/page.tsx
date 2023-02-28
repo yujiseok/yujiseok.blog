@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { allPosts } from "contentlayer/generated";
-import { useMDXComponent } from "next-contentlayer/hooks";
 import Balancer from "react-wrap-balancer";
+import { Mdx } from "@/components/mdx";
 
 export async function generateStaticParams() {
   return allPosts.map((post) => ({
@@ -43,7 +43,6 @@ const Post = ({ params }: { params: { slug: string } }) => {
   if (!post) {
     return false;
   }
-  const MDXContent = useMDXComponent(post.body.code);
 
   return (
     <section>
@@ -60,9 +59,7 @@ const Post = ({ params }: { params: { slug: string } }) => {
         </p>
       </div>
 
-      <article className="prose break-keep dark:prose-invert prose-h1:text-2xl">
-        <MDXContent />
-      </article>
+      <Mdx code={post.body.code} />
     </section>
   );
 };
