@@ -5,4 +5,51 @@
 body {
   height: 100vh;
   min-height: -webkit-fill-available;
+  scroll-behavior: smooth;
+}
+
+.prose .anchor {
+  @apply invisible absolute no-underline;
+
+  margin-left: -1em;
+  padding-right: 0.5em;
+  width: 80%;
+  max-width: 700px;
+  cursor: pointer;
+}
+
+.anchor:hover {
+  @apply visible;
+}
+
+.prose a {
+  text-decoration-color: #374151;
+  @apply decoration-[0.1em] underline-offset-2 transition-all dark:decoration-gray-300;
+}
+
+.prose .anchor:after {
+  @apply text-neutral-300;
+  content: "#";
+}
+
+.prose *:hover > .anchor {
+  @apply visible;
+}
+
+pre {
+  /* position: relative; */
+  margin-top: 0 !important;
+}
+
+div[data-rehype-pretty-code-title] {
+  /* background-color: #1f2937; */
+  @apply bg-[#1f2937] dark:bg-[#0F141D];
+  color: #fff;
+  padding: 0.5em 1.14286em;
+  border-radius: 6px 6px 0 0;
+  transform: translateY(10px);
+  font-size: 0.875rem;
+  /* border-radius: 6px; */
+  /* border-bottom: 1px solid;
+  @apply border-b-gray-300; */
 }
