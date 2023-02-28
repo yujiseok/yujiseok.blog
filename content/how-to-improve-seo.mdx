@@ -62,7 +62,7 @@ SEO의 과정을 알기 위해선 검색 엔진이 웹사이트 품질을 결정
 <Image src={`/images/seo/img2.png`} width={907} height={740} alt="아 뭐더라?" />
 
 이때, 대부분의 사람들은 검색 결과 상위에 노출된 페이지를 누르고 열람합니다.
-물론 광고를 사용해 트래픽을 올릴 수 있지만 (paid search) 대부분의 사람들은 자연적으로 트래픽이 높은 결과 (**organic search**)를 선호합니다.
+물론 광고를 사용해 트래픽을 올릴 수 있지만 (**paid search**) 대부분의 사람들은 자연적으로 트래픽이 높은 결과 (**organic search**)를 선호합니다.
 SEO를 잘하면 비용을 들이지 않고도 페이지를 검색 결과 상위에 지속적으로 노출시킬 수 있습니다.
 
 즉 아무리 좋은 콘텐츠를 갖는 사이트라도 SEO가 좋지 않다면, 검색 결과에서 노출되지 않을 확률이 높습니다.
@@ -70,9 +70,9 @@ SEO를 잘하면 비용을 들이지 않고도 페이지를 검색 결과 상위
 ## 메타 태그
 
 메타 태그란 검색 엔진에 페이지에 대한 추가 정보를 제공하는 데 사용되는 HTML 태그입니다. `meta`태그는 HTML의 `<head>` 태그 안에 추가됩니다.
-HTML 문서가 어떤 내용이며, 키워드, 만든 사람 등의 메타 데이터를 제공합니다.
+HTML 문서가 어떤 내용이며, 키워드, 만든 사람 등의 메타데이터를 제공합니다.
 
-Next는 `13.2` 버전 이후부터 [빌트인](https://beta.nextjs.org/docs/api-reference/metadata)으로 SEO를 위한 메타 데이터를 만들어주는 기능을 지원합니다.
+Next는 `13.2` 버전 이후부터 [빌트인](https://beta.nextjs.org/docs/api-reference/metadata)으로 SEO를 위한 메타데이터를 만들어주는 기능을 지원합니다.
 메타데이터는 어떤 `page.tsx` 나 `layout.tsx`에서 사용 가능합니다.
 
 > ✨ `charset` 과 `viewport`은 설정해 주지 않아도 기본적으로 적용됩니다!
@@ -156,7 +156,7 @@ export async function generateMetadata({
       description,
       type: "article",
       publishedTime,
-      url: `https://www.yujiseok.blog/blog/${slug}`,
+      url: `https://www.yujiseok.blog/post/${slug}`,
     },
   };
 }
