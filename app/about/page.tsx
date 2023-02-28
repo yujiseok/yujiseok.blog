@@ -18,7 +18,7 @@ function About() {
           <Balancer> 안녕하세요 저는 유지석입니다.</Balancer>
         </h3>
 
-        <p className="my-6">
+        <p className="my-6 leading-7">
           {/* 저는 앞으로 나아가는 것을 좋아하는 개발자입니다. */}
         </p>
 
