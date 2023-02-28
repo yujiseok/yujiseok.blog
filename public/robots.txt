@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://yujiseok.blog/sitemap.xml
