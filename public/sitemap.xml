@@ -1,9 +1,9 @@
-
-    <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
     <urlset
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
+      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
     >
       <url>
         <loc>https://www.yujiseok.blog/</loc>
@@ -15,8 +15,10 @@
         <loc>https://www.yujiseok.blog/post</loc>
       </url>
       <url>
+        <loc>https://www.yujiseok.blog/post/how-to-improve-seo</loc>
+        <lastmod>2023-02-28T10:42:34.888Z</lastmod>
+      </url><url>
         <loc>https://www.yujiseok.blog/post/the-reason-why-i-made-my-own-blog</loc>
-        <lastmod>2023-02-28T04:04:10.308Z</lastmod>
+        <lastmod>2023-02-28T10:42:34.888Z</lastmod>
       </url>
-    </urlset>
-  
+    </urlset> 
