@@ -33,7 +33,7 @@ export async function generateMetadata({
       description,
       type: "article",
       publishedTime,
-      url: `https://www.yujiseok.blog/blog/${slug}`,
+      url: `https://www.yujiseok.blog/post/${slug}`,
     },
   };
 }
