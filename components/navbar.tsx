@@ -38,7 +38,9 @@ function Navbar() {
           {NAV_ITEMS.map(({ name, href }) => (
             <li
               key={name}
-              className={`${pathname === href ? "underline" : ""} `}
+              className={`${
+                pathname === href ? "underline underline-offset-2" : ""
+              } `}
             >
               <Link href={href}>{name}</Link>
             </li>
