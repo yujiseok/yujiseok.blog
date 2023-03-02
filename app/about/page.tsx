@@ -15,18 +15,19 @@ function About() {
       <h1 className="mb-6 text-3xl font-bold">About Me</h1>
       <section className="mb-12">
         <h3 className="text-4xl font-semibold">
-          <Balancer> 안녕하세요 저는 유지석입니다.</Balancer>
+          <Balancer>
+            안녕하세요 <br />
+            저는 유지석입니다.
+          </Balancer>
         </h3>
 
         <p className="my-6 leading-7">
-          <p>저는 새로운 것을 마주하는 것에 두려움이 없습니다.</p>
+          {/* <p>저는 생각을 실체화하는 것을 좋아하는 개발자입니다.</p> */}
+          <p>새로운 것을 마주하는 것에 두려움이 없습니다.</p>
+          <p>창작 활동을 통해 영감을 얻는 것을 좋아합니다.</p>
           <p>
-            제 머릿속에 생각하는 것을 현실로 실제화하는 것을 즐기는
-            개발자입니다.
-          </p>
-          <p>
-            그 과정 속에서 배움을 얻으며, 궁금증이 생기면 주도적으로 찾아 제
-            것으로 만드는 과정을 즐깁니다.
+            궁금증이 생기면 주도적으로 해결하며, 제 것으로 만드는 과정을
+            즐깁니다.
           </p>
         </p>
 
