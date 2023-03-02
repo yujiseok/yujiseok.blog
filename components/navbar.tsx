@@ -29,7 +29,7 @@ function Navbar() {
   if (pathname?.includes("/post/")) pathname = "/post";
 
   return (
-    <nav className="mt-12 h-14 w-full">
+    <nav className="mt-10 h-14 w-full">
       <div className="mx-auto flex h-full w-full max-w-2xl items-center justify-between px-4 py-4">
         <h1 className="text-3xl font-bold">
           <Link href="/">Yujiseok</Link>

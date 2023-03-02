@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 function PostPage() {
   return (
     <section>
-      <h1 className="mb-5 text-3xl font-bold">Post</h1>
+      <h1 className="mb-6 text-3xl font-bold">Post</h1>
 
       {allPosts
         .sort((a, b) => {
@@ -19,7 +19,7 @@ function PostPage() {
           return 1;
         })
         .map((post) => (
-          <article key={post.slug} className="mb-4">
+          <article key={post.slug} className="mb-6">
             <Link href={`/post/${post.slug}`}>
               <h2 className="text-xl font-semibold">{post.title}</h2>
               <h6 className="font-light text-gray-500">{post.summary}</h6>
