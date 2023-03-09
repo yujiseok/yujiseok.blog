@@ -10,7 +10,7 @@ body {
 .prose .anchor {
   @apply invisible absolute no-underline;
 
-  margin-left: -1em;
+  margin-left: -0.8em;
   padding-right: 0.5em;
   width: 80%;
   max-width: 700px;
