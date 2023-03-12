@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { name, avatar, intro, bottomIntro } from "lib/home";
+import { name, avatar } from "lib/home";
 
 export default function Home() {
   return (
