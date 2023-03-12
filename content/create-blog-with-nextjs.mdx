@@ -1,0 +1,421 @@
+---
+title: Next.js를 이용해 개인 블로그 만들기
+publishedAt: "2023-03-12"
+summary: Next를 이용해 블로그를 만든 방법을 다룹니다.
+---
+
+# Next를 이용해 블로그 만들기
+
+## 개요
+
+앞선 [포스트](https://www.yujiseok.blog/post/the-reason-why-i-made-my-own-blog)에 제 블로그를 만든 이유와 기술 스택에 대한 글을 작성하였습니다.
+그 글을 토대로 저의 개발 경험을 공유하고 소개합니다.
+
+## 과정
+
+### 1. Next App 만들기
+
+블로그를 만들기 위해 제가 선택한 프레임워크는 **Next**입니다.
+**Static Rendering**을 통해 빌드 시 서버에 `prerendered` 된다는 점이 블로그를 만드는 데 강력한 힘이라 생각해 선택하게 되었습니다.
+
+> ✨ 이외에도, 높은 SEO, 파일 시스템 기반의 동적 라우팅 등 개발자라면 구미가 당기는 **cool**한 장점들이 많습니다!
+
+Next의 13버전이 출시되면서 기존의 `page` 디렉터리와 유사한 기능인 `app` 디렉터리가 추가되었습니다.
+app 디렉터리는 기본적으로 `Server Component`로 동작합니다.
+
+현재 저는 `13.2.4` 버전을 사용 중입니다. Next 13 버전의 app 디렉터리를 사용하려면 아래와 같이 터미널에 입력합니다.
+
+```bash
+pnpm dlx create-next-app@latest --experimental-app
+
+```
+
+설치가 완료되면 기본적으로 아래와 같은 디렉터리 구조를 갖게 됩니다.
+
+```bash
+📦app
+ ┣ 📂api
+ ┃ ┗ 📂hello
+ ┃ ┃ ┗ 📜route.ts
+ ┣ 📜favicon.ico
+ ┣ 📜globals.css
+ ┣ 📜layout.tsx
+ ┣ 📜page.module.css
+ ┗ 📜page.tsx
+```
+
+여기서 주목할 파일은 `layout.tsx`와 `page.tsx`입니다.
+
+- **layout.tsx**
+
+layout은 라우트들의 공통 UI를 담당하는 파일입니다.
+즉 navbar, main, footer 등 웹을 구성하는데 필요한 시맨틱 태그들을 공유하거나 공통 스타일을 지정할 수 있습니다.
+
+> ✨ react-router-dom의 중첩 라우팅을 이용해 layout을 공유하는 것과 비슷하다고 보면 쉽습니다!
+
+블로그의 기본적인 layout을 그려주기 위해 layout.tsx를 활용합니다. 스타일링은 TailwindCSS를 사용하였습니다.
+
+```tsx title="layout.tsx"
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="ko" className={`${pretendard.variable} font-sans`}>
+      <head />
+      <body className="mx-2 flex flex-col bg-slate-50 antialiased transition-colors delay-75 dark:bg-slate-800">
+        <ThemeProviders>
+          <Navbar />
+          <main className="mx-auto mt-14 w-full max-w-2xl px-4">
+            {children}
+          </main>
+          <Footer />
+        </ThemeProviders>
+        <AnalyticsWrapper />
+      </body>
+    </html>
+  );
+}
+```
+
+`ThemeProviders` 컴포넌트를 이용해 다크 모드를 추가합니다. 다크 모드는 `next-themes` 라이브러리를 통해 구현합니다.
+이때 클라이언트 훅들(useState, useEffect 등)을 이용하기 위해선 `"use client"`를 사용해 ThemeProviders 컴포넌트를 `Client Component`로 만들어 줍니다.
+
+```tsx title="ThemeProviders"
+"use client";
+import { ThemeProvider } from "next-themes";
+
+function ThemeProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider enableSystem={true} attribute="class">
+      {children}
+    </ThemeProvider>
+  );
+}
+export default ThemeProviders;
+```
+
+- **page.tsx**
+
+page는 특정 라우트의 UI를 담당하는 파일입니다.
+app 디렉터리 내부의 `page.tsx`는 메인 페이지 UI를 나타냅니다.
+
+### 2. contentlayer를 통한 content 관리
+
+저는 다른 데이터베이스나, HeadlessCMS를 사용하지 않고 제 로컬에 **mdx 파일**들을 관리하기로 하였습니다. 이때 효율적으로 mdx 파일들을 관리하기 위해 [contentlayer](https://www.contentlayer.dev/)를 활용합니다.
+`contentlayer`는 content의 형태를 **type-safe**한 JSON 데이터로 변환해 주고 content를 관리해 주는 SDK입니다.
+
+contentlayer를 사용하기 위해선, 몇가지 과정이 필요합니다.
+
+1. contentlayer를 설치하기 위해 아래와 같은 명령어를 입력합니다.
+
+```bash
+pnpm add contentlayer next-contentlayer
+```
+
+2. `next dev` 또는 `next build` 시 사용하기 위해 `next.config.js` 파일을 다음과 같이 수정합니다.
+
+```js title="next.config.js"
+const { withContentlayer } = require("next-contentlayer");
+/** @type {import('next').NextConfig} */
+
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+};
+
+module.exports = withContentlayer(nextConfig);
+```
+
+3. contentlayer가 생성되는 디렉터리의 alias를 설정해 주기 위해 `tsconfig.json` 파일을 다음과 같이 수정합니다.
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "contentlayer/generated": ["./.contentlayer/generated"]
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.tsx", "**/*.ts", ".contentlayer/generated"]
+  //                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+```
+
+4. content의 schema를 설정합니다.
+   설정된 schema에 따라 content들이 개별 데이터로 변환이 되며, 우리는 이 데이터를 컴포넌트 안에서 사용할 수 있게 됩니다.
+   `contentlayer.config.ts` 파일을 생성하고 schema를 설정합니다.
+
+`defineDocumentType` API를 이용해 mdx 파일의 속성과 필드를 정의합니다.
+
+```ts title="contentlayer.config.ts"
+import type { ComputedFields } from "contentlayer/source-files";
+import { defineDocumentType, makeSource } from "contentlayer/source-files";
+import readingTime from "reading-time";
+
+/** @type {import('contentlayer/source-files').ComputedFields} */
+const computedFields: ComputedFields = {
+  readingTime: { type: "json", resolve: (doc) => readingTime(doc.body.raw) },
+  slug: {
+    type: "string",
+    resolve: (doc) => doc._raw.flattenedPath,
+  },
+};
+
+export const Post = defineDocumentType(() => ({
+  name: "Post",
+  filePathPattern: `**/*.mdx`,
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true,
+    },
+    publishedAt: {
+      type: "string",
+      required: true,
+    },
+    summary: {
+      type: "string",
+      required: true,
+    },
+    image: {
+      type: "string",
+    },
+  },
+  computedFields,
+}));
+```
+
+- **name**: 필수 옵션으로 정의된 name으로 타입과 데이터를 나타냅니다.
+- **filePathPattern**: glob patterns을 사용해 경로를 정의합니다.
+- **contentType**: content의 타입을 정의합니다.
+- **computedFields**: 계산된 작업을 처리하는 속성입니다.
+- **fields**: 필드는 문서의 데이터 형태를 정의하는 속성으로, `fronttmatter`를 의미합니다.
+  title, publishedAt, summary의 경우 필수적인 정보이기에 required를 `true`로 설정하였습니다.
+
+`makeSource` API를 이용해 contentlayer에 schema와 속성을 제공합니다.
+
+```ts title="contentlayer.config.ts"
+// ...
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
+
+export default makeSource({
+  contentDirPath: "content",
+  documentTypes: [Post],
+  mdx: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypePrettyCode,
+        {
+          theme: "material-theme-palenight",
+        },
+      ],
+      [
+        rehypeAutolinkHeadings,
+        {
+          properties: {
+            className: ["anchor"],
+          },
+        },
+      ],
+    ],
+  },
+});
+```
+
+- **contentDirPath**: 필수 옵션으로 content가 존재하는 루트 디렉터리를 의미합니다.
+- **documentTypes**: 필수 옵션으로 프로젝트에 필요한 schema 정의입니다.
+  위에서 defineDocumentType으로 만든 `Post`를 넣어줍니다.
+- **mdx**: mdx 파일을 `HTML`로 변환하기 위한 플러그인들을 추가합니다.
+  - **rehype-autolink-headings**: `h1 ~ h6`에 해당하는 헤딩 태그에 자동으로 링크를 주입시켜주는 플러그인입니다.
+  - **rehype-slug**: 헤딩 태그에 자동으로 `id`를 추가해 주는 플러그인입니다.
+  - **remark-gfm**: 깃허브 마크다운 문법에 맞게 변환해 주는 플러그인입니다.
+  - **rehype-pretty-code**: Syntax highlighting을 위한 플러그인입니다.
+
+위와 같은 과정을 통해 contentlayer는 자동으로 build와 dev 과정에서 데이터를 `.contentlayer/generated` 디렉터리 안에 JSON 형태로 생성합니다.
+
+### 3. contentlayer로 생성된 JSON 데이터 사용하기
+
+#### post 페이지에서 목록 보여주기
+
+Next는 파일 기반 라우팅이라는 흑마술을 사용합니다. 포스트 목록을 볼 수 있는 라우트인 post 페이지를 만들기 위해 우선
+app 디렉터리에 `post` 폴더를 생성합니다. 생성된 폴더 안에 page.tsx를 생성하여 post 페이지의 UI를 담당하게 합니다.
+
+```bash
+📦post
+ ┗ 📜page.tsx
+```
+
+page.tsx 내부에서 개별 포스트를 렌더링 해주는 로직을 작성합니다.
+이때, Post라는 이름으로 정의한 documentTypes의 데이터(allPosts)를 import 해옵니다.
+
+allPosts는 `Post[]`로 타입이 정해진 type-safe 한 데이터입니다.
+
+```tsx
+import { allPosts } from "contentlayer/generated";
+
+/** Document types */
+export type Post = {
+  /** File path relative to `contentDirPath` */
+  _id: string;
+  _raw: Local.RawDocumentData;
+  type: "Post";
+  title: string;
+  publishedAt: string;
+  summary: string;
+  image?: string | undefined;
+  /** MDX file body */
+  body: MDX;
+  readingTime: json;
+  slug: string;
+};
+```
+
+> ✨ contentlayer가 post의 타입을 자동으로 선언해줍니다.
+> 타입에 대한 걱정을 덜어 주는 엄청난 편의성입니다 😆
+
+가져온 데이터를 `.map` 메서드를 이용해 순회하며 `jsx`를 리턴해줍니다.
+저는 최신순으로 포스트를 정렬하기 위해 `.sort` 메서드를 사용해 내림차순 정렬해 줍니다.
+
+```tsx title="post/page.tsx"
+// ...
+
+function PostPage() {
+  return (
+    <section>
+      <h1 className="mb-6 text-3xl font-bold">Post</h1>
+
+      {allPosts
+        .sort((a, b) => {
+          if (new Date(a.publishedAt) > new Date(b.publishedAt)) return -1;
+
+          return 1;
+        })
+        .map((post) => (
+          <article key={post.slug} className="mb-6">
+            <Link href={`/post/${post.slug}`}>
+              <h2 className="text-xl font-semibold">{post.title}</h2>
+              <h6 className="font-light text-gray-500">{post.summary}</h6>
+              <p>
+                <small className="mr-2">{post.publishedAt}</small>
+              </p>
+            </Link>
+          </article>
+        ))}
+    </section>
+  );
+}
+export default PostPage;
+```
+
+#### 동적 라우팅을 이용한 개별 포스트 보여주기
+
+동적 라우팅을 위해 post 폴더 안에 `[slug]` 폴더를 생성합니다.
+라우팅을 위한 쿼리 파라미터를 `generateStaticParams` API를 이용해 받아옵니다.
+generateStaticParams는 객체 배열을 반환하는데, 각각의 객체는 개별 라우트의 정보를 갖습니다.
+
+> ✨ generateStaticParams는 빌드 타임에 라우트를 생성합니다.
+
+생성된 개별 라우트 파라미터를 `Props`로 넘겨줍니다.
+
+`.find` 메서드를 이용해 Props로 받은 slug와 allPosts의 개별 포스트 중 slug가 동일한 포스트를 찾습니다.
+이렇게 찾은 포스트를 화면에 렌더링 합니다.
+
+```tsx title="[slug]/page.tsx"
+export async function generateStaticParams() {
+  return allPosts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+const Post = ({ params }: { params: { slug: string } }) => {
+  const post = allPosts.find((post) => post.slug === params.slug);
+  if (!post) {
+    return false;
+  }
+
+  return (
+    <section>
+      <div className="mb-6">
+        <h1 className="mb-1 text-3xl font-semibold">
+          <Balancer>{post.title}</Balancer>
+        </h1>
+        <h4 className="font-light text-gray-700 dark:text-gray-400">
+          {post.summary}
+        </h4>
+        <p>
+          <small>{post.publishedAt}</small>{" "}
+          <small>{post.readingTime.text}</small>
+        </p>
+      </div>
+
+      <Mdx code={post.body.code} />
+    </section>
+  );
+};
+export default Post;
+```
+
+#### useMDXComponent 훅을 이용해 mdx 렌더링하기
+
+mdx를 렌더링 하기 위해선 contentlayer가 제공하는 `useMDXComponent` 훅을 이용해야 합니다.
+
+`[slug]/page.tsx` 가 내려준 `post.body.code`를 받아 mdx를 렌더링 할 수 있게 해줍니다.
+렌더링 된 mdx의 타이포그래피를 위해 TailwindCSS의 [오피셜 플러그인](https://tailwindcss.com/docs/typography-plugin) `@tailwindcss/typography`를 사용합니다.
+mdx를 감싼 `article` 태그에 `prose`를 추가해 줍니다.
+
+```tsx title="components/mdx.tsx"
+// tailwind.config.js
+module.exports = {
+  // ...
+  plugins: [require("@tailwindcss/typography")],
+};
+
+import { useMDXComponent } from "next-contentlayer/hooks";
+
+// ...
+
+export function Mdx({ code }: { code: string }) {
+  const Component = useMDXComponent(code);
+
+  return (
+    <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all break-keep">
+      <Component components={{ ...components }} />
+    </article>
+  );
+}
+```
+
+### 4. 배포와 도메인 등록
+
+사실 블로그를 만들기 시작했을 때, 도메인을 먼저 구매하고 시작하였습니다.
+
+> ✨ 확실히 도메인을 구매하니 동기부여도 되고 개발이 더 잘 됐습니다 😆
+
+배포의 경우 Vercel을 이용해 배포를 하였습니다.
+Vercel에서 기본으로 제공하는 도메인 `.vercel.app`을 사용해도 좋지만,
+제 개인 블로그인 만큼 도메인도 직접 등록해 보자는 마음으로 구매를 결정했습니다.
+저는 [hosting.kr](https://www.hosting.kr/)를 통해 도메인을 구매하였습니다.
+
+도메인을 Vercel에 등록하기 위해선 hosting.kr의 `네임서버`를 아래와 같이 변경해 주면 됩니다.
+
+> ns1.hosting.co.kr -> ns1.vercel-dns.com  
+> ns2.hosting.co.kr -> ns2.vercel-dns.com
+
+## 후기
+
+---
+
+#### 출처
+
+- https://beta.nextjs.org/docs/
+- https://www.contentlayer.dev/docs
