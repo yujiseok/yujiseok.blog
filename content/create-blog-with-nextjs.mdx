@@ -1,6 +1,6 @@
 ---
 title: Next.js를 이용해 개인 블로그 만들기
-publishedAt: "2023-03-12"
+publishedAt: "2023-03-15"
 summary: Next를 이용해 블로그를 만든 방법을 다룹니다.
 ---
 
@@ -23,7 +23,7 @@ summary: Next를 이용해 블로그를 만든 방법을 다룹니다.
 Next의 13버전이 출시되면서 기존의 `page` 디렉터리와 유사한 기능인 `app` 디렉터리가 추가되었습니다.
 app 디렉터리는 기본적으로 `Server Component`로 동작합니다.
 
-현재 저는 `13.2.4` 버전을 사용 중입니다. Next 13 버전의 app 디렉터리를 사용하려면 아래와 같이 터미널에 입력합니다.
+현재 저는 `13.2.4` 버전을 사용 중입니다. Next 13 버전의 app 디렉터리를 사용하려면 아래의 명령어를 터미널에 입력합니다.
 
 ```bash
 pnpm dlx create-next-app@latest --experimental-app
@@ -103,12 +103,12 @@ app 디렉터리 내부의 `page.tsx`는 메인 페이지 UI를 나타냅니다.
 
 ### 2. contentlayer를 통한 content 관리
 
-저는 다른 데이터베이스나, HeadlessCMS를 사용하지 않고 제 로컬에 **mdx 파일**들을 관리하기로 하였습니다. 이때 효율적으로 mdx 파일들을 관리하기 위해 [contentlayer](https://www.contentlayer.dev/)를 활용합니다.
+저는 다른 데이터베이스나, HeadlessCMS를 사용하지 않고 제 로컬에 **mdx 파일**들을 관리하기로 결정하였습니다. 이때 효율적으로 mdx 파일들을 관리하기 위해 [contentlayer](https://www.contentlayer.dev/)를 활용합니다.
 `contentlayer`는 content의 형태를 **type-safe**한 JSON 데이터로 변환해 주고 content를 관리해 주는 SDK입니다.
 
-contentlayer를 사용하기 위해선, 몇가지 과정이 필요합니다.
+contentlayer를 사용하기 위해선, 몇가지 설정이 필요합니다.
 
-1. contentlayer를 설치하기 위해 아래와 같은 명령어를 입력합니다.
+1. contentlayer를 설치하기 위해 아래의 명령어를 터미널에 입력합니다.
 
 ```bash
 pnpm add contentlayer next-contentlayer
@@ -284,7 +284,7 @@ export type Post = {
 > 타입에 대한 걱정을 덜어 주는 엄청난 편의성입니다 😆
 
 가져온 데이터를 `.map` 메서드를 이용해 순회하며 `jsx`를 리턴해줍니다.
-저는 최신순으로 포스트를 정렬하기 위해 `.sort` 메서드를 사용해 내림차순 정렬해 줍니다.
+저는 최신순으로 포스트를 정렬하기 위해 `.sort` 메서드를 사용해 내림차순 정렬해 주었습니다.
 
 ```tsx title="post/page.tsx"
 // ...
@@ -411,11 +411,27 @@ Vercel에서 기본으로 제공하는 도메인 `.vercel.app`을 사용해도 �
 > ns1.hosting.co.kr -> ns1.vercel-dns.com  
 > ns2.hosting.co.kr -> ns2.vercel-dns.com
 
+도메인 등록이 끝나면, 이제 저만의 도메인을 가진 블로그를 만나 볼 수 있게 됩니다!
+
+완성된 코드는 [이곳](https://github.com/yujiseok/yujiseok.blog)에서 확인해 보실 수 있습니다.
+
 ## 후기
+
+미루고 미뤄왔던 것을 해냈을 때 성취감은 엄청났습니다.
+나를 위한 공간을 내 손으로 직접 만들었다는 것이 저에게 큰 의미로 다가왔습니다.
+제가 작성한 코드가 화면에 그려질 때의 그 쾌감을 느끼며, 역시 나는 창작 활동을 해야 하는 사람이구나라는 것을 또다시 느끼게 되었습니다.
+
+블로그를 만들며, 개발이라는 세계를 접하고 즐기고 있다는 것이 정말 다행이라는 생각이 많이 들었습니다.
+개발 공부를 시작하고 배울 것도 많고 무지의 늪에 빠져 무력감을 느낄 때의 제 자신과 지금의 저를 돌아 봤을 때, 아직 갈 길이 멀지만 그래도
+제법 성장한 제모습을 볼 수 있어 감회가 새로웠습니다.
+
+블로그 개발 경험을 원동력으로 삼아 앞으로 더 즐겁게 개발하며 더욱 성장해야겠습니다! 🥰
 
 ---
 
 #### 출처
 
 - https://beta.nextjs.org/docs/
+- https://www.npmjs.com/package/next-themes
 - https://www.contentlayer.dev/docs
+- https://github.com/leerob/leerob.io
