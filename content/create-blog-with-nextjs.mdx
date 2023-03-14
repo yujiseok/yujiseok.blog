@@ -53,7 +53,7 @@ layout은 라우트들의 공통 UI를 담당하는 파일입니다.
 
 > ✨ react-router-dom의 중첩 라우팅을 이용해 layout을 공유하는 것과 비슷하다고 보면 쉽습니다!
 
-블로그의 기본적인 layout을 그려주기 위해 layout.tsx를 활용합니다. 스타일링은 TailwindCSS를 사용하였습니다.
+블로그의 기본적인 layout을 그려주기 위해 layout.tsx를 활용합니다. 스타일링은 `TailwindCSS`를 사용하였습니다.
 
 ```tsx title="layout.tsx"
 export default function RootLayout({
@@ -82,7 +82,7 @@ export default function RootLayout({
 `ThemeProviders` 컴포넌트를 이용해 다크 모드를 추가합니다. 다크 모드는 `next-themes` 라이브러리를 통해 구현합니다.
 이때 클라이언트 훅들(useState, useEffect 등)을 이용하기 위해선 `"use client"`를 사용해 ThemeProviders 컴포넌트를 `Client Component`로 만들어 줍니다.
 
-```tsx title="ThemeProviders"
+```tsx title="components/providers"
 "use client";
 import { ThemeProvider } from "next-themes";
 
