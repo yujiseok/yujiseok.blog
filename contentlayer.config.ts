@@ -50,6 +50,12 @@ export default makeSource({
         rehypePrettyCode,
         {
           theme: "material-theme-palenight",
+          onVisitHighlightedLine(node: any) {
+            node.properties.className.push("line-highlighted");
+          },
+          onVisitHighlightedWord(node: any) {
+            node.properties.className = ["word-highlighted"];
+          },
         },
       ],
       [
