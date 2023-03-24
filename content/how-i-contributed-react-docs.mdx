@@ -31,7 +31,7 @@ summary: React 공식 문서에 기여하게 된 저의 신비한 사연을 소�
 
 > ⁉️ 잠깐 혹시 이상한 점을 발견하셨나요?
 
-이상한 점은 바로, 코드 예시 ChatRoom 컴포넌트의 `props`인 `serverUrl`과 `const`로 선언된 `useState`의 첫 번째 반환 값 `serverUrl`이 재할당이 됐다는 것입니다!
+이상한 점은 바로, 코드 예시 ChatRoom 컴포넌트의 `props`인 `serverUrl`과 `const`로 선언된 `useState`의 첫 번째 반환 값 `serverUrl`에 재할당이 됐으며 이미 선언되었다는 것입니다!
 
 ```jsx /serverUrl/
 function ChatRoom({ roomId, serverUrl }) {
@@ -126,7 +126,7 @@ function ChatRoom({ roomId, serverUrl }) {
    ·              ╰── `serverUrl` redefined here
    ```
 
-   두 가지 에러는 다음 과 같습니다.
+   두 가지 에러는 다음과 같습니다.
 
    - **cannot reassign to a variable declared with `const`**
      - `const`로 선언한 변수는 재할당을 할 수 없습니다.
@@ -171,25 +171,25 @@ function ChatRoom({ roomId, serverUrl }) {
    [CRA](https://github.com/facebook/create-react-app#philosophy)로 초기화된 React 프로젝트는 기본적으로 React에 맞는 ESlint가 설치되어 있습니다.
    설치 목록을 보려면, 터미널에 `npm ls eslint`를 입력합니다. 그럼 다음과 같은 결과를 볼 수 있습니다.
 
-```bash
-npm ls eslint
-cra@0.1.0
-└─┬ react-scripts@5.0.1
-├─┬ eslint-config-react-app@7.0.1
-│ ├─┬ @babel/eslint-parser@7.21.3
-│ │ └── eslint@8.36.0 deduped
-// ...
-│ ├─┬ eslint-plugin-jsx-a11y@6.7.1
-│ │ └── eslint@8.36.0 deduped
-│ ├─┬ eslint-plugin-react-hooks@4.6.0
-│ │ └── eslint@8.36.0 deduped
-│ ├─┬ eslint-plugin-react@7.32.2
-│ │ └── eslint@8.36.0 deduped
-// ...
-```
+   ```bash
+   npm ls eslint
+   cra@0.1.0
+   └─┬ react-scripts@5.0.1
+   ├─┬ eslint-config-react-app@7.0.1
+   │ ├─┬ @babel/eslint-parser@7.21.3
+   │ │ └── eslint@8.36.0 deduped
+   // ...
+   │ ├─┬ eslint-plugin-jsx-a11y@6.7.1
+   │ │ └── eslint@8.36.0 deduped
+   │ ├─┬ eslint-plugin-react-hooks@4.6.0
+   │ │ └── eslint@8.36.0 deduped
+   │ ├─┬ eslint-plugin-react@7.32.2
+   │ │ └── eslint@8.36.0 deduped
+   // ...
+   ```
 
-1번의 경우와 마찬가지로 `Identifier 'serverUrl' has already been declared`라는 오류를 발생합니다.
-CRA와 JavaScript 환경에서도 에러라는 것이 증명되었습니다. ✔️
+   1번의 경우와 마찬가지로 `Identifier 'serverUrl' has already been declared`라는 오류를 발생합니다.
+   CRA와 JavaScript 환경에서도 에러라는 것이 증명되었습니다. ✔️
 
 6. `CRA`와 `TypeScript` 환경
 
@@ -212,6 +212,8 @@ CRA와 JavaScript 환경에서도 에러라는 것이 증명되었습니다. ✔
 `Pull Request`의 경우 프로젝트들을 진행하며 생성해 본 적은 있었지만, 오픈 소스에 생성하는 것은 처음이었습니다.
 처음 하는 일이다 보니 제법 긴장이 됐습니다. 더군다나 그냥 오픈 소스도 아닌 **React**의 공식 문서라니! 😵  
 제가 지금껏 `GitHub`를 사용한 방식을 되짚으며 `Pull Request`을 생성하였습니다.
+
+순서는 다음과 같습니다.
 
 ### 1.React.dev Fork
 
