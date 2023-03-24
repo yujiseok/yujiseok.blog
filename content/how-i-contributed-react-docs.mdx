@@ -1,0 +1,321 @@
+---
+title: React 공식 문서에 기여하게 된 썰
+publishedAt: "2023-03-24"
+summary: React 공식 문서에 기여하게 된 저의 신비한 사연을 소개합니다.
+---
+
+<Image
+  src={`/images/how-i-contributed-react-docs/wepoongdangdang.jpg`}
+  width={1786}
+  height={1180}
+  alt="위풍당당"
+/>
+
+# React 공식문서에 기여하게 된 썰
+
+## 개요
+
+네 React 공식 문서에서 코드 에러 [잡은 사람](https://github.com/reactjs/react.dev/pull/5791)이 바로 접니다.
+
+## 코드 에러를 찾게된 전말
+
+때는 3월 22일 새벽 2시경이었습니다. React의 컴포넌트 라이프 사이클을 [새로운 공식 문서](https://react.dev/learn/lifecycle-of-reactive-effects#react-verifies-that-you-specified-every-reactive-value-as-a-dependency)를 통해 공부하던 중 `ESlint`를 활용하면 **re-synchronize**에 필요한 `reactive value`를 찾아준다는 부분의 코드 예시에서
+에러를 찾게 되었습니다. 에러 코드는 다음과 같습니다.
+
+<Image
+  src={`/images/how-i-contributed-react-docs/before.png`}
+  width={948}
+  height={495}
+  alt="수정되기 전 코드"
+/>
+
+> ⁉️ 잠깐 혹시 이상한 점을 발견하셨나요?
+
+이상한 점은 바로, 코드 예시 ChatRoom 컴포넌트의 `props`인 `serverUrl`과 `const`로 선언된 `useState`의 첫 번째 반환 값 `serverUrl`이 재할당이 됐다는 것입니다!
+
+```jsx /serverUrl/
+function ChatRoom({ roomId, serverUrl }) {
+  const [serverUrl, setServerUrl] = useState("https://localhost:1234"); // serverUrl is reactive
+
+  // ...
+}
+```
+
+처음 코드 에러를 찾아내고 뭔가 알 수 없는 두근거림을 느꼈습니다.
+두근거림 이후 제 눈을 의심했고 `const`로 선언된 변수의 경우 재할당이 불가능 한데, **Dan Abramov**가 설마 실수를?이라는 생각이 들었습니다.
+
+에러를 찾았다는 것을 빨리 React 팀에 알리기 위해 바로 `Pull Request`를 생성하자는 생각을 하였는데, 잠시 숨을 가다듬었습니다.
+그 후 저는 만약 내가 틀린 것이라면?이라는 생각이 들었고, 사실 90% 정도 에러다라고 확신은 했습니다(진짜).
+그래도 에러라는 확신을 얻기 위해 테스트 작업을 해보았습니다.
+
+> ✨ 절대 제가 **틀린 것** 같아서 테스트를 진행한 것이 아니라는 점을 밝힙니다. 😆
+
+## 코드 에러 테스트 과정
+
+총 6 가지 경우에서 에러 테스트를 진행하였습니다.
+
+1. `JavaScript` 환경
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/js.png`}
+     width={768}
+     height={224}
+     alt="js"
+   />
+
+   `IDE` 상으로 JavaScript 환경에서는 어떤 에러도 발생하지 않습니다. 하지만, 런타임에서는 어떻게 동작할까요?
+
+   코드를 실행시키면 바로 아래와 같은 `Syntax` 에러가 발생됩니다.
+
+   ```bash
+   const [serverUrl, setServerUrl] = [];
+         ^^^^^^^^^
+
+   SyntaxError: Identifier 'serverUrl' has already been declared
+   ```
+
+   즉 식별자 `serverUrl`이 이미 선언되었다는 에러입니다.
+   JavaScript 환경에서는 **확실한** 에러라는 것이 증명되었습니다. ✔️
+
+2. `TypeScript` 환경
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/ts.png`}
+     width={768}
+     height={224}
+     alt="ts"
+   />
+
+   코드 작성과 동시에 `Duplicate identifier 'serverUrl'` 에러를 보여줍니다.  
+   런타임이 아닌 컴파일 시 에러를 보여주는 TypeScript의 특징을 확인해 볼 수 있습니다.  
+   위 과정을 통해 TypeScript 환경에서도 **확실한** 에러라는 것이 증명되었습니다. ✔️
+
+위 두 과정을 거치며 에러라는 것을 확신하였습니다. 그런데 저는 `vite`와 `CRA` 같은 툴체인으로 만든 프로젝트의 경우 어떤 에러를 발생할지 의문을 갖게 되었습니다.
+그래서 직접 에러를 검증해 봤습니다.
+
+3. `vite`와 `JavaScript` 환경
+
+   {" "}
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/v-j.png`}
+     width={1747}
+     height={300}
+     alt="vite-js"
+   />
+
+   분명한 에러임에도 어떠한 에러도 확인할 수 없습니다. 하지만, 개발 서버를 실행해 로컬 호스트로 접속을 하면 바로 아래와 같은 에러들을 발생시킵니다.
+
+   ```bash {2, 11}
+   // 첫 번째 에러
+   × cannot reassign to a variable declared with `const`
+   │ function ChatRoom({ roomId, serverUrl }) {
+   ·                             ────┬────
+   ·                                 ╰── cannot reassign
+   │ const [serverUrl, setServerUrl] = useState("https://localhost:1234"); // serverUrl is reactive
+   ·          ────┬────
+   ·              ╰── const variable was declared here
+
+   // 두 번째 에러
+   × the name `serverUrl` is defined multiple times
+   │ function ChatRoom({ roomId, serverUrl }) {
+   ·                             ────┬────
+   ·                                 ╰── previous definition of `serverUrl` here
+   │   const [serverUrl, setServerUrl] = useState("https://localhost:1234"); // serverUrl is reactive
+   ·          ────┬────
+   ·              ╰── `serverUrl` redefined here
+   ```
+
+   두 가지 에러는 다음 과 같습니다.
+
+   - **cannot reassign to a variable declared with `const`**
+     - `const`로 선언한 변수는 재할당을 할 수 없습니다.
+   - **the name `serverUrl` is defined multiple times**
+     - `serverUrl`이 여러 번 정의되었습니다.
+
+   vite-JavaScript 환경에서도 역시 에러라는 것이 증명되었습니다. ✔️
+
+4. `vite`와 `TypeScript` 환경
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/v-t.png`}
+     width={768}
+     height={224}
+     alt="vite-ts"
+   />
+
+   어디서 본 에러 메시지가 보입니다. 바로 2번 경우와 똑같은 에러입니다.
+   만약 개발 서버를 실행시키면 어떻게 될지 궁금해졌습니다.
+
+   ```bash
+   X [ERROR] The symbol "serverUrl" has already been declared
+   ```
+
+   3번 경우와 다르게 서버를 실행하는 명령어를 입력하자마자 터미널에 `serverUrl`이 이미 선언되었다는 에러가 발생됩니다.
+   vite-TypeScript 환경에서도 역시 에러라는 것이 증명되었습니다. ✔️
+
+5. `CRA`와 `JavaScript` 환경
+
+   {" "}
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/cra-js.png`}
+     width={768}
+     height={224}
+     alt="cra-js"
+   />
+
+   기존의 JavaScript 환경들과 차이점을 발견하셨나요? 바로 `ESlint`입니다. [ESlint](https://eslint.org/)는 문법 및 규칙을 검증해 주는 정적 코드 분석 도구입니다.
+   그렇다면 vite 환경에서는 왜 ESlint가 문법 오류를 잡아내지 못한 걸까요? 그 이유는 vite은 내부적으로 ESlint가 설치되지 않았기 때문입니다.
+
+   [CRA](https://github.com/facebook/create-react-app#philosophy)로 초기화된 React 프로젝트는 기본적으로 React에 맞는 ESlint가 설치되어 있습니다.
+   설치 목록을 보려면, 터미널에 `npm ls eslint`를 입력합니다. 그럼 다음과 같은 결과를 볼 수 있습니다.
+
+```bash
+npm ls eslint
+cra@0.1.0
+└─┬ react-scripts@5.0.1
+├─┬ eslint-config-react-app@7.0.1
+│ ├─┬ @babel/eslint-parser@7.21.3
+│ │ └── eslint@8.36.0 deduped
+// ...
+│ ├─┬ eslint-plugin-jsx-a11y@6.7.1
+│ │ └── eslint@8.36.0 deduped
+│ ├─┬ eslint-plugin-react-hooks@4.6.0
+│ │ └── eslint@8.36.0 deduped
+│ ├─┬ eslint-plugin-react@7.32.2
+│ │ └── eslint@8.36.0 deduped
+// ...
+```
+
+1번의 경우와 마찬가지로 `Identifier 'serverUrl' has already been declared`라는 오류를 발생합니다.
+CRA와 JavaScript 환경에서도 에러라는 것이 증명되었습니다. ✔️
+
+6. `CRA`와 `TypeScript` 환경
+
+   <Image
+     src={`/images/how-i-contributed-react-docs/cra-ts.png`}
+     width={768}
+     height={224}
+     alt="cra-ts"
+   />
+
+   TypeScript로 테스트를 진행한 이전 경우들과 마찬가지로 `Duplicate identifier 'serverUrl'`라는 에러를 발생합니다.  
+   이때 ESlint의 `'serverUrl' is already defined` 에러 메시지 보입니다.
+
+즉 모든 테스트 과정을 진행하였을 때, React 공식 문서의 코드는 문법적으로 오류라는 것이 확실해졌습니다.
+
+테스트를 다 끝낸 후 제가 본 예시가 잘못된 것이라는 확신을 갖게 되었습니다. 이제 공식적으로 `Pull Request`를 생성할 때가 온 것입니다.
+
+## 사상 첫 오픈 소스에 Pull Request를 생성하다.
+
+`Pull Request`의 경우 프로젝트들을 진행하며 생성해 본 적은 있었지만, 오픈 소스에 생성하는 것은 처음이었습니다.
+처음 하는 일이다 보니 제법 긴장이 됐습니다. 더군다나 그냥 오픈 소스도 아닌 **React**의 공식 문서라니! 😵  
+제가 지금껏 `GitHub`를 사용한 방식을 되짚으며 `Pull Request`을 생성하였습니다.
+
+### 1.React.dev Fork
+
+우선 공식 문서 레포를 제 [개인 레포](https://github.com/yujiseok/react.dev/)로 Fork 해옵니다.
+
+<Image
+  src={`/images/how-i-contributed-react-docs/fork.png`}
+  width={1222}
+  height={224}
+  alt="fork"
+/>
+
+### 2. Commit과 Push
+
+<Image
+  src={`/images/how-i-contributed-react-docs/cp.png`}
+  width={1222}
+  height={224}
+  alt="commit-push"
+/>
+
+먼저 제 개인 레포에 수정 사항을 커밋하고 푸시 합니다. 이때 커밋 메시지의 경우 최대한 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+를 지키며 작성하였습니다.
+
+### 3. Pull Request 생성
+
+제 개인 레포에만 수정 사항이 있으면 안 되기에 [원본 저장소](https://github.com/reactjs/react.dev])에 PR을 생성합니다.
+
+저는 다음과 같은 내용으로 PR을 생성하였습니다.
+
+<Image
+  src={`/images/how-i-contributed-react-docs/pr.png`}
+  width={1222}
+  height={224}
+  alt="Pull Request"
+/>
+
+> ✨ PR의 경우 제 나름대로 정중하게 작성하려고 노력했습니다.
+
+두근두근 이제 제 PR이 리뷰되고 머지 되기만을 기다리면 되는 줄 알았습니다.
+하지만 또 다른 절차가 존재합니다.
+
+### 4. Contributor License Agreement
+
+`facebook-github-bot`이 모든 컨트리뷰터는 [Contributor License Agreement](https://code.facebook.com/cla)에 동의해야 하며,
+1시간 뒤에 검증을 통해 `CLA` 태깅을 해주겠다고 댓글을 달아줍니다.
+
+<Image
+  src={`/images/how-i-contributed-react-docs/cla.png`}
+  width={1222}
+  height={224}
+  alt="Contributor License Agreements"
+/>
+
+### 5. Merged
+
+시간이 많이 늦어, 자고 일어나 확인해야지 하는 마음을 갖고 침대에 누웠는데 도저히 잠이 오지 않았습니다.
+그러던 중 핸드폰에 알림이 울렸습니다. 그래서 저는 설마? 하는 마음으로 알림을 확인해 보았는데 다른 유저의 댓글이었습니다.
+이때의 실망감이란, 그 유저의 질문은 의도된 에러가 아니냐는 것이었습니다.
+
+<Image
+  src={`/images/how-i-contributed-react-docs/user.png`}
+  width={1222}
+  height={224}
+  alt="comments"
+/>
+
+일어나서 대답을 하기로 하고 우선 잠을 청했습니다.
+어릴 때 소풍을 가는 날이면 눈이 빨리 떠지는 것처럼 유난히 일찍 눈이 떠졌습니다.
+
+그런데 이게 웬걸! 그 **Dan Abramov**가 제 PR에 다른 유저의 질문에 대한 댓글과 함께 **thanks** 댓글을 남겨주었습니다.
+물론 제 PR의 머지와 함께 말이죠!!
+
+<Image
+  src={`/images/how-i-contributed-react-docs/dan.png`}
+  width={1222}
+  height={224}
+  alt="Dan Abramov"
+/>
+
+그 후 바로 공식 문서에 반영이 되었습니다. 😆
+
+<Image
+  src={`/images/how-i-contributed-react-docs/after.png`}
+  width={1222}
+  height={224}
+  alt="코드 수정 후"
+/>
+
+머지 된 PR은 [이곳](https://github.com/reactjs/react.dev/pull/5791)에서 확인하실 수 있습니다!
+
+## 후기
+
+일련의 기여 과정을 거치며, 몇 가지 느낀 점이 있습니다. 우선 코드를 읽고 문제점을 찾을 수 있게 되었다는 것입니다.
+내가 작성한 코드뿐 아니라 타인이 작성한 코드를 읽고 이해할 수 있게 됐다는 점이 저에게 있어 큰 의미를 갖습니다.
+깃에 관해서도 이제 제법 익숙해졌다는 생각이 들었습니다. 또, 사람은 누구나 실수할 수 있다는 것을 알게 되었고 실수하는 것에 대해서 낙담하지 말자는 것입니다.
+완벽한 결과물을 한 번에 내놓는 건 어려우며, 여러 사람의 의견을 받아들여 더 좋은 결과물을 만드는 것이 더 좋은 방식이라는 것을 이번 과정을 통해 몸소 느끼게 되었습니다.
+
+무엇보다 저에게 가장 의미 있었고 좋았던 부분은 제가 좋아하는 개발자 Dan Abramov에게 thanks라는 댓글을 받게 된 것과 저의 코드가 공식 문서에
+반영이 되었다는 것 아닐까 합니다. 정말 감회가 새롭습니다!
+
+단발성에 그치지 않고 앞으로도 가능하면 여러 오픈 소스에 기여하고 싶다는 생각이 들었습니다. 저 스스로를 위한 프로젝트를 진행하는 것도 좋지만, 기여라는 것은 정말 또 다른 세상인 것 같습니다.
+
+이번 기여를 통해 단순히 코드를 작성하는 것 외에도 다른 방식으로 성장하고 시야를 넓힐 수 있다는 것을 알게 된 아주 귀중한 경험입니다.
+정말 뿌듯하고 이 경험을 토대로 더욱 앞으로 나아가고 싶습니다.
+
+> ✨ PR 링크를 북마크 해놓고 하루에도 몇 번씩 보는 것은 비밀입니다. 🤫
