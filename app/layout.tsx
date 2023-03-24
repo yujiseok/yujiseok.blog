@@ -56,7 +56,7 @@ export default function RootLayout({
       <body className="mx-2 flex flex-col bg-slate-50 antialiased transition-colors delay-75 dark:bg-slate-800">
         <ThemeProviders>
           <Navbar />
-          <main className="mx-auto mt-14 w-full max-w-2xl px-4">
+          <main className="mx-auto mt-14 w-full max-w-3xl px-4">
             {children}
           </main>
           <Footer />
