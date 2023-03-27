@@ -21,7 +21,7 @@ function About() {
           </Balancer>
         </h3>
 
-        <p className="my-6 leading-7">
+        <div className="my-6 leading-7">
           {/* <p>저는 생각을 실체화하는 것을 좋아하는 개발자입니다.</p> */}
           <p>새로운 것을 마주하는 것에 두려움이 없습니다.</p>
           <p>창작 활동을 통해 영감을 얻는 것을 좋아합니다.</p>
@@ -29,7 +29,7 @@ function About() {
             궁금증이 생기면 주도적으로 해결하며, 제 것으로 만드는 과정을
             즐깁니다.
           </p>
-        </p>
+        </div>
 
         <ul className="flex gap-4">
           <li>
