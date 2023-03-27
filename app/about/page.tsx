@@ -69,7 +69,7 @@ function About() {
         <ul className="flex list-disc flex-col gap-1 px-4">
           <li>
             <div>
-              <p>어반유니온 (2021.12 - 2022.09)</p>
+              <p>어반데이터랩 (2022.01 - 2022.09)</p>
               <p>주요 업무: 2022 한국어 AI 경진대회 플랫폼 퍼블리싱</p>
             </div>
           </li>
@@ -79,7 +79,7 @@ function About() {
       <section>
         <h4 className="mb-6 text-2xl font-semibold">Education</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
-          <li>원티드 프리온보딩 프론트엔드 인턴십 (2023.02.20 - 현재)</li>
+          <li>원티드 프리온보딩 프론트엔드 인턴십 (2023.02.20 - 2023.03.17)</li>
           <li>
             패스트캠퍼스 메가바이트 스쿨 프론트엔드 과정 (2022.09.13 - 현재)
           </li>
