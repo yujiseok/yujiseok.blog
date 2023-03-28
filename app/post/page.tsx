@@ -22,7 +22,9 @@ function PostPage() {
           <article key={post.slug} className="mb-6">
             <Link href={`/post/${post.slug}`}>
               <h2 className="text-xl font-semibold">{post.title}</h2>
-              <h6 className="font-light text-gray-500">{post.summary}</h6>
+              <h6 className="my-1 text-sm font-light text-gray-500">
+                {post.summary}
+              </h6>
               <p>
                 <small className="mr-2">{post.publishedAt}</small>
               </p>
