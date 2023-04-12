@@ -29,6 +29,18 @@ function About() {
             궁금증이 생기면 주도적으로 해결하며, 제 것으로 만드는 과정을
             즐깁니다.
           </p>
+          <p>
+            이런 궁금증을 해결하는 과정 속에서{" "}
+            <a
+              href="https://github.com/reactjs/react.dev/pull/5791"
+              rel="noopener noreferrer"
+              target="_blank"
+              className="underline underline-offset-2"
+            >
+              리액트 공식 문서
+            </a>
+            에 기여하게 되었습니다.
+          </p>
         </div>
 
         <ul className="flex gap-4">
