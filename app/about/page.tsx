@@ -6,9 +6,6 @@ export const metadata: Metadata = {
   description: "앞으로 나아가는 것을 좋아하는 개발자 유지석입니다.",
 };
 
-// 패캠 4.28
-// 원티드 3.17
-
 function About() {
   return (
     <>
@@ -64,15 +61,16 @@ function About() {
               LinkedIn
             </a>
           </li>
-          {/* <li>
+          <li>
             <a
-              href="#"
+              href="https://yujiseok.notion.site/c03d5dd5b09d45789a29e3e7221202a3"
               rel="noopener noreferrer"
+              target="_blank"
               className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
             >
               Portfolio
             </a>
-          </li> */}
+          </li>
         </ul>
       </section>
 
@@ -91,10 +89,11 @@ function About() {
       <section>
         <h4 className="mb-6 text-2xl font-semibold">Education</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
-          <li>원티드 프리온보딩 프론트엔드 인턴십 (2023.02.20 - 2023.03.17)</li>
           <li>
-            패스트캠퍼스 메가바이트 스쿨 프론트엔드 과정 (2022.09.13 - 현재)
+            패스트캠퍼스 메가바이트 스쿨 프론트엔드 과정 (2022.09.13 -
+            2023.04.14)
           </li>
+          <li>원티드 프리온보딩 프론트엔드 인턴십 (2023.02.20 - 2023.03.17)</li>
         </ul>
       </section>
     </>
