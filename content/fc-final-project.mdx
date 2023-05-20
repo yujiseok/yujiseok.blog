@@ -1,0 +1,562 @@
+---
+title: 인재를 쉽고 빠르게 잡콕 프로젝트 회고
+publishedAt: "2023-05-17"
+summary: 부트캠프 과정 중 진행했던 파이널 프로젝트 회고입니다.
+---
+
+<Image src="/images/jobkok/jobkok.png" width={768} height={400} alt="잡콕" />
+
+# 인재를 쉽고 빠르게 잡콕 프로젝트 회고
+
+## 개요
+
+부트캠프 과정 중 기업과 연계하여 진행한 최종 프로젝트 소개, 진행 과정, 제가 구현한 기능들과 회고를 다룹니다.
+
+## 프로젝트 소개
+
+파이널 프로젝트의 경우 기업과 직접적으로 연계하여 기업의 **RFP**(제안요청서)를 분석해 기업의 요구사항을 개발하는 프로젝트였습니다.
+각기 다른 총 4개의 기업이 참여하였는데, 제가 참여한 기업의 주제는 **채용절차 서비스 개발**이었습니다.
+
+채용절차 서비스 개발을 선택한 이유는 다음과 같습니다.
+
+1. 매력적이었던 기업의 RFP
+2. 다양한 기능과 요구 사항
+3. 채용절차 서비스에 관한 관심
+
+> 💀 이때는 몰랐습니다.. 저 RFP가 저희에게 가져온 대혼란을!
+
+주제를 선정한 후, 팀이 구성되었습니다. 파이널 프로젝트는 프론트 • 백엔드만의 협업이 아닌, UI/UX 파트도 참여하여 협업을 진행하였습니다.
+팀원은 프론트엔드 4명, 백엔드 4명 그리고 UI/UX 3명 총 11명으로 구성이 되었습니다.
+
+팀을 구성하고 팀명을 정하게 되었는데, 팀의 번호가 3이어서 <b>싹쓰리(SSAK3)</b>로 짓게 되었습니다.
+팀명을 정하고 나니 이제, 서비스명을 정하는 관문이 남게 되었습니다. 여러 서비스명 후보가 존재했지만, 그중에서도 가장 알기 쉽고 기억하기 쉬운 <b>잡콕(JobKok)</b>으로 정하게 되었습니다.
+말 그대로 잡을 콕! 집는다는 의미입니다.
+
+> 😌 사람은 이름 따라간다는 말을 정말 몸소 체험할 수 있게 된 프로젝트였습니다.  
+> 최우수 프로젝트로 선정되었으며, 회고 역시 최우수 팀으로 선정되어 말 그대로 싹 쓸어 버렸습니다. 🌊
+
+개발 기간은 2023년 3월 3일부터 2023년 4월 10일까지 진행되었습니다.
+저는 프론트엔드의 팀장을 맡게 되었습니다.
+
+## 프로젝트 진행 과정
+
+처음 프로젝트가 시작되었을 3월 초에는 한 달 넘는 프로젝트의 기간이 제법 널널하다고 생각했습니다.
+프로젝트는 참여 기업 담당자와 싱크업 미팅 - 기획 및 프로젝트 설정 - 설계 발표 - 최종 발표 순으로 진행이 되었는데, 널널하다 생각한 것은 정말 저의 오산이었습니다.
+
+### 기업 담당자와 싱크업 미팅
+
+싱크업 미팅은 프로젝트에 참여한 기업 담당자와 기업의 요구사항을 수행하는 팀이 진행하는 미팅으로 약 한 시간가량 진행되었습니다.
+
+채용 서비스를 선택한 이유가 RFP 문서의 내용이 가장 자세하고 구현할 기능이 많아서 선택한 것이었습니다.
+하지만 막상 담당자와 미팅을 진행하며, 저뿐만 아니라 모든 팀원들이 혼란 상태에 빠지게 되었습니다.
+그 이유는 RFP 문서상의 기능들은 이미 다 완성되었다는 것과 어떤 기능도 좋다고 하시던 담당자의 의견이었습니다.
+또 최소한의 기능으로 개발하라는 것, 개발적인 부분을 몰라 어떤 기술을 사용해야 되는지도 확답을 못 받았다는 것과 같은 이유로 혼란은 가중되었습니다.
+
+이런 혼란은 비단 저희 팀뿐이 아니었습니다. 같은 주제로 프로젝트를 진행하는 팀이 저희 팀을 포함해 총 3팀이었는데, 그 3팀과의 미팅에서 각기 다른 통일되지 않은 주제와 요구사항을 원했고 비협조적인 태도를 보였습니다.
+그러다 보니 다른 팀에서는 팀원이 이탈하는 상황도 발생했습니다.
+
+위와 같은 상황에서 기획에 들어가게 되었습니다.
+
+### 기획 및 프로젝트 설정
+
+싱크업 미팅 이후 팀원들의 의욕이 급격하게 꺾인 것을 느꼈고, 물론 저도 그랬습니다.
+하지만, 포기할수는 없었기에 선택을 해야했습니다. 선택지는 1. 기업의 RFP를 토대로 최소한의 기능만을 개발, 2. 기업의 주제인 채용절차 서비스를 토대로 새로운 기획을 통한 개발 두 가지였습니다.
+저희 팀의 선택은 2 번이였습니다.
+
+막상 기획을 처음부터 시작하려니, 타겟 선정, 유저 플로우, 와이어프레임 등 해야 할 것이 이만저만이 아니었습니다.
+사실 저는 이때도 무엇을 개발해야 하는지 의문을 가진 상태였습니다. 그러나, 팀원들과 지속적인 회의와 소통을 통해
+**사업주가 채용 과정보다는 사업에 집중할 수 있게 채용 과정을 자동화하는 서비스**를 만드는 것으로 방향성을 잡게 되었습니다.
+
+기획과 방향성을 잡는데 총 17번의 [회의](https://www.notion.so/a8f7335d197544c3b727eef266302fae)가 진행됐고, 다수의 인원의 참여와 처음부터 기획을 해야 해 생각보다 오랜 시간이 걸렸던 것 같습니다.
+회의가 많아지고 길어질수록 남았던 의욕도 고갈되기 일보 직전이었습니다.
+그래도, 기획과 방향성이 진행되니 프로젝트가 진행되는 것을 느끼게 되었습니다.
+
+하지만 기획이 정해지고도 바로 개발에 들어갈 수 없었습니다. 디자인이 없었던 것과 통일되지 않은 기획이 있었기 때문입니다.
+기획에 시간이 많이 투자됨에 따라 절대적으로 개발할 시간이 줄어들었고, 시간에 대한 압박감을 느끼게 되었습니다.
+통일되지 않은 기획의 경우 **피그마**로 팀원들과 소통하며 맞혀갔습니다.
+
+> 🎨 기획하느라 고생한 우리 UI/UX 파트에 무한한 감사를 드립니다.
+
+그러면서 프론트엔드의 [초기 설정](https://www.notion.so/5903db0b66ea477abe4b99245b2810bd)을 하였습니다.
+
+컨벤션의 경우 코드와 깃 관련(커밋, 이슈, PR) 컨벤션을 정했습니다.
+이슈와 PR 템플릿을 사용해 최대한 반복되는 행위를 줄이도록 하였습니다.
+깃 허브의 프로젝트 기능을 활용하여 깃 허브의 기능을 최대로 활용하고 생산성을 높이기 위해 노력했습니다.
+
+또 브랜치 전략의 경우 `upstream` 저장소를 fork 하여 `feature` 브랜치를 생성해 작업을 진행하는 `Git Flow` 전략을 채택하였습니다.
+`Netlify`로 선배포를 진행하여, merge 되기 전에 프리뷰를 확인할 수 있도록 하였습니다.
+
+기술 스택은 다음과 같습니다. ([미니 프로젝트](/post/fc-mini-project)와 흡사합니다.)
+
+- **React (vite)**
+  - `vite`는 [esbuild](https://esbuild.github.io/)로 만들어진 빌드 툴입니다. `esbuild`는 `Go`언어로 만들어져 어마 무시한 속도를 자랑합니다.
+    무려 `webpack` 보다 100배 이상의 속도를 자랑합니다. `vite`는 `ES Module`을 활용해 모든 자바스크립트를 번들하는 것이 아닌 변경된 모듈만 교체합니다. 이와 같은 이유로 빠른 생산성을 위해 `vite`를 툴체인으로 선택했습니다.
+- **TypeScript**
+  - 정적 타입, `IDE`를 통한 인텔리센스 지원을 통한 생산성 증대 그리고 타입스크립트에 익숙해지기 위해 선택하였습니다.
+- **TailwindCSS**
+  - `TailwindCSS` 유틸리티 클래스 기반의 CSS 프레임워크입니다. 클래스명을 고민해도 되지 않는 장점과 이미 구축된 디자인 시스템을 사용하기 위해 선택하였습니다.
+- **Redux-Toolkit**
+  - 이번 프로젝트에서는 다른 상태 관리 라이브러리(`Recoil`, `Zustand`)를 적용하고 싶었으나, 저도 그렇고 다른 팀원들이 익숙한 `Redux-Toolkit`을 선택하였습니다.
+- **React-Query**
+  - 지난 프로젝트들을 진행하며, `React-Query`를 통한 서버 상태 관리에 만족스러운 개발 경험이 있어서 선택하였습니다.
+- **React-Hook-Form**
+  - 채용폼을 만들기 위해서는 폼과 수많은 인풋 필드들이 필요한데, 효율적으로 폼을 관리하기 위해 선택하였습니다.
+- **Zod**
+  - 폼의 유효성 검증을 타입스크립트로 쉽게 하기 위해 선택하였습니다.
+
+기획이 어느 정도 확정되고 기능에 필요한 명세서를 작성하였습니다. 백엔드와 **노션**, **슬랙**, **게더 타운** 등 다양한 툴을 사용해 서로의 요구사항을 파악하고 소통하였습니다.
+대략적인 디자인 시안이 나오기 시작한 시점부터 본격적인 개발을 시작했는데, 그 시점이 어느새 프로젝트 종료의 코앞이었습니다.
+
+> 🕰 시간은 정말 무섭게 저를 앞질러 갔습니다.
+
+### 설계 발표
+
+프론트엔드가 작성한 **기능 명세서**와 백엔드에서 작성한 <b>API 문서(포스트맨 docs)</b>를 확인하며, 각 파트의 요구사항을 파악하였습니다.
+서로의 문서를 확인하며 요구사항을 분석하니 확실히 프로젝트에 박차를 가할 수 있게 되었습니다.
+
+이때부터는 모든 인원이 회의에 참여하는 것이 어렵다고 판단해, 기능을 담당하는 담당자들 간 소통으로 방식을 바꿔 시간 낭비를 최소화하였습니다.
+하지만, 이렇게 소수의 인원이 참여해 진행하다 보니 전체적으로 안건이 공유가 안된다는 단점이 발생해 최대한 슬랙을 통해 공유하도록 하였습니다. 그리고 최대한 문서화를 하려고 노력했습니다.
+
+위와 같이 적극적인 의견 공유와 문서화를 통해 [설계 발표 자료](https://docs.google.com/presentation/d/1aLFZDSz8ahGDoR-JSEv8qAg-DK9tbH4KOpobxgLRotE/edit#slide=id.p1)를 차질 없이 준비할 수 있었습니다.
+설계 발표는 저와 백엔드 팀원 1분이 진행하였는데, 기업 담당자분으로부터 개발에 문외한 자신도 이해가 가는 발표였다는 피드백을 받았습니다.
+
+위와 같은 단계를 거쳐 본격적으로 그토록 원하던 기능 구현에 들어가게 되었습니다.
+
+## 기능 구현
+
+기능의 경우 기획서와 디자인 시안을 보고 각 팀원들이 하고 싶은 기능을 페이지별로 맡아서 구현하는 것으로 정하였습니다.
+제가 담당한 페이지와 기능은 다음과 같습니다.
+
+### 페이지
+
+#### 메인 페이지(인재 관리)
+
+제가 메인 페이지를 하고 싶었던 이유는 UI적인 요소를 개발해 볼 수 있다는 점과 서비스의 메인이 되는 중요한 페이지이므로 제가 잘할 수 있을 것이란 자신감이 있었습니다.
+
+인재 관리 페이지는 잡콕 서비스의 메인 페이지로 서비스의 타겟 고객인 사업주들이 로그인 후 볼 수 있는 페이지로
+채용 폼 조회, 슬라이더를 통한 인재 조회 그리고 칸반보드(Drag & Drop)를 활용한 채용 단계 변경의 역할을 합니다.
+또, 채용 폼이 없을 경우, 폼은 존재하지만 등록된 인재가 없는 경우 마지막으로 폼과 인재 모두 존재하는 경우 총 세 가지의 조건을 처리해 줘야 하는 페이지였습니다.
+
+기능 개발을 하며 제일 시간이 많이 가고 어려웠던 페이지인데 특히, **조건 처리**와 **칸반보드**가 기억에 남는 페이지입니다.
+
+처음 **조건**을 처리할 때, 위 세 가지 조건을 모두 개별 조건으로 처리하려고 하였습니다.
+그러다 보니 로직이 꼬이게 되어 훅의 규칙을 지키지 않아 에러와 마주했던 기억이 있습니다.(조건문 안에서 훅 호출, 리턴 이후 훅 선언 등)
+하지만 폼의 유무에 따라 두 가지 조건으로 줄일 수 있다는 것을 알게 되었고 이런 에러를 해결할 수 있었습니다.
+
+**칸반보드**는 가장 재밌으면서도 어려웠던 기능이었는데 어려웠던 이유는 제가 필요로 한 데이터의 형식과 서버에서 응답받은 데이터 형식이 달랐다는 것입니다.
+라이브러리의 경우 Jira로 유명한 [Atlassian](https://www.atlassian.com)이 개발한 `react-beautiful-dnd`를 사용하였습니다.
+
+> 라이브러리를 선택한 [이유](https://github.com/kdt-final-3/jobkok-fe/issues/14#issuecomment-1476105537)
+
+칸반 보드는 서류 제출, 면접, 최종 조율 총 세 가지 채용 진행 단계를 컬럼으로 가지며, 현황을 한눈에 파악하고 채용 단계를 수정할 수 있는 기능입니다.
+이때 제가 필요로 하는 데이터의 형식은 다음과 같았습니다.
+
+```ts
+const base: IKanbanBase[] = [
+  { title: "서류제출", applicant: [] },
+  { title: "면접", applicant: [] },
+  { title: "최종조율", applicant: [] },
+];
+```
+
+즉 각각의 단계 별로 인재가 매핑되는 데이터가 필요했습니다.
+
+하지만 서버에서 받아오는 데이터는 아래와 같이 전체 인재가 나열된 데이터 그리고 각 단계별 인재의 데이터였습니다.
+
+```ts
+[
+  {
+    applyId: "1",
+    applyName: "홍길동",
+    applyPhone: "010-1111-1111",
+    applyEmail: "applyTest@test.com",
+    resumeContent: "저는 홍길동 입니다 !",
+    applyPortfolio: "https://portfolio.portfolio",
+    // ...
+  },
+  // ...
+];
+```
+
+백엔드의 담당 팀원과 데이터에 관해서 조율을 하였는데, 제가 원하는 형식으로 데이터를 뿌려주는 것은 어려울 것 같다는 의견을 주었습니다.
+그래서 저는 이 데이터를 어떻게 하면 내가 원하는 형식으로 정제할 수 있을까를 생각했고, 그 결과 `talentByProcedure`라는 유틸 함수를 만들게 되었습니다.
+
+```ts title="utils/talentByProcedure.ts"
+import type { IKanbanBase, IResponse, ITalent } from "@/types/talent";
+
+const talentToProcedure = (
+  talentData: IResponse<null> | IResponse<ITalent[]> | undefined
+) => {
+  const base: IKanbanBase[] = [
+    { title: "서류제출", applicant: [] },
+    { title: "면접", applicant: [] },
+    { title: "최종조율", applicant: [] },
+  ];
+
+  talentData?.data
+    ?.filter((talent) => talent.failApply !== true)
+    .forEach((applicant) => {
+      const { applyProcedure } = applicant;
+      const match = base.find((item) => item.title === applyProcedure);
+      if (match) {
+        match.applicant.push(applicant);
+      }
+    });
+
+  return base;
+};
+
+export default talentToProcedure;
+```
+
+`talentToProcedure`는 서버에서 받아온 데이터를 받아와 탈락하지 않은 인재를 `filter`메서드로 찾은 뒤 각각의 인재를 `forEach`로 순회해 그 안에서 `find` 메서드로
+기존 `title`과 `applyProcedure`가 같은 매치된 항목을 찾고 인재를 `applicant` 배열에 `push` 메서드를 활용해 추가해 주는 함수입니다.
+이 유틸리티 함수를 이용해 제가 원하는 데이터의 형식으로 정제할 수 있게 되었습니다. 이 함수를 활용해 다음과 같이 칸반보드를 구현할 수 있었습니다.
+
+```tsx title="components/Talent/Kanban.tsx"
+const Kanban = ({
+  allTalent,
+  likeMutate,
+}: {
+  allTalent: IResponse<null> | IResponse<ITalent[]> | undefined;
+  likeMutate: UseMutateFunction<any, unknown, string, unknown>;
+}) => {
+  if (allTalent?.data === null || allTalent === undefined) return <></>;
+
+  const kanbanData: IKanbanBase[] = talentToProcedure(allTalent);
+  const { onDragEnd } = useDnD(kanbanData);
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="flex items-start justify-between gap-6">
+        {kanbanData.map((kanban) => (
+          <Droppable key={kanban.title} droppableId={kanban.title}>
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className={`bg-gray-0 flex-1 rounded-xl border border-gray-50 pl-8 pr-4 ${
+                  kanban.applicant.length ? "pb-12" : "pb-0"
+                }`}
+              >
+                <KanbanHeader kanban={kanban} />
+
+                <div className="flex max-h-[54.75rem] flex-col gap-4 overflow-y-auto overflow-x-hidden py-1 pr-3">
+                  {kanban.applicant.map((talent: ITalent, index: number) => (
+                    <KanbanBoard
+                      key={talent.applyId}
+                      talent={talent}
+                      index={index}
+                      likeMutate={likeMutate}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              </div>
+            )}
+          </Droppable>
+        ))}
+      </div>
+    </DragDropContext>
+  );
+};
+export default Kanban;
+```
+
+사실 칸반보드를 구현하면서 라이브러리의 도움을 받고 여러 예시들을 참고해 구현을 하였습니다.
+그러다 보니 제 스스로 완벽히 이해하지 못하고 작성했던 기억이 있습니다.
+재밌었던 기능이었던 만큼 다시 한번 코드를 읽어보며 이해하고 다른 프로젝트에 적용하도록 노력해야겠습니다.
+또 처음에는 상태로 칸반을 관리하여 `useDnD`훅을 만들었는데, 상태로 관리할 필요가 없게 되었는데 유틸 함수로 변경하지 못한 점이 아쉽습니다.
+
+> 프로젝트가 끝난 후 한 달 정도 지난 시점에서 제가 작성한 코드를 읽으며 회고를 작성하는데, 확실히 의도를 파악하기 힘든 코드들이 있는 것 같습니다.
+
+#### 인재 현황
+
+인재 현황의 경우 메인 페이지와 마찬가지로 칸반보드를 통한 현황 관리와 수정이 가능합니다. 추가적으로 각 단계별 인재를 조회할 수 있는 테이블이 있습니다.
+구현한 기능은 단계별 인재 조회, 페이지네이션, 인재 채용 단계 수정 그리고 인재 찜 기능입니다.
+
+인재 현황의 기능을 구현하며, 페이징과 필터링 등 기능에서 지난 [원티드 프리온보딩](https://www.yujiseok.blog/post/wanted-pre-onboarding) 과정에서 배운 `react-router-dom`의 `useSearchParams` 훅을 십분 활용하였습니다.
+
+```tsx title="TalentStatus/index.tsx"
+const [searchParams, setSearchParams] = useSearchParams();
+const applyProcedure = searchParams.get("applyProcedure") ?? "전체";
+
+const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  setSearchParams({
+    applyProcedure: e.target.value,
+  });
+};
+```
+
+우선 `useSearchParams` 훅을 호출한 뒤 채용 단계를 `searchParams.get("applyProcedure")`로 초기화합니다.
+그 후 셀렉트 박스에 이벤트 핸들러를 부착해 선택 시 쿼리 스트링으로 필터링을 할 수 있게 구현하였습니다.
+
+페이징의 경우 `usePagination` 훅을 만들어 여러 페이지에서 재사용하였습니다.
+
+```ts title="hooks/usePagination.ts"
+import { useSearchParams } from "react-router-dom";
+import { LIMIT } from "@/constants/pagination";
+
+type HandleClick = (page: string) => void;
+
+interface UsePagination {
+  page: number;
+  offset: number;
+  handleClick: HandleClick;
+}
+
+const usePagination = (): UsePagination => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page =
+    !searchParams.get("page") || 0 ? 0 : Number(searchParams.get("page"));
+  const applyProcedure = searchParams.get("applyProcedure") ?? "전체";
+
+  const handleClick: HandleClick = (page) =>
+    setSearchParams({
+      applyProcedure,
+      page,
+    });
+  const offset = (page - 1 + 1) * LIMIT; // page가 1부터 시작하기에 page에 1을 더함
+
+  return { page, offset, handleClick };
+};
+```
+
+위의 채용 단계 필터링과 마찬가지로 `useSearchParams`를 활용합니다.
+`usePagination`이 반환하는 것은 페이지를 뜻하는 `page`, 각 페이지의 첫 게시물 인덱스인 `offset` 그리고 페이지를 제어하는 `handleClick` 함수입니다.
+
+채용 단계 수정의 경우 한 번에 최대 4명의 인재의 단계를 수정할 수 있는 기능입니다. 인재를 클릭 시 추가되는 로직을 구현해야 했는데, 처음에는 막막했던 기억이 있습니다.
+`useState`를 활용해 상태로 선택된 인재를 관리할 수 있도록 하였습니다.
+
+```tsx title="TalentStatus/index.tsx"
+// ...
+
+const [talent, setTalent] = useState<ITalent[]>([]);
+
+const handleTalentChange = (
+  e: React.ChangeEvent<HTMLInputElement>,
+  item: ITalent
+) => {
+  if (e.target.checked && talent.length < 4) {
+    setTalent((prev) => [...prev, item]);
+  } else {
+    const newTalent = [...talent].filter(
+      (talent) => talent.applyId !== item.applyId
+    );
+    e.target.checked = false;
+    setTalent(newTalent);
+  }
+};
+
+// ...
+
+const multipleEdit = async () => {
+  for (let i = 0; i < talent.length; i++) {
+    try {
+      const res = await editTalentByProcedure(talent[i].applyId, applyStep);
+      if (res.state === 200) {
+        allTalentRefetch();
+        talentByProcedureRefetch();
+        setTalent([]);
+        // alert("채용 단계 수정이 성공하였습니다.");
+      }
+    } catch (error) {
+      alert("채용 단계 수정이 실패하였습니다.");
+      return;
+    }
+  }
+};
+```
+
+상태를 초기화한 후, `handleTalentChange`라는 이벤트 핸들러를 만들어 4명까지 인재를 추가할 수 있도록 로직을 구현했습니다. 불변성을 지키기 위해 전개 연산자와 `filter`메서드를 사용했습니다.
+이때 추가된 인재의 단계를 변경하기 위해선 각 인재의 id 값이 필요하였는데, 그 값이 배열이 아니어서 각 인재별 처리를 `for` 문으로 구현하였습니다.
+이 부분 역시 백엔드의 담당 팀원과 논의를 하였는데, 기한 일과 근접한 날짜에 배열로 수정이 되어 프로젝트에 반영을 하지 못한 점과 `useMutation`으로 구현하지 못한 점이 아쉽습니다.
+
+찜 기능의 경우 `useLikeMutate` 훅을 만들어 사용하였습니다.
+
+```ts title="hooks/useLikeMutate.ts"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { assortLikeTalent } from "@/api/talentDetail";
+
+const useLikeMutate = () => {
+  const queryClient = useQueryClient();
+  const { mutate: likeMutate, data: mutateData } = useMutation(
+    assortLikeTalent,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries();
+      },
+    }
+  );
+
+  return { likeMutate };
+};
+export default useLikeMutate;
+```
+
+#### 탈락 인재 보관함
+
+탈락 인재 보관함은 인재 현황과 매우 비슷한 UI와 기능을 갖는 페이지로 탈락된 인재 조회와 찜의 기능을 담당합니다.
+전체적인 구현 방식 역시 `useSearchParams`, `useLikeMutate` 등을 활용한 인재 현황과 흡사합니다.
+
+### 기능
+
+페이지 별로 구현한 기능과 별개로 따로 구현한 기능들은 아래와 같습니다.
+
+#### Redux-toolkit • Redux-persist를 활용한 유저 상태 관리
+
+앱에서 유저의 정보가 전역적으로 필요하기에 `Redux-toolkit`으로 상태 관리를 구현하였습니다.
+로그인 시 서버로부터 응답받은 데이터를 `payload`로 받아와 상태를 변경하고 로그아웃 시 유저의 상태를 초기화합니다.
+
+```ts title="features/authSlice.ts"
+export const authSlice = createSlice({
+  initialState,
+  name: "auth",
+  reducers: {
+    signIn: (state, action: PayloadAction<InitialState>) => {
+      return { ...state, ...action.payload };
+    },
+    signOut: () => initialState,
+  },
+});
+```
+
+#### 토큰 여부에 따른 리다이렉트 처리
+
+리다이렉트의 경우 공통 레이아웃을 담당하는 `Layout.tsx`에서 `useEffect` 와 `useAppSelector` 훅으로 유저의 정보를 가져와 토큰의 유무에 따른 처리를 하였습니다.
+
+```tsx title=""
+const { auth } = useAppSelector((state) => state);
+
+useEffect(() => {
+  if (!auth.accessToken) {
+    navigate("/sign-in");
+  }
+}, [auth.accessToken]);
+```
+
+#### axios interceptors를 활용한 인증 로직 구현
+
+로그인을 제외한 대부분의 api에서 인증이 필요했습니다. 그렇기에 항상 헤더에 토큰을 주입하는 것은 비효율적이라고 판단하였고 `interceptors`를 사용하기로 하였습니다.
+
+**요청 interceptors**
+
+```ts title="api/axios.ts" {6}
+client.interceptors.request.use((config) => {
+  const { accessToken } = JSON.parse(localStorage.getItem("token") || "{}");
+  if (!config.headers) return config;
+
+  if (accessToken !== null) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+```
+
+요청이 처리되기 전에 로컬 스토리지에 저장된 토큰을 가져와 토큰을 헤더에 주입하는 로직을 구현하였습니다.
+
+하지만 인증이 만료되면 서버 측에서 설정한 `400` 에러가 발생해 앱이 터져버리는 오류가 발생했습니다. `400` 에러와 인증 연장을 자동화하기 위해
+응답 `interceptors`를 추가하였습니다.
+
+**응답 interceptors**
+
+```ts title="api/axios.ts"
+client.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const { refreshToken } = JSON.parse(localStorage.getItem("token") || "{}");
+    const { config, response } = error;
+    const status = response.status;
+    const originalConfig = config;
+
+    if (status === 400) {
+      try {
+        const res = await axios({
+          method: "POST",
+          url: `${config.baseURL}/auth/reissue`,
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        });
+
+        if (res.status === 200) {
+          localStorage.setItem("token", JSON.stringify(res.data.data));
+          originalConfig.headers.Authorization = `Bearer ${res.data.data.accessToken}`;
+          return axios(originalConfig);
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          return Promise.reject(error.response?.data);
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
+
+에러의 상태가 `400`일시 인스턴스로 생성한 `client`가 아닌 `axios`를 사용해 `/auth/reissue` 엔드 포인트에 `POST`요청을 보내 새로운 액세스 토큰과 리프레시 토큰을 발급받습니다.
+만약 서버에서 정상적인 응답을 받았을 경우 응답으로 받은 토큰 데이터를 로컬 스토리지에 저장합니다. 그 후 헤더에 새로 발급된 액세스 토큰을 주입해 인증을 연장합니다.
+만약 에러가 생기면 프로미스를 `reject` 하도록 구현하였습니다.
+
+## 마주한 문제
+
+<Image
+  src="/images/jobkok/husky.png"
+  width={768}
+  height={400}
+  alt="husky 에러"
+/>
+
+선 배포를 하고 프로젝트를 진행하였는데, 린트 자동화를 위해 설치한 `husky`에서 [에러](https://github.com/kdt-final-3/jobkok-fe/issues/28)가 발생하였습니다. 해결하기 위해 세 가지 방법을 시도해 보았습니다.
+
+1. **is-ci 추가**
+
+   [공식 문서](https://typicode.github.io/husky/guide.html#with-is-ci)에 나온 해결법으로 is-ci를 설치해 스크립트에 추가하는 방법입니다.
+   `npm install is-ci --save-dev` 명령어로 의존성을 추가하고, 스크립트에 `"prepare": "is-ci || husky install"` 추가합니다. 하지만 여전히 배포 오류는 해결되지 않았습니다.
+
+2. **스크립트 명렁어 추가**
+
+   `"prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""` 명령어를 스크립트에 추가해 오류를 해결하는 것이었는데, 역시나 오류는 해결되지 않았습니다.
+
+3. **prepare 명령어 postinstall로 변경**
+
+   팀원의 의견으로 명령어를 `postinstall`로 변경해 보았지만, 여전히 해결되지 않았습니다.
+
+구글링을 통해 발견한 위의 해결법과 팀원의 의견도 오류를 막을 순 없었습니다. 그러다 `package.json`을 자세히 살펴보았고 `husky`가 `devDependencies`에 제대로 설치가 되지 않은 것을 발견하였습니다.
+설마 하는 마음으로 재설치를 진행하였습니다. 그런데 이럴 수가.... 오류가 감쪽같이 해결되었습니다. 정말 허탈한 순간이었습니다.
+
+> 이 오류를 계기로 패키지가 제대로 설치되었는지 확인하는 습관을 가져야겠다고 다짐했습니다.  
+> [해결 과정](https://github.com/kdt-final-3/jobkok-fe/pull/29#issuecomment-1482907246)
+
+## 프로젝트 회고 ✨
+
+<Image src="/images/jobkok/final.jpeg" width={768} height={400} alt="잡콕" />
+
+제가 할 수 있는 한 최대한 잘하고 열심히 하기 위해 부단히 노력했던 프로젝트여서 그런지 아쉬움이 많이 남습니다.
+특히 기획에 시간이 너무 많이 들어 실제로 개발할 시간이 절대적으로 부족해 구현하지 못한 기능들도 있다는 것과 시간에 쫓겨 작성한 코드를 제대로 이해하지 못한 부분들이 있다는 것이 아쉽습니다.
+이미 끝난 시점에 누구를 탓하고 싶진 않지만, 기업 연계 프로젝트를 준비할 때 기업 측은 물론이고 부트 캠프를 진행하는 측에서도 좀 더 심도 있게 진행하고 검증 과정을 거쳐서 기업을 선정했으면 좋겠다는 생각이 많이 들었습니다.
+다음 과정부터는 **최종**이라는 말의 무게를 좀 더 생각했으면 합니다.
+
+이번 프로젝트를 진행하며, 소통을 위한 **노션 • 슬랙 • 게더타운**, 디자인과 기획을 확인하기 위한 **피그마 • 제플린**, 백엔드와 소통하기 위한 **포스트맨** 그리고 프로젝트를 관리하기 위한 **깃허브**의 각종 기능들(프로젝트, 이슈, 템플릿)을 활용해 최대한 도입하고 익숙해지려고 노력한 것 같습니다.
+소통 역시 다른 프로젝트와 달리 가장 활발히 했던 기억이 있습니다. 프론트엔드끼리는 매일 1시에 모여서 10~15분 정도 데일리 스크럼을 통해 각자 진행 상황과 의문점을 공유했고 각 기능의 담당자들과도 활발히 소통하였습니다. 이런 소통들이 모여 최우수 프로젝트로 선정될 수 있었던 것 같습니다.
+11명의 인원들이 소통하는 것은 사실 쉽지 많은 않은 일인데, 서로 얼굴 붉히는 일 없이 프로젝트를 마무리 한점에 박수를 보내고 싶습니다.
+물론 모든 파트의 사항들을 이해한 것은 아니지만, 한 달 남짓한 시간을 함께 보내며 다른 파트의 팀원들과 소통하는 법을 배우게 된 것 같습니다.
+포기하지 않고 끝까지 열심히 해준 우리 팀원들에게 고맙다고 전하고 싶습니다.
+
+그동안 시도를 안 해본 **커스텀 훅**을 만들어서 활용한 점과, 리액트의 `Suspense`를 사용해 선언적으로 비동기를 처리한 것, **타입 스크립트**와 **인증**에 한 걸음 더 가까워졌다는 점 등 기술적으로 제법 성장할 수 있었습니다.
+아쉬운 점도 많은데, 낙관적인 상황만을 전제로 개발하여 에러 처리를 잘 못한 것이 가장 아쉽습니다. 항상 프로젝트나 개발을 하며 느끼는 것인데, 에러나 예외 상황에 대해 그렇게 깊게 생각하는 것 같지 않습니다.
+이건 사실상 안전 불감증이 아닐까요? 예외 처리하는 법에 익숙해지도록 더 공부해야겠습니다.
+
+파이널 프로젝트를 진행하며 정말 많이 배우고 발전할 수 있었던 것 같습니다. 하나의 서비스를 배포한다는 것이 생각 보다 더 힘든 일이라는 것을 알게 되었습니다.
+하나의 서비스가 나오기 위해 얼마나 많은 회의와 소통이 있었을지, 새삼 선배 개발자들이 배포한 서비스들이 대단하다고 느껴집니다.
+
+앞으로 여기서 멈추는 것이 아니라 멋진 선배 개발자가 되기 위해 더 노력해야겠습니다.
+
+
+--- 
+
+
+- [프로젝트 저장소](https://github.com/yujiseok/jobkok)
+- [노션](https://www.notion.so/3-e6ecfb1d3143440f9afa58481929ab5a)
