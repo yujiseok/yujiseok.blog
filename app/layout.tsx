@@ -26,6 +26,7 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yujiseok.blog"),
   title: {
     default: "Yujiseok",
     template: "%s | Yujiseok",
