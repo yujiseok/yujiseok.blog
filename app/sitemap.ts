@@ -1,6 +1,7 @@
 import { allPosts } from "contentlayer/generated";
+import type { MetadataRoute } from "next";
 
-export default async function sitemap() {
+export default function sitemap(): MetadataRoute.Sitemap {
   const posts = allPosts.map((post) => ({
     url: `https://www.yujiseok.blog/post/${post.slug}`,
     lastModified: post.publishedAt,
