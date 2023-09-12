@@ -19,6 +19,8 @@ function DarkModeBtn() {
         <button
           type="button"
           className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
+          title="Toggle dark mode"
+          aria-label="Toggle theme"
           onClick={() => setTheme("light")}
         >
           <HiOutlineSun size={20} />
@@ -27,6 +29,8 @@ function DarkModeBtn() {
         <button
           type="button"
           className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
+          title="Toggle dark mode"
+          aria-label="Toggle theme"
           onClick={() => setTheme("dark")}
         >
           <HiOutlineMoon size={20} />
