@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { name, avatar } from "lib/home";
+import avatar from "app/avatar.jpg";
 
 export default function Home() {
   return (
@@ -10,7 +10,7 @@ export default function Home() {
             src={avatar}
             width={125}
             height={125}
-            alt={name}
+            alt="유지석"
             placeholder="blur"
             priority
             className="h-full w-full rounded-full object-cover"
@@ -20,7 +20,7 @@ export default function Home() {
           안녕하세요? 저의 블로그에 찾아와 주셔서 감사합니다. 😊
           <div>
             저는 프론트엔드 개발자{" "}
-            <h4 className="inline-block text-lg font-semibold">{name}</h4>
+            <h4 className="inline-block text-lg font-semibold">유지석</h4>
             입니다.
           </div>
           <p>앞으로 나아가는 것을 좋아합니다.</p>
