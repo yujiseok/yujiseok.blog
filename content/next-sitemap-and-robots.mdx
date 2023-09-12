@@ -1,0 +1,214 @@
+---
+title: Next.js를 활용해 sitemap.xml과 robots.txt 만들기
+publishedAt: "2023-09-12"
+summary: 정말 쉽게 만들 수 있습니다.
+---
+
+## 개요
+
+Next가 제공하는 API를 사용해 검색 엔진 최적화에 필요한 sitemap과 robots를 정말 쉽게 만드는 방법을 소개합니다.
+
+## 기존 방법
+
+### sitemap.xml
+
+제가 구현한 [기존 방법](https://yujiseok.blog/post/how-to-improve-seo#%EC%82%AC%EC%9D%B4%ED%8A%B8%EB%A7%B5)은 `node`의 `fs` 모듈을 사용해 mdx 파일들을 동적으로 읽어서 빌드 시 sitemap을 생성하도록 코드를 작성하였습니다.
+sitemap을 생성하는 코드가 타입스크립트로 작성되었기에, `node` 환경에서 실행시키기 위해 `ts-node` 패키지 설치와 `tsconfig.node.json` 파일을 생성해야 하는 번거로움이 있었습니다.
+
+```ts title="lib/sitemap.ts"
+import fs from "fs";
+
+const getDate = new Date().toISOString();
+
+function createSiteMap() {
+  const path = process.cwd();
+
+  const allPosts = fs.readdirSync(`${path}/content`);
+  const slugs = allPosts.map((post) => post.replace(".mdx", ""));
+
+  const postUrls = slugs
+    .map(
+      (slug) => `<url>
+        <loc>https://www.yujiseok.blog/post/${slug}</loc>
+        <lastmod>${getDate}</lastmod>
+      </url>`
+    )
+    .join("");
+
+  const generatedSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
+      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+    >
+      <url>
+        <loc>https://www.yujiseok.blog/</loc>
+      </url>
+      <url>
+        <loc>https://www.yujiseok.blog/about</loc>
+      </url>
+      <url>
+        <loc>https://www.yujiseok.blog/post</loc>
+      </url>
+      ${postUrls}
+    </urlset> `;
+
+  fs.writeFileSync("public/sitemap.xml", generatedSitemap, "utf-8");
+}
+
+createSiteMap();
+```
+
+### robots.txt
+
+robots.txt의 경우 동적으로 생성하는 sitemap과 다르게 `public` 폴더 내부에 정적인 파일을 생성해 둘 수 있었습니다.
+
+> 💡 물론 위의 두 방법 모두 정상적으로 작동하지만, 저는 Next가 기본적으로 제공하는 [API](https://nextjs.org/docs/app/api-reference/file-conventions/metadata)를 사용하는 것이 더 간결하고 Next에 맞는 방법이라고 생각하였고,
+> 블로그에 적용시키기로 하였습니다.
+
+## Next가 제공하는 API로 만들기
+
+> 💡 이때 모든 파일의 경로는 반드시 `app` 디렉토리 내부여야합니다.
+
+### sitemap.xml
+
+기본적으로 Next는 sitemap을 생성하는 두 가지 방법을 제공합니다.
+
+#### 1. 정적 `sitemap.xml`
+
+정적으로 생성하는 방법은 말 그대로 파일을 다음과 같이 정적으로 생성하는 것입니다.
+
+```xml title="app/sitemap.xml"
+<urlset
+	xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url>
+		<loc>https://www.yujiseok.blog</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/post</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/about</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/post/create-blog-with-nextjs</loc>
+		<lastmod>2023-03-15</lastmod>
+	</url>
+  <!-- ... -->
+</urlset>
+```
+
+정적으로 생성하는 방법은 페이지가 새로 생성될 때마다 매번 추가해 줘야 하는 번거로움이 있습니다.
+
+#### 2. 동적 `sitemap.xml`
+
+매번 추가하지 않고 동적으로 생성하기 위해, `sitemap.ts` 파일을 추가해 `Sitemap`을 반환하도록 하는 함수를 `export` 합니다.
+
+```ts title="metadata-interface.d.ts"
+type Sitemap = Array<{
+  url: string;
+  lastModified?: string | Date;
+  changeFrequency?:
+    | "always"
+    | "hourly"
+    | "daily"
+    | "weekly"
+    | "monthly"
+    | "yearly"
+    | "never";
+  priority?: number;
+}>;
+```
+
+```ts title="app/sitemap.ts"
+import { allPosts } from "contentlayer/generated";
+import type { MetadataRoute } from "next";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const posts = allPosts.map((post) => ({
+    url: `https://www.yujiseok.blog/post/${post.slug}`,
+    lastModified: post.publishedAt,
+  }));
+
+  const routes = ["", "/post", "/about"].map((route) => ({
+    url: `https://www.yujiseok.blog${route}`,
+    lastModified: new Date().toISOString().split("T")[0],
+  }));
+
+  return [...routes, ...posts];
+}
+```
+
+이때, 저는 [contentlayer](https://contentlayer.dev)를 사용해 mdx 컨텐츠를 관리하고 있기에, 우선 모든 포스트를 불러옵니다.
+불러온 포스트를 `map` 메서드를 통해 순회하면서 sitemap의 형식과 `Sitemap` 타입에 맞는 배열(`posts`)을 만들어 줍니다.
+
+또, 각 라우트에 맞는 sitemap 역시 필요하기에, 라우트 배열을 생성한 후 마찬가지로 `map` 메서드를 통해 순회해 새로운 배열(`routes`)을 만들어 줍니다.
+
+최종적으로 새로 생성한 두 배열을 스프레드 연산자를 통해 하나의 배열로 합친 후 반환합니다.
+
+> 👀 한눈에 봐도 기존 방식에 비해 간결해진 것을 알 수 있습니다.
+
+### robots.txt
+
+robots 역시 두 가지 방법을 제공합니다.
+
+#### 1. 정적 `robots.txt`
+
+```txt title="app/robots.txt"
+User-Agent: *
+Allow: /
+
+Host: https://yujiseok.blog
+Sitemap: https://yujiseok.blog/sitemap.xml
+```
+
+#### 2. 동적 `robots.txt`
+
+robots를 생성하기 위해 `robots.ts` 파일을 추가해 `Robots` 객체를 반환하도록 하는 함수를 `export` 합니다.
+
+```ts title="metadata-interface.d.ts"
+type Robots = {
+  rules:
+    | {
+        userAgent?: string | string[];
+        allow?: string | string[];
+        disallow?: string | string[];
+        crawlDelay?: number;
+      }
+    | Array<{
+        userAgent: string | string[];
+        allow?: string | string[];
+        disallow?: string | string[];
+        crawlDelay?: number;
+      }>;
+  sitemap?: string | string[];
+  host?: string;
+};
+```
+
+```ts title="app/robots.ts"
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: "*",
+      allow: "/",
+    },
+    sitemap: "https://yujiseok.blog/sitemap.xml",
+    host: "https://yujiseok.blog",
+  };
+}
+```
+
+이와 같이 Next가 제공하는 API를 사용하면 검색 엔진 최적화에 필요한 파일들을 정말 간단하게 생성할 수 있습니다.
+
+---
+
+#### 출처
+
+- https://nextjs.org/docs/app/api-reference/file-conventions/metadata
