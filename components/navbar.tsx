@@ -2,7 +2,7 @@
 import Link from "next/link";
 import DarkModeBtn from "./darkModeBtn";
 import { usePathname } from "next/navigation";
-
+import { motion } from "framer-motion";
 interface NavItem {
   name: "home" | "about" | "post";
   href: "/" | "/about" | "/post";
@@ -36,13 +36,18 @@ function Navbar() {
         </h1>
         <ul className="flex items-center gap-3 md:gap-4">
           {NAV_ITEMS.map(({ name, href }) => (
-            <li
-              key={name}
-              className={`${
-                pathname === href ? "underline underline-offset-2" : ""
-              } `}
-            >
+            <li key={name} className="relative">
               <Link href={href}>{name}</Link>
+              {pathname === href && (
+                <motion.div
+                  layoutId="active-link"
+                  transition={{
+                    type: "spring",
+                    duration: 0.5,
+                  }}
+                  className="absolute h-[1px] w-full bg-black dark:bg-white"
+                />
+              )}
             </li>
           ))}
 
