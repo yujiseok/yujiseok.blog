@@ -21,7 +21,9 @@ function CustomLink(props: any) {
 }
 
 function CustomImage(props: any) {
-  return <Image alt={props.alt} {...props} className="rounded-md" />;
+  return (
+    <Image alt={props.alt} {...props} className="mx-auto rounded-md" priority />
+  );
 }
 
 const components = {
