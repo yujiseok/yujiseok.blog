@@ -8,10 +8,9 @@ export default function Home() {
         <div className="flex h-[100px] w-[100px] flex-shrink-0 md:h-[125px] md:w-[125px]">
           <Image
             src={avatar}
-            width={125}
-            height={125}
             alt="유지석"
             placeholder="blur"
+            quality={100}
             priority
             className="h-full w-full rounded-full object-cover"
           />
