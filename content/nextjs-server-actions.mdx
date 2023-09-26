@@ -1,0 +1,304 @@
+---
+title: "Next.js 서버 액션 알아보기"
+publishedAt: "2023-09-26"
+summary: Next의 기가 막힌 서버 액션에 대해 알아봅니다.
+---
+
+## 개요
+
+서버 액션이 무엇인지 예제와 함께 정리합니다.
+
+## 서버 액션
+
+서버 액션은 폼의 뮤테이션(생성, 업데이트, 삭제)을 할 수 있게 해주는 넥스트의 아주 강력한 기능입니다.
+서버 액션을 사용하면, API 엔드포인트를 생성하지 않고도 컴포넌트 내에서 비동기 함수를 직접 정의할 수 있습니다.
+
+서버 액션을 사용하려면 `next.config.js` 파일 내부에 다음과 같이 설정을 추가해야 합니다:
+
+```js title="next.config.js"
+module.exports = {
+  experimental: {
+    serverActions: true,
+  },
+};
+```
+
+## 서버 액션을 사용해 폼 다루기
+
+아주 간단한 투두 앱을 만들며, 서버 액션을 이해해 봅니다.
+
+### 프로젝트 설정
+
+우선 디렉토리에 넥스트 앱을 생성합니다.
+
+```bash
+npx createTodo-next-app@latest
+```
+
+간단한 앱을 만들기 위해서 `prisma`와 `sqlite`를 사용합니다.
+
+```bash
+npm install prisma --save-dev
+npx prisma init --datasource-provider sqlite
+```
+
+설치가 끝나면, 투두를 위한 prisma 스키마를 정의해 줍니다.
+
+```prisma title="prisma/schema.prisma"
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 투두 스키마
+model Todos {
+  id        Int      @id @default(autoincrement())
+  title     String
+  createTododAt DateTime @default(now())
+}
+```
+
+스키마를 정의했으니 실제 데이터베이스 테이블에 스키마를 다음과 같은 명령어로 추가해 줍니다.
+
+```bash
+npx prisma db push
+```
+
+이제 앱에서 사용할 prisma의 인스턴스를 생성해 줍니다.
+
+```ts title="lib/prisma.ts"
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+const client = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalThis.prisma = client;
+
+export default client;
+```
+
+인스턴스가 존재한다면, 기존의 인스턴스를 사용하고 없을 시 새로 만들어줍니다.
+
+### UI 및 서버 액션 정의하기
+
+이제 본격적으로 코드를 작성하며 서버 액션을 살펴봅니다.
+우선 `app/page.tsx`의 보일러 플레이트 코드들을 제거한 후 폼을 위한 UI을 진행합니다.
+
+```tsx title="page.tsx" {8}
+import { createTodo } from "@/action";
+
+const page = () => {
+  return (
+    <section className="px-16 py-12">
+      <div className="container mx-auto flex flex-col gap-8">
+        <h1 className="text-lg text-gray-900">Todos</h1>
+        <form action={createTodo} className="flex max-w-sm flex-col gap-4">
+          <input
+            type="text"
+            name="title"
+            className="rounded-md border border-slate-300 px-2 py-1 outline-none"
+            required
+          />
+          <button className="rounded-md bg-slate-300 py-2 hover:shadow-sm">
+            submit
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+};
+export default page;
+```
+
+위의 코드에서 중요한 부분은 바로 폼 태그의 `action`입니다.
+서버 액션은 기존 리액트에서 클릭 이벤트 또는 서브밋 이벤트로 폼을 제출하는 방식이 아닌, 폼의 action을 사용해 서버로 폼의 데이터를 제출합니다.
+
+이때 `<form action={createTodo}>`은 데이터로 [FormData](https://developer.mozilla.org/ko/docs/Web/API/FormData) 타입을 전달받습니다.
+FormData 타입을 사용하면 기존에 `useState` 또는 `useRef`로 인풋의 값을 가져올 필요 없이, `formData.get(name)` 메서드를 통해 인풋의 값을 가져올 수 있습니다.
+
+이제 투두 생성을 위한 서버 액션을 정의합니다.
+
+> 서버 액션을 정의하기 위해선 `"use server"` 지시어를 추가해야 합니다. 이때 인라인으로 함수 내부 최상단에 작성하거나, 별개의 파일로 액션을 분리해 파일 최상단에 작성할 수 있습니다.
+
+액션을 담당하는 별도의 파일을 생성해, 액션을 관리합니다. 파일 최상단에 `"use server"`를 추가해 줍니다.
+이렇게 하면 모든 함수에 지시어를 추가해야 하는 수고스러움을 덜 수 있습니다.
+
+```ts title="action/index.ts" {4-5}
+"use server";
+import client from "@/lib/prisma";
+
+export const createTodo = async (formData: FormData) => {
+  const title = formData.get("title") as string;
+
+  await client.todos.createTodo({
+    data: {
+      title,
+    },
+  });
+};
+```
+
+인풋의 `name` 속성과 `get` 메서드를 사용해 인풋의 `title` 값을 가져옵니다.
+
+추가된 투두를 가져오는 `getTodos` 함수를 생성해 줍니다.
+
+```ts title="action/index.ts"
+// ...
+
+export const getTodos = async () => {
+  const todos = await client.todos.findMany();
+
+  return todos;
+};
+```
+
+이제 투두를 보여주기 위한 UI을 추가합니다. 이때, 넥스트는 기본적으로 [서버 컴포넌트](https://www.yujiseok.blog/post/react-server-components)이므로 컴포넌트 자체에서 비동기를 처리할 수 있습니다.
+
+```tsx title="page.tsx" {8}
+import { createTodo, getTodos } from "@/action";
+
+const page = () => {
+  const todos = await getTodos();
+
+  return (
+    <section className="px-16 py-12">
+      <div className="container mx-auto flex flex-col gap-8">
+        {/* ... */}
+
+        <ul className="max-w-sm">
+          {todos.map((todo) => (
+            <li key={todo.id} className="mb-4 flex justify-between">
+              {todo.title} <DeleteButton id={todo.id} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+};
+export default page;
+```
+
+이제 서버 액션을 사용해 투두를 추가해 봅시다.
+
+<Image
+  src="/images/server-actions/refresh.gif"
+  width={600}
+  height={500}
+  alt="새로고침"
+/>
+
+혹시 몇 가지 개선할 사항을 찾으셨나요? 좀 더 나은 유저 경험을 주기 위해 개선할 사항들은 다음과 같습니다:
+
+#### 1. 새로고침 대신, 데이터 재검증을 통한 캐시 무효화
+
+데이터 재검증을 하기 위해서 가장 쉬운 방법은 전체 라우트 세그먼트를 무효화하는 [revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath)를 사용하는 것입니다.
+`createTodo` 함수에 `revalidatePath`를 추가해 줍니다.
+
+```ts title="action/index.ts" {13}
+"use server";
+import client from "@/lib/prisma";
+
+export const createTodo = async (formData: FormData) => {
+  const title = formData.get("title") as string;
+
+  await client.todos.createTodo({
+    data: {
+      title,
+    },
+  });
+
+  revalidatePath("/todos");
+};
+```
+
+<Image
+  src="/images/server-actions/no-refresh.gif"
+  width={600}
+  height={500}
+  alt="새로고침 없이"
+/>
+
+revalidatePath를 추가함으로써 자동으로 데이터가 재검증 되어 추가된 투두를 즉시 확인할 수 있게 되었습니다.
+
+#### 2. 유저에게 현재 폼이 상태 알리기
+
+현재 UI에서는 유저가 폼이 서버에 제출 중인 로딩 상태를 알 수 없습니다.
+리액트의 실험적인 훅인 `useFormStatus`를 통해 로딩 상태를 알 수 있게 되었습니다.
+
+훅을 사용하기 위해선, **클라이언트 컴포넌트**여야 하므로 제출 버튼을 `<SubmitButton />` 컴포넌트로 분리해 줍니다.
+
+> 클라이언트 컴포넌트를 생성할 시, 트리 최하단의 컴포넌트를 클라이언트 컴포넌트로 만드는 것이 좋습니다.
+
+```tsx title="components/SubmitButton.tsx" {1-2}
+"use client";
+import { experimental_useFormStatus as useFormStatus } from "react-dom";
+
+const SubmitButton = () => {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      aria-disabled={pending}
+      disabled={pending}
+      className="rounded-md bg-slate-300 py-2 hover:shadow-sm disabled:opacity-70"
+    >
+      {pending ? "submitting..." : "submit"}
+    </button>
+  );
+};
+export default SubmitButton;
+```
+
+`useFormStatus` 훅은 `pending` 상태를 반환해 줍니다.
+이제 폼 내부에 컴포넌트를 불러온 후 투두를 추가해 봅시다.
+
+<Image
+  src="/images/server-actions/pending.gif"
+  width={600}
+  height={500}
+  alt="제출 상태 표시"
+/>
+
+`pending`을 통해 현재 폼이 서버에 제출 중인 것을 알 수 있게 되었습니다.
+
+> `useFormStatus` 훅은 오직 서버 액션을 사용하는 폼의 자식 요소에서만 사용 가능합니다.  
+> 이외에도 `useFormState` 훅을 사용한 에러 핸들링, `useOptimistic` 훅을 사용한 옵티미스틱 UI가 가능합니다.
+
+## 서버 액션의 장점
+
+서버 액션의 장점은 다음과 같습니다:
+
+1. 기존에 리액트에서 폼을 다루는 방식에 비해, 훨씬 간결하게 폼을 다룰 수 있습니다.
+
+서버 액션을 사용하면 `useState`나 `useRef` 없이 `FormData`만을 사용해 폼을 다룰 수 있습니다.
+
+2. 로딩 상태를 쉽게 알 수 있습니다.
+
+기존 리액트에서 로딩 상태를 다루기 위해서는 로딩 상태를 만들어, 직접 로딩의 상태를 다루어야 했는데, `useFormStatus` 훅을 사용하면 폼이 현재 제출 중인 로딩 상태인지 쉽게 알 수 있습니다.
+
+3. 자바스크립트 없이도 서버 액션을 사용할 수 있습니다.
+
+<Image
+  src="/images/server-actions/no-js.gif"
+  width={600}
+  height={500}
+  alt="자바스크립트 없이"
+/>
+
+서버 액션을 사용하면 기존 리액트의 방식보다 효율적으로 폼을 다룰 수 있으며, 로딩 상태와 옵티미스틱 UI를 쉽게 구현할 수 있도록 해줍니다.
+
+---
+
+출처
+
+- https://nextjs.org/docs/app/building-your-application/data-fetching/forms-and-mutations
+- https://www.youtube.com/watch?v=dDpZfOQBMaU&ab_channel=LeeRobinson
+- [예제](https://github.com/yujiseok/next-server-action)
