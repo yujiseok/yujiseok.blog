@@ -59,7 +59,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${pretendard.variable} font-sans`}>
-      <head />
       <body className="mx-2 flex flex-col bg-slate-50 antialiased transition-colors delay-75 dark:bg-slate-800">
         <ThemeProviders>
           <Navbar />
