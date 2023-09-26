@@ -12,7 +12,7 @@
     "@vercel/analytics": "^0.1.11",
     "contentlayer": "^0.3.2",
     "framer-motion": "^10.16.4",
-    "next": "13.5.3",
+    "next": "13.4.19",
     "next-contentlayer": "^0.3.2",
     "next-themes": "^0.2.1",
     "react": "18.2.0",
@@ -24,6 +24,7 @@
     "rehype-pretty-code": "^0.9.5",
     "rehype-slug": "^5.1.0",
     "remark-gfm": "^3.0.1",
+    "sharp": "^0.32.6",
     "shiki": "^0.14.1"
   },
   "devDependencies": {
