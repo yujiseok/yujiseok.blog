@@ -202,6 +202,9 @@ export async function generateMetadata({
 
 위 태그 외에도 `changefreq`, `priorty` 등의 선택 옵션 태그가 있습니다.
 
+> 🚨 아래의 생성 방식은 레가시한 방식입니다. 넥스트는 현재 [사이트맵](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)과 [robots.txt](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots)를 생성하는 빌트인 API를 제공합니다.
+> 빌트인 API를 사용해 구현하는 방식은 이 [포스트](https://yujiseok.blog/post/next-sitemap-and-robots)에서 확인하실 수 있습니다.
+
 사이트맵을 생성하기 위해 `node`의 `fs` 모듈을 가져옵니다.
 현재 작업 디렉토리의 경로를 사용해 mdx 파일들이 있는 content 폴더를 읽어들입니다.
 모든 파일들을 `map` 메서드를 사용해 순회하면서, `.mdx` 확장자를 `replace` 메서드를 사용해 제거합니다.
