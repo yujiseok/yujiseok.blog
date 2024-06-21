@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import ThemeProviders from "@/components/providers";
-import { AnalyticsWrapper } from "@/components/analytics";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const pretendard = localFont({
   src: [
@@ -67,7 +69,9 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProviders>
-        <AnalyticsWrapper />
+        <Analytics />
+        <SpeedInsights />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID ?? ""} />
       </body>
     </html>
   );
