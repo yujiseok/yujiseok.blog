@@ -40,8 +40,7 @@ pre {
   margin-top: 0 !important;
 }
 
-div[data-rehype-pretty-code-title] {
-  /* background-color: #1f2937; */
+figcaption[data-rehype-pretty-code-title] {
   @apply bg-[#1f2937] dark:bg-[#0F141D];
   color: #fff;
   padding: 0.5em 1.14286em;
@@ -98,10 +97,10 @@ pre code {
   color: gray;
 }
 
-[data-rehype-pretty-code-fragment] .line-highlighted {
+span[data-highlighted-line] {
   @apply bg-slate-300 bg-opacity-10;
 }
 
-[data-rehype-pretty-code-fragment] .word-highlighted {
+mark[data-highlighted-chars] {
   @apply rounded-md bg-slate-300 bg-opacity-10 p-1;
 }
