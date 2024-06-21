@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Balancer from "react-wrap-balancer";
 
 export const metadata: Metadata = {
   title: "About",
@@ -12,10 +11,8 @@ function About() {
       <h1 className="mb-6 text-3xl font-bold">About Me</h1>
       <section className="mb-12">
         <h3 className="text-4xl font-semibold">
-          <Balancer>
-            안녕하세요 <br />
-            저는 유지석입니다.
-          </Balancer>
+          안녕하세요 <br />
+          저는 유지석입니다.
         </h3>
 
         <div className="my-6 leading-7">
