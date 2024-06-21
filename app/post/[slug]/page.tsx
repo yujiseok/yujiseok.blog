@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { allPosts } from "contentlayer/generated";
-import Balancer from "react-wrap-balancer";
-import { Mdx } from "@/components/mdx";
 
-export async function generateStaticParams() {
-  return allPosts.map((post) => ({
+import { Mdx } from "@/components/mdx";
+import { getAllPosts } from "@/lib/utils";
+
+export function generateStaticParams() {
+  const posts = getAllPosts();
+
+  return posts.map((post) => ({
     slug: post.slug,
   }));
 }
@@ -14,16 +16,18 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata | undefined> {
-  const post = allPosts.find((post) => post.slug === params.slug);
+  const post = getAllPosts().find((post) => post.slug === params.slug);
+
   if (!post) {
     return;
   }
+
   const {
     title,
     publishedAt: publishedTime,
     summary: description,
-    slug,
-  } = post;
+    image,
+  } = post.metadata;
 
   return {
     title,
@@ -33,13 +37,13 @@ export async function generateMetadata({
       description,
       type: "article",
       publishedTime,
-      url: `https://www.yujiseok.blog/post/${slug}`,
+      url: `https://www.yujiseok.blog/post/${post.slug}`,
     },
   };
 }
 
 const Post = ({ params }: { params: { slug: string } }) => {
-  const post = allPosts.find((post) => post.slug === params.slug);
+  const post = getAllPosts().find((post) => post.slug === params.slug);
   if (!post) {
     return false;
   }
@@ -48,18 +52,18 @@ const Post = ({ params }: { params: { slug: string } }) => {
     <section>
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">
-          <Balancer>{post.title}</Balancer>
+          <>{post.metadata.title}</>
         </h1>
         <h4 className="font-light text-gray-700 dark:text-gray-400">
-          {post.summary}
+          {post.metadata.summary}
         </h4>
         <p>
-          <small>{post.publishedAt}</small>{" "}
-          <small>{post.readingTime.text}</small>
+          <small>{post.metadata.publishedAt}</small>{" "}
+          {/* <small>{post.readingTime.text}</small> */}
         </p>
       </div>
 
-      <Mdx code={post.body.code} />
+      <Mdx source={post.content} />
     </section>
   );
 };

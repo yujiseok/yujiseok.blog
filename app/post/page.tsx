@@ -1,5 +1,5 @@
+import { getAllPosts } from "@/lib/utils";
 import type { Metadata } from "next";
-import { allPosts } from "contentlayer/generated";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -8,29 +8,24 @@ export const metadata: Metadata = {
 };
 
 function PostPage() {
+  const posts = getAllPosts();
+
   return (
     <section>
       <h1 className="mb-6 text-3xl font-bold">Post</h1>
-
-      {allPosts
-        .sort((a, b) => {
-          if (new Date(a.publishedAt) > new Date(b.publishedAt)) return -1;
-
-          return 1;
-        })
-        .map((post) => (
-          <article key={post.slug} className="mb-6">
-            <Link href={`/post/${post.slug}`}>
-              <h2 className="text-xl font-semibold">{post.title}</h2>
-              <h6 className="my-1 text-sm font-normal text-gray-400">
-                {post.summary}
-              </h6>
-              <p>
-                <small className="mr-2">{post.publishedAt}</small>
-              </p>
-            </Link>
-          </article>
-        ))}
+      {posts.map(({ metadata, slug }) => (
+        <article key={slug} className="mb-6">
+          <Link href={`/post/${slug}`}>
+            <h2 className="text-xl font-semibold">{metadata.title}</h2>
+            <h6 className="my-1 text-sm font-normal text-gray-400">
+              {metadata.summary}
+            </h6>
+            <p>
+              <small className="mr-2">{metadata.publishedAt}</small>
+            </p>
+          </Link>
+        </article>
+      ))}
     </section>
   );
 }
