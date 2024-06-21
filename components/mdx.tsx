@@ -1,6 +1,7 @@
-import { useMDXComponent } from "next-contentlayer/hooks";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
+import rehypePrettyCode, { Options } from "rehype-pretty-code";
 
 function CustomLink(props: any) {
   const href = props.href;
@@ -17,7 +18,7 @@ function CustomLink(props: any) {
     return <a {...props} />;
   }
 
-  return <a target="_blank" rel="noopener noreferrer" {...props} />;
+  return <a target="_blank" rel="noreferrer" {...props} />;
 }
 
 function CustomImage(props: any) {
@@ -26,17 +27,27 @@ function CustomImage(props: any) {
   );
 }
 
-const components = {
+const mdxComponents = {
   a: CustomLink,
   Image: CustomImage,
 };
 
-export function Mdx({ code }: { code: string }) {
-  const Component = useMDXComponent(code);
+const options: Options = {
+  theme: "material-theme-palenight",
+};
 
+export function Mdx({ components, source }: any) {
   return (
     <article className="prose max-w-3xl break-keep dark:prose-invert prose-h1:text-2xl prose-a:break-all">
-      <Component components={{ ...components }} />
+      <MDXRemote
+        source={source}
+        components={{ ...mdxComponents, ...(components || {}) }}
+        options={{
+          mdxOptions: {
+            rehypePlugins: [[rehypePrettyCode, options]],
+          },
+        }}
+      />
     </article>
   );
 }
