@@ -58,22 +58,17 @@ function About() {
               LinkedIn
             </a>
           </li>
-          <li>
-            <a
-              href="https://yujiseok.notion.site/c03d5dd5b09d45789a29e3e7221202a3"
-              rel="noopener noreferrer"
-              target="_blank"
-              className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
-            >
-              Portfolio
-            </a>
-          </li>
         </ul>
       </section>
 
       <section className="mb-12">
         <h4 className="mb-6 text-2xl font-semibold">Career</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
+          <li>
+            <div>
+              <p>데이원컴퍼니 (2023.11 ~ )</p>
+            </div>
+          </li>
           <li>
             <div>
               <p>어반데이터랩 (2022.01 - 2022.09)</p>
