@@ -1,12 +1,12 @@
 import "./globals.css";
 import localFont from "next/font/local";
 import type { Metadata } from "next";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
-import ThemeProviders from "@/components/providers";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import ThemeProviders from "@/app/components/provider";
+import Navbar from "@/app/components/navbar";
+import Footer from "@/app/components/footer";
 
 const pretendard = localFont({
   src: [
@@ -61,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${pretendard.variable} font-sans`}>
-      <body className="mx-2 flex flex-col bg-slate-50 antialiased transition-colors delay-75 dark:bg-slate-800">
+      <body className="mx-2 flex flex-col bg-neutral-50 antialiased transition-colors delay-100 dark:bg-neutral-800">
         <ThemeProviders>
           <Navbar />
           <main className="mx-auto mt-14 w-full max-w-3xl px-4">
@@ -71,7 +71,8 @@ export default function RootLayout({
         </ThemeProviders>
         <Analytics />
         <SpeedInsights />
-        <GoogleAnalytics gaId={process.env.GA_ID ?? ""} />
+
+        <GoogleAnalytics gaId={process.env.GA_ID!} />
       </body>
     </html>
   );

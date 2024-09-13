@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { Mdx } from "@/components/mdx";
 import { getAllPosts } from "@/lib/utils";
+import { Mdx } from "@/app/components/mdx";
 
 export function generateStaticParams() {
   const posts = getAllPosts();

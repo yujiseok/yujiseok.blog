@@ -1,14 +1,11 @@
 "use client";
+
 import Link from "next/link";
 import DarkModeBtn from "./darkModeBtn";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-interface NavItem {
-  name: "home" | "about" | "post";
-  href: "/" | "/about" | "/post";
-}
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   {
     name: "home",
     href: "/",
@@ -21,8 +18,7 @@ const NAV_ITEMS: NavItem[] = [
     name: "post",
     href: "/post",
   },
-];
-
+] as const;
 function Navbar() {
   let pathname = usePathname();
 
@@ -51,7 +47,7 @@ function Navbar() {
             </li>
           ))}
 
-          <li>
+          <li className="inline-flex">
             <DarkModeBtn />
           </li>
         </ul>
