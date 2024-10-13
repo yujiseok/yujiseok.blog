@@ -2,6 +2,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
 import rehypePrettyCode, { Options } from "rehype-pretty-code";
+import Typewriter from "./2024-gencon/typewriter";
 
 function CustomLink(props: any) {
   const href = props.href;
@@ -30,6 +31,7 @@ function CustomImage(props: any) {
 const mdxComponents = {
   a: CustomLink,
   Image: CustomImage,
+  Typewriter,
 };
 
 const options: Options = {
