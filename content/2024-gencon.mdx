@@ -1,0 +1,294 @@
+---
+title: 2024 젠콘 랜딩 페이지 개발 회고
+publishedAt: "2024-10-12"
+summary: framer motion을 곁들인
+---
+
+<Image
+  src="/images/2024-gencon/2024-gencon.webp"
+  width={2400}
+  height={500}
+  alt="2024-gencon"
+/>
+
+## 개요
+
+평소 인터랙티브한 웹 개발에 관심이 많았는데, 이런 요소가 필요한 컨퍼런스의 랜딩 페이지 개발을 맡게 되었습니다.
+이때, `Framer Motion`을 사용해 보고 싶다는 생각이 들어서 이번 프로젝트에 적용해 보았습니다.
+이번 글에서는 젠콘 랜딩 페이지 개발을 진행하면서 제가 느끼고 배운 점들을 공유하겠습니다.
+
+> 실제 랜딩 페이지는 [gencon2024.fastcampus.co.kr](https://gencon2024.fastcampus.co.kr)에서 확인하실 수 있습니다.
+
+## 젠콘이란?
+
+생성형 AI(Gen AI)로 인한 업계의 변화와 트렌드, 그리고 AI 서비스를 위한 데이터셋과 클라우드 구축 방법을 다루는 컨퍼런스입니다.
+또, AI 산업의 성장에 따른 투자 전망에 대해 기업과 벤처 투자자들이 의견을 공유하는 자리이기도 합니다.
+
+세션은 총 9개로 구성 되어있었고 엔비디아, 마이크로소프트, 깃허브 등 글로벌 기업과 스노우, 콕스웨이브 등 국내 기업의 연사들이 참여했습니다.
+
+랜딩 페이지의 경우 총 9개의 섹션으로 구성되어 있으며, 각 섹션은 스크롤 ⋅ 뷰포트에 기반한 애니메이션과 타입라이터 효과 등을 사용했습니다.
+각 애니메이션을 `Framer Motion`을 통해 구현하는 방법과 랜딩 페이지에 구현한 기능을 소개하겠습니다.
+
+## 스크롤 기반 애니메이션
+
+메인 섹션은 유저가 랜딩 시 가장 먼저 보는 섹션으로 다른 섹션보다 중요도가 높다는 판단을 하였습니다.
+중요성에 의거하여, 기획 단계에서 스크롤 기반 애니메이션을 적용하여 유저의 몰입도를 높이기로 결정했습니다.  
+디자이너의 레퍼런스를 참조하여 스크롤에 따라 섹션이 포커스 되고 타이틀이 나타나는 애니메이션을 구현했습니다.
+
+부드러운 스크롤을 제공하는 `lenis` 라이브러리를 통해, 유저에게 좀 더 자연스러운 스크롤 경험을 제공했습니다.
+lenis의 설정은 다음과 같습니다:
+
+> 세상 간단한 설정으로 유저에게 부드러운 스크롤을 제공할 수 있습니다.
+
+```tsx title="RootLayout.tsx"
+import { ReactLenis } from "lenis/react";
+
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
+  return <ReactLenis root>{children}</ReactLenis>;
+};
+```
+
+이제 실제로 스크롤 위치에 따라 요소의 애니메이션을 제어하는 방법에 대해 알아보겠습니다.
+스크롤의 위치에 따라 요소의 애니메이션을 제어하기 위해선 `Framer Motion`의 `useScroll` 훅을 사용해야 합니다.
+
+해당 훅의 인터페이스는 다음과 같습니다:
+
+```tsx
+declare function useScroll({
+  container,
+  target,
+  layoutEffect,
+  ...options
+}?: UseScrollOptions): {
+  scrollX: MotionValue<number>;
+  scrollY: MotionValue<number>;
+  scrollXProgress: MotionValue<number>;
+  scrollYProgress: MotionValue<number>;
+};
+```
+
+- container: 스크롤 위치를 감지하는 스크롤이 가능한 컨테이너, 기본값은 윈도우 뷰포트
+- target: 컨테이너의 스크롤이 가능한 영역
+- options
+  - axis: 스크롤 방향, 기본값은 `"y"`
+  - offset: 스크롤의 진행률을 확인하는 데 사용되는 오프셋 값, 기본값은 `["start start", "end end"]`
+
+이 훅은 스크롤의 위치에 따라 애니메이션을 제어할 수 있는 모션 값을 반환합니다.
+
+- `scrollX` / `Y`: 스크롤의 x, y 축의 절대 위치
+- `scrollXProgress` / `YProgress`: 스크롤의 x, y 축의 상대적인 스크롤 진행률 (0 ~ 1)
+
+화면에 포커스 되는 효과를 구현하기 위해 CSS의 clip-path를 사용했습니다.
+`clip-path`는 요소의 클리핑 범위를 제어하는 속성으로, useScroll 훅을 통해 반환된 모션 값을 사용하여 요소의 클리핑 범위를 제어할 수 있습니다.
+애니메이션을 위해, 스크롤의 진행률 사용해야 하므로 `scrollYProgress`을 사용했습니다.
+
+이때, 모션 값을 새로운 값으로 변환하기 위해 `useTransform` 훅을 사용했습니다.
+useTransform 훅은 주어진 입출력 범위에 따라 모션 값을 새로운 값으로 변환합니다.
+
+해당 훅의 인자는 다음과 같습니다:
+
+```tsx
+useTransform(value, input, output, options);
+```
+
+두 훅을 사용해 스크롤에 따라 요소의 애니메이션을 제어하는 코드의 [예시](https://codesandbox.io/p/sandbox/9vh82d?file=%2Fsrc%2Fstyles.css%3A21%2C1)는 다음과 같습니다:
+
+```tsx
+const target = useRef(null);
+const { scrollYProgress } = useScroll({
+  target,
+  offset: ["start end", "end end"],
+});
+
+const screenStyle: MotionStyle = {
+  clipPath: useTransform(
+    scrollYProgress,
+    [0, 0.9],
+    ["circle(200%)", "circle(0%)"],
+  ),
+};
+```
+
+위 코드에서 `screenStyle`은 스크롤의 진행률에 따라 요소의 `clipPath`를 제어하는 스타일 객체입니다.
+이렇게 생성된 스타일 객체를 `motion` 컴포넌트의 `style` 속성에 전달하면 스크롤에 따라 요소의 애니메이션을 제어할 수 있습니다.
+
+```tsx
+// ...
+
+<div className="App" ref={target}>
+  <motion.div className="screen" style={screenStyle}>
+    Clipping Test
+  </motion.div>
+</div>
+```
+
+## 타입라이터 애니메이션
+
+<Image
+  src="/images/2024-gencon/typewriter.gif"
+  width={1200}
+  height={400}
+  alt="typewriter"
+/>
+
+> 라네요? 🤔
+
+타입라이터 효과는 텍스트가 한 글자씩 나타나는 애니메이션 효과입니다.
+최근에 챗지피티와 같은 대화형 인공지능 서비스에서 많이 사용되는 효과로, 유저에게 자연스러운 대화 경험을 제공합니다.  
+이번 컨퍼런스가 AI에 관한 컨퍼런스라는 점을 고려하여, 타입라이터 효과를 적용하기로 결정했습니다.
+
+우선 타입라이터 컴포넌트를 어떠한 방식으로 설계할지 고민했습니다.
+이때 최대한 재사용성이 높은 컴포넌트를 만들기로 결정했습니다.
+재사용성을 높이기 위해, 타입라이터 컴포넌트는 다음과 같은 인터페이스를 갖도록 하였습니다:
+
+1. 기존 `HTMLElement`의 속성을 상속받기 위한 `Framer Motion`의 `HTMLMotionProps`
+2. 유연한 태그 변경을 위한 `as` 속성을 갖는 폴리모피즘 컴포넌트
+   - 폴리모피즘은 하나의 인터페이스나 추상 클래스를 사용하여 여러 클래스를 만들 수 있는 객체지향 프로그래밍의 원리입니다.
+   - `as` 속성을 통해 동일한 로직을 유지하되 다양한 HTML 태그로 컴포넌트를 사용할 수 있습니다.
+   - 이때 `as` 속성은 타입 안정성을 위해 유니언 타입을 갖습니다.
+3. 타입라이터의 실제 텍스트를 전달받는 `text` 속성
+
+이렇게 설계된 타입라이터 컴포넌트는 다음과 같이 작성할 수 있습니다:
+
+```tsx title="Typewriter.tsx"
+type TypewriterTags = "p" | "span" | "div" | "h2";
+
+interface TypewriterProps extends HTMLMotionProps<"p"> {
+  as?: TypewriterTags;
+  text: string;
+  className?: string;
+}
+
+export const sentenceVariants: Variants = {
+  visible: { transition: { staggerChildren: 0.025 } },
+};
+
+export const charVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { opacity: { duration: 0.1 } } },
+};
+
+const renderCharacters = (text: string) =>
+  Array.from(text).map((char, i) => (
+    <motion.span key={`${char}-${i}`} variants={charVariants}>
+      {char}
+    </motion.span>
+  ));
+
+const Typewriter = ({
+  as = "h2",
+  text,
+  className,
+  ...props
+}: TypewriterProps) => {
+  const MotionComponent = motion[as] as React.ElementType;
+
+  return (
+    <MotionComponent
+      variants={sentenceVariants}
+      initial="hidden"
+      animate="visible"
+      className={className}
+      {...props}
+    >
+      {renderCharacters(text)}
+    </MotionComponent>
+  );
+};
+```
+
+`motion` 컴포넌트의 `variants` prop은 애니메이션의 상태를 정의하는 객체입니다.
+객체에 애니메이션에 필요한 초기, 최종, 숨김 등 다양한 상태를 미리 정의할 수 있습니다.
+이를 통해 복잡한 애니메이션 상태를 쉽게 관리할 수 있습니다.
+
+만약 타입라이터 컴포넌트가 뷰포트에 진입할 때 애니메이션을 실행하고 싶다면, `Framer Motion`의 `useInView` 훅을 사용할 수 있습니다.
+타겟이 되는 요소를 `ref`를 통해 참조하고, `amount` 해당 요소가 뷰포트에 얼마나 보여야 애니메이션을 실행할지 정합니다.
+이외에도 `once` 옵션을 통해 애니메이션을 한 번만 실행할지 여부를 설정할 수 있습니다.
+
+```tsx title="useInViewAnimation.ts"
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+
+const useInViewAnimation = (amount = 1) => {
+  const ref = useRef(null);
+  const isVisible = useInView(ref, {
+    amount,
+  });
+
+  return { ref, isVisible };
+};
+export default useInViewAnimation;
+```
+
+<Typewriter />
+
+## 리액트 라우터 돔을 활용한 URL을 갖는 모달 구현
+
+각 세션은 모달을 통해 상세 정보를 제공합니다.
+URL 없이 모달을 구현할 수도 있지만, URL을 갖는 모달을 구현함으로써 유저가 세션의 정보를 공유하거나 히스토리 관리를 할 수 있게 했습니다.
+
+우선 `createBrowserRouter` 함수를 사용해 라우터 객체를 생성합니다.
+해당 랜딩 페이지의 경우 별도의 라우트가 필요 없으므로 `/` 경로를 사용합니다.
+공통으로 사용될 레이아웃을 정의하고 `children` 중첩 라우팅을 통해 경로를 설정합니다.
+
+```tsx title="router.ts"
+import { createBrowserRouter } from "react-router-dom";
+
+const router = createBrowserRouter({
+  element: <RootLayout />,
+  children: [
+    {
+      path: "/",
+      element: <App />,
+      children: [
+        {
+          path: "/session/:id",
+        },
+      ],
+    },
+  ],
+});
+```
+
+```tsx title="Session.tsx"
+const Session = () => {
+  return (
+    <ul>
+      {sessions.map((session) => (
+        <li key={session.id}>
+          <Link to={`/session/${session.id}`}>{session.title}</Link>
+        </li>
+      ))}
+    </ul>
+  );
+};
+```
+
+세션의 목록을 `<Link />` 컴포넌트를 통해 렌더링하고, 유저가 클릭 시 해당 세션의 모달이 열리도록 구현했습니다.
+`useParams` 훅을 사용해 URL 파라미터인 id를 가져와 id에 대응하는 세션의 정보를 모달에 렌더링 할 수 있도록 하였습니다.
+
+## 회고
+
+프로젝트를 맡아 디자인 팀과 직접 소통하며 빠르게 피드백을 받을 수 있었던 점이 매우 만족스러웠습니다.
+특히 인터랙션과 영상 등 평소에 관심은 있었지만 구현해 보지 못했던 것들을 실제로 구현할 수 있어서 갈증이 어느 정도 해소되는 느낌이었습니다.
+컨퍼런스의 기획과 디자인이 하나의 결과물로 도출되는 과정에 참여할 수 있어 좋았고, 디자인이 프로덕트로 완성되는 과정을 직접 볼 수 있어서 매우 흥미로웠습니다.
+이러한 디자인 팀과의 직접적인 소통을 통한 협업 형태가 앞으로도 계속 유지되었으면 합니다.
+
+그러나 온라인으로 주로 소통하다 보니 인터랙션이나 모바일 관련 디자인 가이드를 명확하게 이해하지 못한 부분이 아쉬웠습니다.
+또한 개발과 디자인을 별개의 것으로 생각하고 개발을 진행한 점도 아쉬움으로 남습니다.
+QA 기간을 충분히 산정하여 프로젝트의 완성도를 높이지 못한 점, 혼자 모든 것을 개발하려는 생각에 동료들의 도움을 받지 못한 점, 그리고 진행 상황을 꾸준히 공유하지 못한 점도 아쉬운 부분입니다.
+
+결론적으로, 디자인과 개발을 독립적인 것으로 생각하지 말고 하나의 유기체로 바라보며, 온라인 소통뿐만 아니라 직접 대면하여 소통하는 것도 시도해 보아야겠습니다.
+또한 진행 상황을 꾸준히 공유하여 다른 동료들과 타임라인을 함께 공유하는 것이 중요하다고 느꼈습니다.
+
+> 저는 랜딩 페이지 덕에 약 1000명 정도의 모객에 성공했다고 생각합니다. 😎  
+> 이 외에도 이벤트 및 참여율을 높이기 위한 설문조사 기능을 구현하였습니다.
+
+---
+
+출처
+
+- [Framer Motion](https://www.framer.com/motion)
+- [clip-path](https://developer.mozilla.org/ko/docs/Web/CSS/clip-path)
+- [lenis](https://lenis.darkroom.engineering)
+- [React Router Dom](https://reactrouter.com/en/main)
