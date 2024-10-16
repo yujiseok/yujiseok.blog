@@ -38,7 +38,7 @@ export const charVariants: Variants = {
 };
 
 const TypewriterWrapper = () => {
-  const { ref, isVisible } = useInViewAnimation();
+  const { ref, isVisible } = useInViewAnimation(0.5);
 
   return (
     <div className="border rounded-md p-4 overscroll-contain max-h-40 overflow-y-auto">
