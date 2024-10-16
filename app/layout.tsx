@@ -9,20 +9,7 @@ import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
 const pretendard = localFont({
-  src: [
-    {
-      path: "../public/fonts/Pretendard-Regular.woff2",
-      weight: "400",
-    },
-    {
-      path: "../public/fonts/Pretendard-SemiBold.woff2",
-      weight: "600",
-    },
-    {
-      path: "../public/fonts/Pretendard-Bold.woff2",
-      weight: "700",
-    },
-  ],
+  src: "../public/fonts/PretendardVariable.woff2",
   variable: "--font-pretendard",
   display: "swap",
 });
@@ -54,14 +41,16 @@ export const metadata: Metadata = {
   },
 };
 
+const isProd = process.env.NODE_ENV === "production";
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={`${pretendard.variable} font-sans`}>
-      <body className="mx-2 flex flex-col bg-neutral-50 antialiased transition-colors delay-100 dark:bg-neutral-800">
+    <html lang="ko" className={`${pretendard.variable} antialiased`}>
+      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors delay-100 dark:bg-neutral-800">
         <ThemeProviders>
           <Navbar />
           <main className="mx-auto mt-14 w-full max-w-3xl px-4">
@@ -72,7 +61,7 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
 
-        <GoogleAnalytics gaId={process.env.GA_ID!} />
+        <GoogleAnalytics gaId={isProd ? process.env.GA_ID! : ""} />
       </body>
     </html>
   );
