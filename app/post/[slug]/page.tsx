@@ -11,12 +11,11 @@ export function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata | undefined> {
-  const post = getAllPosts().find((post) => post.slug === params.slug);
+  const { slug } = await props.params;
+  const post = getAllPosts().find((post) => post.slug === slug);
 
   if (!post) {
     return;
@@ -42,7 +41,8 @@ export async function generateMetadata({
   };
 }
 
-const Post = ({ params }: { params: { slug: string } }) => {
+const Post = async (props: { params: Promise<{ slug: string }> }) => {
+  const params = await props.params;
   const post = getAllPosts().find((post) => post.slug === params.slug);
   if (!post) {
     return false;
