@@ -17,7 +17,7 @@ function PostPage() {
         <article key={slug} className="mb-6">
           <Link href={`/post/${slug}`}>
             <h2 className="text-xl font-semibold">{metadata.title}</h2>
-            <h6 className="my-1 text-sm font-normal text-gray-400">
+            <h6 className="my-1 text-sm font-normal text-neutral-600 dark:text-neutral-400">
               {metadata.summary}
             </h6>
             <p>

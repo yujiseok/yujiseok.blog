@@ -50,7 +50,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${pretendard.variable} antialiased`}>
-      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors delay-100 dark:bg-neutral-800">
+      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors ease-out delay-50 dark:bg-neutral-800">
         <ThemeProviders>
           <Navbar />
           <main className="mx-auto mt-14 w-full max-w-3xl px-4">
