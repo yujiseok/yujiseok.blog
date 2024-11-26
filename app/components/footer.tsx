@@ -11,7 +11,7 @@ function Footer() {
           >
             GitHub
           </a>
-          <a href="mailto:koesijuy@gamil.com" rel="noopener noreferrer">
+          <a href="mailto:koesijuy@gmail.com" rel="noopener noreferrer">
             Contact
           </a>
         </div>
