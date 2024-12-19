@@ -1,6 +1,5 @@
 "use client";
-import { HTMLMotionProps, motion, Variants } from "framer-motion";
-import { useInView } from "framer-motion";
+import { HTMLMotionProps, motion, Variants, useInView } from "motion/react";
 import { useRef } from "react";
 
 type TypewriterTags = "p" | "span" | "div" | "h2";

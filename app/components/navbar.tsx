@@ -3,7 +3,7 @@
 import Link from "next/link";
 import DarkModeBtn from "./darkModeBtn";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const NAV_ITEMS = [
   {
