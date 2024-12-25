@@ -1,5 +1,5 @@
 import "./globals.css";
-import localFont from "next/font/local";
+import { Geist } from "next/font/google";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -8,9 +8,9 @@ import ThemeProviders from "@/app/components/provider";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
-const pretendard = localFont({
-  src: "../public/fonts/PretendardVariable.woff2",
-  variable: "--font-pretendard",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -49,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={`${pretendard.variable} antialiased`}>
+    <html lang="ko" className={`${geistSans.variable} antialiased`}>
       <body className="mx-2 flex flex-col bg-neutral-50 transition-colors ease-out delay-50 dark:bg-neutral-800">
         <ThemeProviders>
           <Navbar />

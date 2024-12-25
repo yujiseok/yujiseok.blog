@@ -4,7 +4,6 @@
 
 body {
   height: 100vh;
-  min-height: -webkit-fill-available;
 }
 
 .prose .anchor {
@@ -47,9 +46,6 @@ figcaption[data-rehype-pretty-code-title] {
   border-radius: 0.375rem 0.375rem 0 0;
   transform: translateY(10px);
   font-size: 0.875rem;
-  /* border-radius: 6px; */
-  /* border-bottom: 1px solid;
-  @apply border-b-gray-300; */
 }
 
 .prose :where(code):not(:where([class~="not-prose"] *))::before,

@@ -25,7 +25,6 @@ export async function generateMetadata(props: {
     title,
     publishedAt: publishedTime,
     summary: description,
-    image,
   } = post.metadata;
 
   return {
@@ -51,16 +50,11 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   return (
     <section>
       <div className="mb-6">
-        <h1 className="mb-1 text-3xl font-semibold">
-          <>{post.metadata.title}</>
-        </h1>
-        <h4 className="font-light text-gray-700 dark:text-gray-400">
+        <h1 className="mb-1 text-3xl font-semibold">{post.metadata.title}</h1>
+        <h4 className="text-gray-700 dark:text-gray-400">
           {post.metadata.summary}
         </h4>
-        <p>
-          <small>{post.metadata.publishedAt}</small>{" "}
-          {/* <small>{post.readingTime.text}</small> */}
-        </p>
+        <small>{post.metadata.publishedAt}</small>
       </div>
 
       <Mdx source={post.content} />
