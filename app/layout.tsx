@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import ThemeProviders from "@/app/components/provider";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,15 +49,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={`${geistSans.variable} antialiased`}>
+    <html
+      lang="ko"
+      className={`${geistSans.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <body className="mx-2 flex flex-col bg-neutral-50 transition-colors ease-out delay-50 dark:bg-neutral-800">
-        <ThemeProviders>
+        <ThemeProvider attribute="class">
           <Navbar />
           <main className="mx-auto mt-14 w-full max-w-3xl px-4">
             {children}
           </main>
           <Footer />
-        </ThemeProviders>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
 
