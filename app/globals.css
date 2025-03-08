@@ -102,7 +102,7 @@ pre code {
 }
 
 [data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full break-words rounded-none border-0 bg-transparent p-0 text-sm text-black;
+  @apply grid min-w-full rounded-none border-0 bg-transparent p-0 text-sm break-words text-black;
   counter-reset: line;
   box-decoration-break: clone;
 }
@@ -126,5 +126,5 @@ span[data-highlighted-line] {
 }
 
 mark[data-highlighted-chars] {
-  @apply rounded-md  bg-black/30 p-1;
+  @apply rounded-md bg-black/30 p-1;
 }
