@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 function About() {
   return (
     <>
-      <h1 className="mb-6 text-3xl font-bold">About Me</h1>
       <section className="mb-12">
         <h3 className="text-4xl font-semibold">
           안녕하세요 <br />

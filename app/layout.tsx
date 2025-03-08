@@ -1,4 +1,5 @@
 import "./globals.css";
+
 import { Geist } from "next/font/google";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
@@ -54,7 +55,7 @@ export default function RootLayout({
       className={`${geistSans.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors ease-out delay-50 dark:bg-neutral-800">
+      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors delay-50 ease-out dark:bg-neutral-800">
         <ThemeProvider attribute="class">
           <Navbar />
           <main className="mx-auto mt-14 w-full max-w-3xl px-4">
