@@ -41,7 +41,7 @@ function About() {
               href="https://github.com/yujiseok"
               rel="noopener noreferrer"
               target="_blank"
-              className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
+              className="rounded-md bg-neutral-100 p-2 text-neutral-800 transition-colors duration-200 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600"
             >
               Github
             </a>
@@ -51,7 +51,7 @@ function About() {
               href="https://www.linkedin.com/in/%EC%A7%80%EC%84%9D-%EC%9C%A0-1741591b1/"
               rel="noopener noreferrer"
               target="_blank"
-              className="rounded-md bg-slate-100 p-2 text-black delay-75 ease-in-out hover:bg-slate-200"
+              className="rounded-md bg-neutral-100 p-2 text-neutral-800 transition-colors duration-200 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600"
             >
               LinkedIn
             </a>
