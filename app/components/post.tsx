@@ -19,7 +19,7 @@ const Post = ({
           <h2 className="text-base font-semibold break-keep md:text-lg">
             {metadata.title}
           </h2>
-          <time className="text-xs text-neutral-600 md:text-sm dark:text-neutral-400">
+          <time className="shrink-0 text-xs text-neutral-600 md:text-sm dark:text-neutral-400">
             {metadata.publishedAt}
           </time>
         </div>
