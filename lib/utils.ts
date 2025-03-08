@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-interface Metadata {
+export interface Metadata {
   title: string;
   summary: string;
   publishedAt: string;
