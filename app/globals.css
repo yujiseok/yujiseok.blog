@@ -13,7 +13,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    /* border-color: var(--color-gray-200, currentColor); */
   }
 }
 
@@ -81,13 +81,13 @@ figcaption[data-rehype-pretty-code-title] {
 }
 
 code {
-  @apply bg-gray-200 dark:bg-gray-600;
+  @apply bg-neutral-200 dark:bg-neutral-700;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
 }
 
 pre code {
-  @apply bg-transparent;
+  @apply bg-transparent dark:bg-transparent;
 }
 
 .prose
