@@ -4,20 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 
-const NAV_ITEMS = [
-  {
-    name: "home",
-    href: "/",
-  },
-  {
-    name: "about",
-    href: "/about",
-  },
-  {
-    name: "post",
-    href: "/post",
-  },
-] as const;
 function Navbar() {
   let pathname = usePathname();
 
@@ -25,7 +11,7 @@ function Navbar() {
 
   return (
     <nav className="mt-10 h-14 w-full">
-      <div className="mx-auto flex h-full w-full max-w-3xl items-center justify-between px-4 py-4">
+      <div className="mx-auto flex h-full w-full max-w-2xl items-center justify-between px-4 py-4">
         <h1 className="text-3xl font-bold">
           <Link href="/">Yujiseok</Link>
         </h1>
@@ -40,7 +26,7 @@ function Navbar() {
                     type: "spring",
                     duration: 0.5,
                   }}
-                  className="absolute h-[1px] w-full bg-black dark:bg-white"
+                  className="absolute h-[1.25px] w-full bg-black dark:bg-white"
                 />
               )}
             </li>
@@ -50,4 +36,20 @@ function Navbar() {
     </nav>
   );
 }
+
 export default Navbar;
+
+const NAV_ITEMS = [
+  {
+    name: "home",
+    href: "/",
+  },
+  {
+    name: "about",
+    href: "/about",
+  },
+  {
+    name: "post",
+    href: "/post",
+  },
+] as const;
