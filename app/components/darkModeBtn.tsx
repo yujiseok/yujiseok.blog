@@ -12,6 +12,7 @@ function DarkModeBtn() {
           title="Toggle dark mode"
           aria-label="Toggle theme"
           onClick={() => setTheme("light")}
+          className="inline-flex pt-0.25 cursor-pointer"
         >
           <SunIcon />
         </button>
@@ -21,6 +22,7 @@ function DarkModeBtn() {
           title="Toggle dark mode"
           aria-label="Toggle theme"
           onClick={() => setTheme("dark")}
+          className="inline-flex pt-0.25 cursor-pointer"
         >
           <MoonIcon />
         </button>
@@ -36,7 +38,7 @@ const SunIcon = () => (
     viewBox="0 0 24 24"
     strokeWidth={1.5}
     stroke="currentColor"
-    className="size-5 inline-flex"
+    className="size-5"
   >
     <path
       strokeLinecap="round"
@@ -53,7 +55,7 @@ const MoonIcon = () => (
     viewBox="0 0 24 24"
     strokeWidth={1.5}
     stroke="currentColor"
-    className="size-5 inline-flex"
+    className="size-5"
   >
     <path
       strokeLinecap="round"

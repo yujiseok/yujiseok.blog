@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import DarkModeBtn from "./darkModeBtn";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import dynamic from "next/dynamic";
+
+const DarkModeBtn = dynamic(() => import("./darkModeBtn"), { ssr: false });
 
 const NAV_ITEMS = [
   {
@@ -47,7 +49,7 @@ function Navbar() {
             </li>
           ))}
 
-          <li className="inline-flex">
+          <li className="grid w-5 h-5 place-items-center">
             <DarkModeBtn />
           </li>
         </ul>
