@@ -1,20 +1,27 @@
 "use client";
+import { cn } from "@/lib/cn";
 import { motion, Variants } from "motion/react";
 
-const PostContainer = ({ children }: { children: React.ReactNode }) => {
+const BlurContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   return (
     <motion.section
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid gap-6"
+      className={cn("grid gap-6", className)}
     >
       {children}
     </motion.section>
   );
 };
 
-export default PostContainer;
+export default BlurContainer;
 
 const containerVariants: Variants = {
   hidden: {
