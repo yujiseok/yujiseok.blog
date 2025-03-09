@@ -19,13 +19,16 @@ const Post = ({
           <h2 className="text-base font-semibold break-keep md:text-lg">
             {metadata.title}
           </h2>
-          <time className="shrink-0 text-xs text-neutral-600 md:text-sm dark:text-neutral-400">
+          <time
+            dateTime={metadata.publishedAt}
+            className="shrink-0 text-xs text-neutral-600 md:text-sm dark:text-neutral-400"
+          >
             {metadata.publishedAt}
           </time>
         </div>
-        <h6 className="my-1 text-xs font-normal break-keep text-neutral-600 md:text-sm dark:text-neutral-400">
+        <p className="my-1 text-xs font-normal break-keep text-neutral-600 md:text-sm dark:text-neutral-400">
           {metadata.summary}
-        </h6>
+        </p>
       </Link>
     </article>
   );

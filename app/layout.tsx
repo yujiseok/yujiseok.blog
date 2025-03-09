@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { ThemeProvider } from "next-themes";
 
@@ -59,15 +58,12 @@ export default function RootLayout({
         <div className="pointer-events-none fixed inset-0 z-10 h-10 w-full backdrop-blur-2xl select-none [mask-image:linear-gradient(to_bottom,black,transparent)]" />
 
         <ThemeProvider attribute="class">
-          <Navbar />
-          <main className="mx-auto mt-14 w-full max-w-2xl px-4">
-            {children}
-          </main>
+          {children}
           <Footer />
         </ThemeProvider>
+
         <Analytics />
         <SpeedInsights />
-
         <GoogleAnalytics gaId={isProd ? process.env.GA_ID! : ""} />
       </body>
     </html>
