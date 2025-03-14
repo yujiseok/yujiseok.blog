@@ -1,5 +1,6 @@
 import BlurContainer from "@/app/components/blurContainer";
 import Track from "@/app/components/music/track";
+import { getBlurDataUrl } from "@/lib/blurUrl";
 import { getPlaylists } from "@/lib/spotify/api";
 import { getPlaylistTracks } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
@@ -24,6 +25,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     (playlist) => playlist.id === playlistId,
   ) as TypeSpotifyPlaylist;
 
+  const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
+
   return (
     <BlurContainer className="gap-0">
       <div className="mb-4 grid items-center gap-2">
@@ -33,6 +36,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           width={playlist.images[0].width ?? 640}
           height={playlist.images[0].height ?? 640}
           className="pointer-events-none mb-2 size-56 rounded-lg object-cover"
+          placeholder="blur"
+          blurDataURL={blurDataUrl}
         />
         <p className="group flex items-center gap-1.5">
           <span className="text-lg">{playlist.name}</span>
