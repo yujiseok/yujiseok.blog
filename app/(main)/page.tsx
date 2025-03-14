@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -29,7 +30,10 @@ export default function Home() {
         <p>
           저는 무언가 창작하는 활동을 무척 좋아하고 재밌어합니다. 꾸준히 양질의
           글을 블로그에 작성하고 공유하는 것을 목표로 하고 있습니다. 또 저는{" "}
-          <strong>음악 감상</strong>을 아주 사랑합니다.
+          <Link href="/music" className="underline underline-offset-2">
+            <strong>음악 감상</strong>
+          </Link>
+          을 아주 사랑합니다.
         </p>
         <p>앞으로 자주 뵈었으면 좋겠습니다.</p>
       </div>
