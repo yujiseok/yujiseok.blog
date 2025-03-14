@@ -1,3 +1,4 @@
+import { getBlurDataUrl } from "@/lib/blurUrl";
 import { cn } from "@/lib/cn";
 import { getPlaylists } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
@@ -27,7 +28,7 @@ const PlaylistCard = async ({
   playlist: TypeSpotifyPlaylist;
   index: number;
 }) => {
-  // const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
+  const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
 
   return (
     <Link
@@ -44,8 +45,8 @@ const PlaylistCard = async ({
         width={playlist.images[0].width ?? 640}
         height={playlist.images[0].height ?? 640}
         className="pointer-events-none h-full w-full object-cover"
-        // placeholder="blur"
-        // blurDataURL={blurDataUrl}
+        placeholder="blur"
+        blurDataURL={blurDataUrl}
       />
     </Link>
   );
