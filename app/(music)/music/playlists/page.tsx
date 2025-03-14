@@ -11,7 +11,7 @@ const page = async () => {
   const playlists = await getPlaylists();
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-4 md:gap-6">
       {playlists.map((playlist, i) => (
         <PlaylistCard key={playlist.id} playlist={playlist} index={i} />
       ))}
