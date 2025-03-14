@@ -7,6 +7,16 @@
   --font-sans: var(--font-geist-sans);
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #e8e8e8 transparent;
+}
+
+html.dark {
+  scrollbar-width: thin;
+  scrollbar-color: #404040 transparent;
+}
+
 body {
   height: 100vh;
   font-family:
