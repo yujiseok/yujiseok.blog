@@ -7,16 +7,6 @@
   --font-sans: var(--font-geist-sans);
 }
 
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    /* border-color: var(--color-gray-200, currentColor); */
-  }
-}
-
 body {
   height: 100vh;
   font-family:
@@ -62,7 +52,6 @@ body {
 }
 
 pre {
-  /* position: relative; */
   margin-top: 0 !important;
 }
 
@@ -127,4 +116,22 @@ span[data-highlighted-line] {
 
 mark[data-highlighted-chars] {
   @apply rounded-md bg-black/30 p-1;
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    filter: blur(1px);
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.fadeDown {
+  animation: fadeDown 0.6s ease-in-out both;
+  will-change: opacity, transform;
 }
