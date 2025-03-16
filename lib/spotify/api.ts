@@ -1,6 +1,6 @@
 import {
   extractCurrentlyPlayingTrack,
-  extractRecentlyPlayedTrack,
+  extractTrack,
   extractTopTrack,
 } from "./extract";
 import {
@@ -10,11 +10,6 @@ import {
   TypeTopTrack,
 } from "@/types/spotify";
 
-interface TokenCache {
-  accessToken: string;
-  expiresAt: number;
-}
-
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } =
   process.env;
 
@@ -22,20 +17,12 @@ const BASIC_TOKEN = Buffer.from(
   SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET,
 ).toString("base64");
 
-const tokenCache = new Map<string, TokenCache>();
-
 const body = new URLSearchParams({
   grant_type: "refresh_token",
   refresh_token: SPOTIFY_REFRESH_TOKEN!,
 }).toString();
 
 export const getAccessToken = async () => {
-  const cachedToken = tokenCache.get(SPOTIFY_REFRESH_TOKEN!);
-
-  if (cachedToken && cachedToken.expiresAt > Date.now()) {
-    return cachedToken.accessToken;
-  }
-
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
@@ -46,11 +33,6 @@ export const getAccessToken = async () => {
   });
 
   const data = await res.json();
-
-  tokenCache.set(SPOTIFY_REFRESH_TOKEN!, {
-    accessToken: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  });
 
   return data.access_token;
 };
@@ -70,7 +52,7 @@ export const getRecentlyPlayed = async (): Promise<
   );
 
   const data = await res.json();
-  const tracks = data.items.map(extractRecentlyPlayedTrack);
+  const tracks = data.items.map(extractTrack);
 
   return tracks;
 };
@@ -145,7 +127,7 @@ export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
   return tracks;
 };
 
-export const getPlaylistTracks = async (
+export const getPlaylistTrack = async (
   playlistId: string,
   limit = 10,
   offset = 0,
@@ -161,7 +143,7 @@ export const getPlaylistTracks = async (
 
   const data = await res.json();
 
-  const tracks = data.items.map(extractRecentlyPlayedTrack);
+  const tracks = data.items.map(extractTrack);
 
   return tracks;
 };

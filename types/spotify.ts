@@ -1,6 +1,6 @@
 import {
   extractCurrentlyPlayingTrack,
-  extractRecentlyPlayedTrack,
+  extractTrack,
   extractTopTrack,
 } from "@/lib/spotify/extract";
 
@@ -97,9 +97,7 @@ export type SpotifyPlaylist = {
 
 export type TypeTopTrack = ReturnType<typeof extractTopTrack>;
 
-export type TypeRecentlyPlayedTrack = ReturnType<
-  typeof extractRecentlyPlayedTrack
->;
+export type TypeRecentlyPlayedTrack = ReturnType<typeof extractTrack>;
 
 export type TypeCurrentlyPlayingTrack = ReturnType<
   typeof extractCurrentlyPlayingTrack

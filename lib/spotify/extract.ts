@@ -15,7 +15,7 @@ export const extractTopTrack = (track: SpotifyTopTrack) => ({
   trackName: track.name,
 });
 
-export const extractRecentlyPlayedTrack = (rawTrack: RawSpotifyTrack) => ({
+export const extractTrack = (rawTrack: RawSpotifyTrack) => ({
   albumCover: rawTrack.track.album.images[0],
   albumName: rawTrack.track.album.name,
   artistName: normalizeArtists(rawTrack.track.artists),
