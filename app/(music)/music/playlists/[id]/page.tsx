@@ -1,8 +1,7 @@
 import BlurContainer from "@/app/components/blurContainer";
 import Track from "@/app/components/music/track";
 import { getBlurDataUrl } from "@/lib/blurUrl";
-import { getPlaylists } from "@/lib/spotify/api";
-import { getPlaylistTracks } from "@/lib/spotify/api";
+import { getPlaylists, getPlaylistTrack } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
 
 import Image from "next/image";
@@ -18,7 +17,7 @@ export const generateStaticParams = async () => {
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const playlistId = (await params).id;
-  const playlistTracks = await getPlaylistTracks(playlistId, 10, 0);
+  const playlistTracks = await getPlaylistTrack(playlistId, 10, 0);
 
   const playlists = await getPlaylists();
   const playlist = playlists.find(
