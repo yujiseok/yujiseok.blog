@@ -7,6 +7,10 @@
   --font-sans: var(--font-geist-sans);
 }
 
+:root {
+  interpolate-size: allow-keywords;
+}
+
 html {
   scrollbar-width: thin;
   scrollbar-color: #e8e8e8 transparent;
@@ -125,6 +129,24 @@ span[data-highlighted-line] {
 
 mark[data-highlighted-chars] {
   @apply rounded-md bg-black/30 p-1;
+}
+
+details {
+  @apply my-4 h-10 rounded-md bg-neutral-200 px-4 py-2 dark:bg-neutral-700;
+  transition: height 0.5s ease;
+
+  &[open] {
+    height: auto;
+    overflow: clip;
+  }
+}
+
+summary {
+  @apply flex cursor-pointer items-center;
+
+  &::marker {
+    content: "";
+  }
 }
 
 @keyframes fadeDown {
