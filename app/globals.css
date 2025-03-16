@@ -121,7 +121,6 @@ pre code {
 
 span[data-highlighted-line] {
   @apply bg-black/30;
-  @apply rounded-md;
 }
 
 mark[data-highlighted-chars] {
