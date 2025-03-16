@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Avatar from "@/public/images/avatar.jpg";
 
 export default function Home() {
   return (
@@ -7,12 +8,9 @@ export default function Home() {
       <div className="my-4 flex items-center gap-8">
         <div className="flex h-[100px] w-[100px] shrink-0 md:h-[125px] md:w-[125px]">
           <Image
-            src="/images/avatar.jpg"
+            src={Avatar}
             alt="유지석"
-            quality={100}
-            priority
-            width={100}
-            height={100}
+            placeholder="blur"
             className="h-full w-full rounded-full object-cover"
           />
         </div>
