@@ -1,0 +1,513 @@
+---
+title: Next.js 블로그에 스포티파이를 더 해보자
+publishedAt: "2025-03-15"
+summary: 블로그를 다채롭게 만들어 봅시다.
+---
+
+## 개요
+
+블로그 제작 초기부터 계획했던 스포티파이 연동을 진행하며 얻은 점과 구현 방법을 작성해 봅니다.
+
+스포티파이는 수많은 정보를 무료로 사용할 수 있도록 해줍니다. 이런 아름다운 서비스를 이용하기 위해 우선
+몇 가지 단계가 필요합니다:
+
+1. 스포티파이 개발자 대시보드에 앱 등록
+2. 계정 인증
+3. 필요한 API 연동
+
+> 스포티파이 계정을 보유하고 있다는 전제하에 작성되었습니다. 혹시 아직 서비스를 이용해보지 않으셨다면, 이번 기회에 경험해보시는 것은 어떨까요? 🎧
+
+## 1. 스포티파이 개발자 대시보드에 앱 등록
+
+- 우선 스포티파이 [대시보드](https://developer.spotify.com/dashboard)에 접속해 앱을 생성합니다.
+- 필수로 작성해야 하는 필드를 입력하고 **Web API**를 선택한 후 저장 버튼을 눌러줍니다.
+
+<Image
+  src="/images/spotify/dashboard.png"
+  width={1200}
+  height={450}
+  alt="spotify dashboard"
+/>
+
+- 인증을 위해 필요한 `Client ID`와 `Client secret`을 복사해 잘 보관합니다.
+
+<Image
+  src="/images/spotify/secrets.png"
+  width={1200}
+  height={450}
+  alt="spotify user secrets"
+/>
+
+이제 `Client ID`와 `Client secret`를 사용해 인증을 할 수 있으며, 리프레시 토큰을 생성할 수 있게 되었습니다.
+
+## 2. 계정 인증
+
+인증을 위해선 조금 더 복잡한 과정을 거처야 합니다.
+
+- curl 요청을 위해서 base64를 생성해야 합니다. 인코딩 [사이트](https://www.base64encode.org/)에 발급받은 시크릿 정보(`clientId:clientSecret`)를 입력해 줍니다.
+  인코딩된 base64 코드를 이번에도 잘 복사해 줍니다.
+
+  <Image
+    src="/images/spotify/base64.png"
+    width={1200}
+    height={450}
+    alt="spotify user base64"
+  />
+
+- 이제 실제 사용할 API [스코프](https://developer.spotify.com/documentation/web-api/concepts/scopes)가 포함된 URL을 브라우저에 입력합니다. 저의 경우 아래의 스코프를 사용하였습니다.
+
+  - playlist-read-private
+  - user-top-read
+  - user-read-recently-played
+  - user-read-currently-playing
+
+  ```bash
+  https://accounts.spotify.com/en/authorize?client_id=<clientId>&response_type=code&redirect_uri=http%3A%2F%2Flocalhost:3000%2F&scope=playlist-read-private+user-top-read+user-read-recently-played+user-read-currently-playing
+  ```
+
+- 해당 URL을 브라우저 입력하면 위에 추가한 스코프의 접근을 동의하냐는 화면이 보이는데, 동의 버튼을 눌러줍니다.
+
+<Image
+  src="/images/spotify/cb.png"
+  width={375}
+  height={450}
+  alt="spotify user cb"
+/>
+
+- 동의 버튼을 누르면 앱 등록 시 작성한 리다이렉트 URI로 이동이 됩니다.
+
+  ```bash
+   http://localhost:3000/?code=AQBIvgEnrnLeiTaDHJrqEw_mfB6pVgRYclLvsLlqIV-9QdOboCiulr_nQbiI8KddxhkoNmhiMQX_sVMPK_bcgaWQT-SraVV2AoneIf2PkbcPrPmTn19Xp7G2uscXZi17hd9G0k6WOYFDfexpiW0-sSLuTH_rvt8AdJ7YgzgQzIQ_Cn4yWvu04MkiJKmbR0AG7YyRtmII-NhXKCBefrdIXipNXwJhjMYGdBsIfsIh9Di1AVKahHHkAn2vVvyXXe8yH2bfMrP78qvASsg7ySYMSN6Mfjy4WKR7
+  ```
+
+- 이제 `code=` 이후 코드를 복사해 줍니다.
+- 다 왔습니다. 이전에 인코딩한 base64 코드와 리다이렉트 URI로 얻게 된 코드를 합쳐 터미널에 curl 요청을 보내봅시다.
+
+  ```bash
+  curl -X POST https://accounts.spotify.com/api/token \
+  -H "Authorization: Basic NmNkODM1NDBjZDUxNGFlYjljNThjMWMxZTA0MDlmZTg6NDExYzE0MGE1M2M5NDk1ZmE3ZDc4YTNhMTQwM2FmNGY=" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code" \
+  -d "code=AQCpXHPZTrao5cvC4OjOaIlAyB6_RW824IW0BAIukkTMhNgRWM08C9IDcV9zzpWbFgkJl3tO_l5H8M4K-XoaFzhyo9Wz-rXEz419aeadVcyj2DKIc1WLjcTq93vK-YBXg3SBCVGYrBUL-pnBJUM2Y7aHiECh7s6u5s6qPW8Uf-1zd_EXhYgO5ob3vvWVrm96LuLNwn-wCo2Q9lZJmEGkmwSmbzjiXQJ-Y-UZI0z1AnjRdY6qX25wke7y9_J535L20hxb_f1ovtJybz8HTMfp46obUKSVWRcg" \
+  -d "redirect_uri=http://localhost:3000/"
+  ```
+
+- 요청이 성공했다면 다음과 같은 JSON 응답을 받습니다:
+
+  ```json title="JSON Response"
+  {
+    "access_token": "BQBaHx06...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "refresh_token": "AQAAwZE2D...",
+    "scope": "playlist-read-private..."
+  }
+  ```
+
+`refresh_token`을 복사해 줍니다. 해당 토큰은 사용자가 앱에 재인증 하지 않고도 클라이언트 앱이 새로운 액세스 토큰을 얻을 수 있게 해줍니다.
+이제, `refresh_token`을 사용해 API 요청을 할 수 있게 되었습니다.
+
+필요한 API 함수 로직을 작성하기 전에, 어떤 식으로 데이터 페칭을 구현할지 고민하였습니다. 선택지는 두 가지였습니다:
+
+- `fetch API`를 사용해 서버에서 데이터를 가져오는 방법
+- 클라이언트에서 데이터를 가져오는 방법 (Tanstack-Query, SWR, useEffect, use ...)
+
+실시간성 반드시 보장되어야 하고 유저의 상호작용 이후 데이터가 필요한 경우가 아니라 판단하여 서버 컴포넌트 내에서 `fetch` 함수를 사용해 데이터를 가져오는 방법으로 구현하기로 결정했습니다.
+
+## 3. 필요한 API 연동
+
+민감한 정보를 위한 환경 변수를 만들어 준 후, 앞서 기재한 스코프에 맞는 API를 찾아 페치 요청과 필요한 토큰을 생성하는 함수를 작성합니다.
+
+### getAccessToken
+
+토큰을 반환하는 엔드 포인트에 대시보드에서 발급받은 클라이언트 아이디와 클라이언트 시크릿 키를 주입해 `post` 요청을 보내줍니다.
+이때 `body`에 curl 요청을 통해 발급받은 `refresh_token`을 전달합니다.
+
+```ts title="getAccessToken" {1-3, 5-8}
+const BASIC_TOKEN = Buffer.from(
+  SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET,
+).toString("base64");
+
+const body = new URLSearchParams({
+  grant_type: "refresh_token",
+  refresh_token: SPOTIFY_REFRESH_TOKEN!,
+}).toString();
+
+const getAccessToken = async () => {
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${BASIC_TOKEN}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+
+  const data = await res.json();
+
+  return data.access_token;
+};
+```
+
+이제 이 액세스 토큰을 통해 우리가 원하는 정보에 마음껏 접근할 수 있습니다.
+제가 필요한 정보는 현재 재생 중인 곡, 최근 재생한 곡 그리고 플레이리스트 정보가 필요하여 해당 함수를 생성해 주었습니다. 또한 필요한 정보만을 추출하기 위한 헬퍼 함수도 같이 추가하였습니다.
+
+<details>
+<summary>getRecentlyPlayed</summary>
+
+```ts
+export const getRecentlyPlayed = async (): Promise<
+TypeRecentlyPlayedTrack[]
+> => {
+const access_token = await getAccessToken();
+
+const res = await fetch(
+  `https://api.spotify.com/v1/me/player/recently-played`,
+  {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  },
+);
+
+const data = await res.json();
+const tracks = data.items.map(extractTrack);
+
+return tracks;
+};
+```
+
+</details>
+
+<details>
+  <summary>getCurrentlyPlaying</summary>
+
+```ts
+export const getCurrentlyPlaying =
+async (): Promise<TypeCurrentlyPlayingTrack> => {
+  const access_token = await getAccessToken();
+
+  const res = await fetch(
+    `https://api.spotify.com/v1/me/player/currently-playing`,
+    {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+      next: {
+        revalidate: 60,
+      },
+    },
+  );
+
+  const data = await res.json();
+
+  return extractCurrentlyPlayingTrack(data);
+
+};
+
+```
+
+</details>
+
+<details>
+  <summary>getPlaylistTracks</summary>
+   ```ts
+   export const getPlaylistTracks = async (
+     limit = 20,
+     offset = 0,
+   ): Promise<TypeSpotifyPlaylist[]> => {
+     const access_token = await getAccessToken();
+     const res = await fetch(
+       `https://api.spotify.com/v1/me/playlists?fields=items(id,name,images,external_urls.spotify)&limit=${limit}&offset=${offset}`,
+       {
+         headers: { Authorization: `Bearer ${access_token}` },
+       },
+     );
+     const data = await res.json();
+     return data.items;
+   };
+    ```
+</details>
+
+<details>
+  <summary>getTopTracks</summary>
+  
+    ```ts
+    export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
+      const access_token = await getAccessToken();
+
+      const res = await fetch(
+        `https://api.spotify.com/v1/me/top/tracks?limit=20&time_range=short_term`,
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+        },
+      );
+
+      const data = await res.json();
+      const tracks = data.items.map(extractTopTrack);
+
+      return tracks;
+    };
+    ```
+
+</details>
+
+<details>
+  <summary>getPlaylistTracks</summary>
+
+    ```ts
+    export const getPlaylistTracks = async (
+      playlistId: string,
+      limit = 10,
+      offset = 0,
+    ): Promise<TypeRecentlyPlayedTrack[]> => {
+      const access_token = await getAccessToken();
+
+      const res = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks?fields=items(track(name,external_urls.spotify,album(name,images),artists(name)))&limit=${limit}&offset=${offset}`,
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+        },
+      );
+
+      const data = await res.json();
+
+      const tracks = data.items.map(extractTrack);
+
+      return tracks;
+    };
+    ```
+
+</details>
+
+> 실제 구현은 해당 [파일](https://github.com/yujiseok/yujiseok.blog/blob/main/lib/spotify/api.ts)에서 확인하실 수 있습니다.
+
+## 페이지에 적용하기
+
+각 데이터를 보여주기 위한 페이지를 생성하고 각 페이지 별 ISR(Incremental Static Regeneration)을 적용하기 위해 페이지별 라우트 세그먼트 컨피그인 `revalidate` 시간을 설정합니다.
+또, 개별 플레이리스트의 정보를 보여주기 위한 동적 라우트를 `generateStaticParams` 함수를 통해 빌드 시 생성해 줍니다.
+
+이때 제 나름의 재검증 시간을 상정하였는데:
+
+<table>
+  <thead>
+    <tr>
+      <th>Route</th>
+      <th>Revalidate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>/music</td>
+      <td>3m</td>
+    </tr>
+    <tr>
+      <td>/music/playlists</td>
+      <td>1d</td>
+    </tr>
+    <tr>
+      <td>/music/playlists/[id]</td>
+      <td>1d</td>
+    </tr>
+    <tr>
+      <td>/music/top-tracks</td>
+      <td>1d</td>
+    </tr>
+  </tbody>
+</table>
+
+최근 재생한 곡의 정보를 필요로 하는 `/music` 페이지를 제외하고 하루를 재검증 시간으로 설정하였습니다.
+
+## blurDataURL 추가하기
+
+`public` 폴더 내에서 정적으로 가져온 이미지의 경우 넥스트가 알아서 모든 최적화를 진행하며, `placeholder="blur"` 프랍을 제공할 경우 자동으로
+플레이스 홀더를 생성해 줍니다. 하지만, 스포티파이에서 가져온 이미지의 경우 넥스트가 빌드 시 접근할 수 없는 외부의 데이터이므로 수동으로 `blurDataURL`을 생성하는 함수를 다음과 같이 생성합니다:
+
+```ts title="blurUrl.ts"
+export const getBlurDataUrl = async (url: string) => {
+  const res = await fetch(url, {
+    cache: "force-cache",
+  });
+  const buffer = await res.arrayBuffer();
+  return `data:image/png;base64,${Buffer.from(buffer).toString("base64")}`;
+};
+```
+
+해당 함수를 사용하면, 이미지 로딩 중 블러 효과와 캐싱을 통한 성능 최적화를 제공합니다.
+
+<div className="flex gap-4 text-center">
+  <div>
+    <Image
+      src="/images/spotify/no-blur.gif"
+      width={375}
+      height={450}
+      alt="no blur image"
+      unoptimized
+    />
+    <small>플레이스홀더 미적용</small>
+  </div>
+  <div>
+    <Image
+      src="/images/spotify/add-blur.gif"
+      width={375}
+      height={450}
+      alt="add blur image"
+      unoptimized
+    />
+    <small>플레이스홀더 적용</small>
+  </div>
+</div>
+
+차이점이 보이시나요? 플레이스 홀더를 추가해 UX를 향상시킬 수 있습니다. 저는 조금의 기교를 추가해 UI에 생명을 부여해 보았습니다. 💃
+
+    <Image
+      src="/images/spotify/animation.gif"
+      width={375}
+      height={450}
+      alt="add blur and animation image"
+      unoptimized
+    />
+
+이제 해당 로직들을 사용해 다른 페이지들의 UI를 유려하게 그려내면 끝입니다. 🏁
+
+## 마주한 문제들
+
+구현을 진행하며, 몇 가지 잘못 이해한 개념과 문제들이 존재합니다.
+
+### 1. 개발 환경과 프로덕션 환경의 차이
+
+넥스트 15 버전에서, `fetch` 함수의 기본 동작은 모든 요청마다 서버에서 데이터(`auto no cache`)를 가져오도록 설계되었습니다.
+하지만, DX를 위한 `HMR` 중에는 또 다른 캐싱 레이어인 `serverComponentsHmrCache`가 도입되었습니다.
+해당 캐시는 모든 `fetch` 요청, 심지어 `cache: 'no-store'` 옵션에도 적용이 됩니다.
+그래서 기본적으로 매 요청마다 새로운 데이터를 가져와야 하지만, HMR 캐시로 인해 코드 수정 후(e.g. 컴포넌트 수정)에도 이전 데이터가 재사용 되었습니다.
+
+> `serverComponentsHmrCache`는 페이지 새로고침 또는 이동 시 초기화됩니다.
+
+캐시 옵션을 아무리 추가해도, 새로운 데이터를 가져오는 것을 해결하려고 제법 진땀을 뺐습니다.
+
+> 요는, 개발 환경에선 매번 새로운 요청을 하지만 HMR에서는 캐싱이 된다는 것입니다.
+
+### 2. 클라이언트 사이드 멘탈 모델로 서버 사이드에서 동작하는 코드를 구현한 것
+
+스포티파이의 API 엔드 포인트에 요청을 하기 위해선 액세스 토큰이 필요합니다. 구현 초기에는 캐싱 없이 매 요청마다, 토큰을 요청해 헤더에 주입하도록 함수를 작성했습니다.
+그러다 보니, 캐싱 동작이 예상과 다르게 동작하였습니다.
+
+사실 생각해 보면, 당연한 이유입니다. 인증 토큰이 요청마다 다르기 때문에, 요청 헤더도 매번 달라집니다. 이는 캐시 키도 항상 새롭게 생성되는 HTTP 캐싱의 일반적인 동작을 고려하지 못한 방식이었습니다.
+
+코드를 작성하며 토큰이라는 것이 당연히 외부 스토리지에 저장되어 있다는 가정하에 구현하려고 했습니다. 즉 한 번 발급받으면 **웹 스토리지**에 저장해, 만료되기 전까지 해당 토큰을 재사용하는 클라이언트 측 인증을 멘탈 모델로 코드를 작성했습니다.
+
+그러다 보니 `cache: "force-cache"`, `revalidate: number` 옵션을 추가해도 캐싱이 되지 않고 있었습니다.
+
+<Image
+  src="/images/spotify/cache-skip.png"
+  width={640}
+  height={450}
+  alt="cache skip"
+/>
+
+이런 문제점을 해결하기 위해 저는 간단한 메모리 기반 캐싱을 구현해 보기로 하였습니다.
+작동 방식은 다음과 같습니다:
+
+1. 토큰의 정보를 저장할 `Map`을 생성합니다.
+2. 토큰 요청 시 우선적으로 캐시를 확인합니다.
+3. 캐시 된 토큰이 존재한다면, 그대로 반환합니다.
+4. 만약 유효하지 않을 시 새 토큰을 요청하고 캐시에 저장합니다.(첫 요청, 토큰 만료)
+
+```ts title="spotify.ts" {5, 8-12, 25-28}
+const BASIC_TOKEN = Buffer.from(
+SPOTIFY_CLIENT_ID + ":" + SPOTIFY_CLIENT_SECRET,
+).toString("base64");
+
+const tokenCache = new Map<string, TokenCache>();
+
+export const getAccessToken = async () => {
+const cachedToken = tokenCache.get(SPOTIFY_REFRESH_TOKEN!);
+
+if (cachedToken && cachedToken.expiresAt > Date.now()) {
+  return cachedToken.accessToken;
+}
+
+const res = await fetch("https://accounts.spotify.com/api/token", {
+  method: "POST",
+  headers: {
+    Authorization: `Basic ${BASIC_TOKEN}`,
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+  body,
+});
+
+const data = await res.json();
+
+tokenCache.set(SPOTIFY_REFRESH_TOKEN!, {
+  accessToken: data.access_token,
+  expiresAt: Date.now() + data.expires_in * 1000,
+});
+
+return data.access_token;
+};
+
+```
+
+해당 코드를 통해 토큰을 메모리 캐시에서 관리하면, 드디어 cache hit를 만나볼 수 있었습니다.
+
+<Image
+  src="/images/spotify/cache-hit.png"
+  width={640}
+  height={450}
+  alt="cache hit"
+/>
+
+저는 여기서 문제가 다 해결되었다고 생각하였습니다.. 😵‍💫
+
+### 3. 전통적인 서버 사이드 렌더링(SSR), 정적 페이지 생성(SSG) 그리고 증분 정적 재생성(ISR) 차이
+
+- **SSR**
+
+  전통적인 SSR(cache opt-out, Dynamic API 사용 시)의 경우 클라이언트 요청마다 새로운 페이지를 가져오게 됩니다. 이런 방식은
+  항상 최신 데이터를 보여줄 수 있다는 장점이 있지만, 서버 자원을 많이 소모하고 페이지 로딩이 생긴다는 단점이 있습니다.
+  위에서 캐싱이 되지 않고 매번 서버로 요청을 하게 되는 것이 전통적인 SSR이라고 할 수 있습니다.
+
+- **SSG**
+
+  SSG는 말 그대로 빌드 시점에 미리 정적 페이지를 생성하여 요청이 있을 때, 사용하는 방식입니다. 빌드 시 모든 페이지와 페이지를 미리 생성해 페이지의 로딩 속도가 매우 빠르며,
+  서버에 부하가 없습니다. 다만, 동적 컨텐츠의 처리가 어렵고 개인화된 컨텐츠 제공이 어렵다는 단점이 있습니다.
+
+- **ISR**
+
+  ISR은 정적 생성의 장점을 유지하면서도 패이지를 검증해 재생성하는 방식입니다. 빌드 타임에 미리 페이지를 생성하면서 재검증 시간을 설정합니다. (물론 `On-demand` 방식도 가능합니다.)
+  설정된 시간이 지나기 전까지, 생성된 페이지를 보여주고 만약 시간이 지났을 경우 백그라운드에서 재생성되고 새로운 페이지를 보여줍니다. SSG의 빠른 속도를 유지하면서 주기적으로 데이터를 업데이트할 수 있습니다.
+  하지만, 완전한 실시간성 데이터는 아닐 수 있다는 단점이 존재합니다. (재검증 시간 경과 후 첫 요청은 캐시 된 페이지가 제공되고, 그 후 요청부터 새로운 페이지를 보게 됨)
+
+제 블로그의 경우 SSG을 사용하고 있었고, 스포티파이 관련 페이지의 경우 재검증 시간을 사용해 ISR 방식으로 구현하였습니다.
+자 그럼 저는 어떤 것을 잘 못 이해하고 있었을까요?
+
+바로바로.. ISR 상황에서 매 사용자 요청마다 데이터를 새로 가져온다고 잘못 생각했습니다. 🥺 실제 ISR에서 데이터 요청은 빌드 시 정적 페이지를 생성할 때 한 번, 그리고 설정된 재검증 시간이 경과한 후 첫 사용자 요청이 있을 때 백그라운드에서 한 번 더 이루어질 뿐인데 말이죠.
+ISR의 대략적인 동작 방식은 다음과 같습니다:
+
+1. 빌드 시점: 앱을 빌드 시 정적 페이지를 생성하며 데이터 요청
+2. 재검증 시간 경과 후 첫 요청: 사용자에게는 캐싱 된 이전 페이지를 제공하면서, 동시에 백그라운드에서 새 데이터로 페이지 재생성 시작
+3. 재생성 완료 후: 이후 모든 사용자는 새롭게 생성된 페이지를 보게 됨
+4. 다시 재검증 시간이 경과하면 위 과정 반복
+
+그래서 바로 위의 메모리 캐싱은 사실 ISR의 동작 방식을 잘못 이해하고 작성한 코드입니다.
+또한 매번 캐시가 스킵 되는 것도 개발 환경의 특성이었습니다.
+
+## 후기
+
+심심했던 블로그에 스포티파이를 추가해 조금의 생기를 불어넣을 수 있어서 너무 재밌게 코딩할 수 있었습니다. 애니메이션도 첨가해서 말이죠.
+또한 알쏭달쏭한 개념들에 대해 왜라는 질문과 함께 좀 더 숙고해 보는 시간을 가질 수 있었습니다.
+
+앞서 경험한 문제점들에서 '아 내가 SSR 아키텍처와 넥스트 개념이 아직 아리송하구나'는 것을 정말 많이 느꼈습니다. <span className="line-through">어쩌면 넥스트 이 녀석이 문제일지도?!</span>
+각 렌더링 방식과 캐시가 동작하는 방식에 대해 이번 기능을 도입하며 좀 더 명확하게 알게 되었습니다. SSR 세상에 있지만 마음은 CSR 속에 살고 있다는 사실에 놀라기도 했습니다.
+
+역시 실제 구현하며 배우는 것이 나한테 잘 맞는구나도 다시 한번 느낄 수 있었습니다.
+좀 더 깊이 있게 넥스트의 렌더링 방식과 캐시를 좀 더 이해하게 되었습니다. 특히 ISR의 작동 방식을 이해하게 되면서, 불필요한 메모리 캐싱 로직을 제거하고 넥스트의 내장 기능을 더 효율적으로 활용할 수 있게 되었습니다. 개발 환경과 프로덕션 환경의 차이점도 명확히 인식하게 되어, 이제는 "왜 개발 환경에서는 캐시가 작동하지 않는 것처럼 보이는지"에 대한 의문도 해소되었습니다.
+
+앞으로 새로운 기능을 구현할 때는 넥스트의 기본 철학과 렌더링 방식을 고려하여 접근해야겠다는 생각이 듭니다.
+
+이번 도입을 통해 이론적인 지식과 실제 구현 사이의 간극을 좁히는 소중한 경험을 하게 되었습니다.
+
+---
+
+- [Spotify Web API](https://developer.spotify.com/documentation/web-api)
+- [ISR](https://nextjs.org/docs/app/building-your-application/data-fetching/incremental-static-regeneration)
