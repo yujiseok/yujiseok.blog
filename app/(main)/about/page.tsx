@@ -1,3 +1,4 @@
+import BlurContainer from "@/app/components/blurContainer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,8 +8,8 @@ export const metadata: Metadata = {
 
 function About() {
   return (
-    <>
-      <section className="mb-12">
+    <BlurContainer className="gap-0">
+      <div className="mb-12">
         <h3 className="text-4xl font-semibold">
           안녕하세요 <br />
           저는 유지석입니다.
@@ -57,9 +58,9 @@ function About() {
             </a>
           </li>
         </ul>
-      </section>
+      </div>
 
-      <section className="mb-12">
+      <div className="mb-12">
         <h4 className="mb-6 text-2xl font-semibold">Career</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
           <li>
@@ -68,9 +69,9 @@ function About() {
             </div>
           </li>
         </ul>
-      </section>
+      </div>
 
-      <section>
+      <div>
         <h4 className="mb-6 text-2xl font-semibold">Education</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
           <li>
@@ -79,8 +80,8 @@ function About() {
           </li>
           <li>원티드 프리온보딩 프론트엔드 인턴십 (2023.02.20 - 2023.03.17)</li>
         </ul>
-      </section>
-    </>
+      </div>
+    </BlurContainer>
   );
 }
 export default About;

@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import Avatar from "@/public/images/avatar.jpg";
+import BlurContainer from "../components/blurContainer";
 
 export default function Home() {
   return (
-    <section className="break-keep">
+    <BlurContainer className="break-keep">
       <div className="my-4 flex items-center gap-8">
         <div className="flex h-[100px] w-[100px] shrink-0 md:h-[125px] md:w-[125px]">
           <Image
@@ -35,6 +36,6 @@ export default function Home() {
         </p>
         <p>앞으로 자주 뵈었으면 좋겠습니다.</p>
       </div>
-    </section>
+    </BlurContainer>
   );
 }
