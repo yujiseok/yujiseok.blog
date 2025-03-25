@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  experimental: {
+    typedEnv: true,
+    viewTransition: true,
+  },
 };
 
 export default nextConfig;

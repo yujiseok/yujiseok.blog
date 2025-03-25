@@ -1,10 +1,10 @@
-import BlurContainer from "@/app/components/blurContainer";
 import Track from "@/app/components/music/track";
 import { getBlurDataUrl } from "@/lib/blurUrl";
 import { getPlaylists, getPlaylistTrack } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
-
+import { unstable_ViewTransition as ViewTransition } from "react";
 import Image from "next/image";
+import BlurContainer from "@/app/components/blurContainer";
 
 export const revalidate = 86_400;
 
@@ -27,17 +27,19 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
 
   return (
-    <BlurContainer className="gap-0">
-      <div className="mb-4 grid items-center gap-2">
+    <div>
+      <ViewTransition name="playlist">
         <Image
           src={playlist.images[0].url}
           alt={playlist.name}
           width={playlist.images[0].width ?? 640}
           height={playlist.images[0].height ?? 640}
-          className="pointer-events-none mb-2 size-56 rounded-lg object-cover"
+          className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
           placeholder="blur"
           blurDataURL={blurDataUrl}
         />
+      </ViewTransition>
+      <BlurContainer className="gap-0">
         <p className="group flex items-center gap-1.5">
           <span className="text-lg">{playlist.name}</span>
           <small>◦</small>
@@ -50,13 +52,14 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
             <ArrowUpRight />
           </a>
         </p>
-      </div>
-      <div className="-m-3">
-        {playlistTracks.map((track) => (
-          <Track key={track.trackName} track={track} />
-        ))}
-      </div>
-    </BlurContainer>
+
+        <div className="-mx-3 mt-4">
+          {playlistTracks.map((track) => (
+            <Track key={track.trackName} track={track} />
+          ))}
+        </div>
+      </BlurContainer>
+    </div>
   );
 };
 

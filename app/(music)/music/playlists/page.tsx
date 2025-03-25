@@ -4,7 +4,7 @@ import { getPlaylists } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
 import Image from "next/image";
 import Link from "next/link";
-
+import { unstable_ViewTransition as ViewTransition } from "react";
 export const revalidate = 86_400;
 
 const page = async () => {
@@ -31,23 +31,25 @@ const PlaylistCard = async ({
   const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
 
   return (
-    <Link
-      href={`/music/playlists/${playlist.id}`}
-      className={cn(
-        "fadeDown relative overflow-hidden rounded-lg",
-        index % 2 === 0 ? "row-span-2" : "row-span-3",
-      )}
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
-      <Image
-        src={playlist.images[0].url}
-        alt={playlist.name}
-        width={playlist.images[0].width ?? 640}
-        height={playlist.images[0].height ?? 640}
-        className="pointer-events-none h-full w-full object-cover"
-        placeholder="blur"
-        blurDataURL={blurDataUrl}
-      />
-    </Link>
+    <ViewTransition name="playlist" className="contain-paint">
+      <Link
+        href={`/music/playlists/${playlist.id}`}
+        className={cn(
+          "fadeDown block size-full overflow-hidden rounded-lg",
+          index % 2 === 0 ? "row-span-2" : "row-span-3",
+        )}
+        style={{ animationDelay: `${index * 80}ms` }}
+      >
+        <Image
+          src={playlist.images[0].url}
+          alt={playlist.name}
+          width={playlist.images[0].width ?? 640}
+          height={playlist.images[0].height ?? 640}
+          className="pointer-events-none size-full object-cover"
+          placeholder="blur"
+          blurDataURL={blurDataUrl}
+        />
+      </Link>
+    </ViewTransition>
   );
 };
