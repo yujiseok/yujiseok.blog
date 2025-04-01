@@ -1,8 +1,8 @@
 import { baseURL } from "../sitemap";
-import { getAllPosts } from "@/lib/utils";
+import { getAllWritings } from "@/lib/utils";
 
 export async function GET() {
-  const posts = getAllPosts();
+  const posts = getAllWritings();
 
   const XML = posts
     .map(

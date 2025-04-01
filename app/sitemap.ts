@@ -1,10 +1,10 @@
-import { getAllPosts } from "@/lib/utils";
+import { getAllWritings } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 
 export const baseURL = "https://www.yujiseok.blog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const posts = getAllPosts().map((post) => ({
+  const posts = getAllWritings().map((post) => ({
     url: `https://www.yujiseok.blog/post/${post.slug}`,
     lastModified: post.metadata.publishedAt,
   }));
