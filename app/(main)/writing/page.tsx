@@ -1,6 +1,6 @@
 import BlurContainer from "@/app/components/blurContainer";
-import Post from "@/app/components/post";
-import { getAllPosts } from "@/lib/utils";
+import Writing from "@/app/components/writing";
+import { getAllWritings } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 };
 
 function PostPage() {
-  const posts = getAllPosts();
+  const writings = getAllWritings();
 
   return (
     <BlurContainer>
-      {posts.map(({ metadata, slug }, i) => (
-        <Post key={slug} metadata={metadata} slug={slug} index={i} />
+      {writings.map(({ metadata, slug }) => (
+        <Writing key={slug} metadata={metadata} slug={slug} />
       ))}
     </BlurContainer>
   );

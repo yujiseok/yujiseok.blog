@@ -34,7 +34,7 @@ const readMdxFile = (filePath: string) => {
   return parseFrontmatter(mdxContent);
 };
 
-export const getAllPosts = () => {
+export const getAllWritings = () => {
   const mdxFiles = getMdxFiles();
 
   return mdxFiles
