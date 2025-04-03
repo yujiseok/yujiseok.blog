@@ -3,7 +3,7 @@ import BlurContainer from "@/app/components/blurContainer";
 const page = () => {
   return (
     <BlurContainer>
-      <div>Cooking</div>
+      <div>TBA</div>
       {/* <div>
         <h4 className="font-semibold">Career</h4>
         <ul className="flex list-disc flex-col gap-1 px-4">
