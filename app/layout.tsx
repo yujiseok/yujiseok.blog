@@ -54,7 +54,7 @@ export default function RootLayout({
       className={`${geistSans.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="mx-2 flex flex-col bg-neutral-50 transition-colors delay-50 ease-out dark:bg-neutral-800">
+      <body className="mx-2 flex flex-col bg-neutral-50 px-4 transition-colors delay-50 ease-out dark:bg-neutral-800">
         <div className="pointer-events-none fixed inset-0 z-10 h-10 w-full backdrop-blur-2xl select-none [mask-image:linear-gradient(to_bottom,black,transparent)]" />
 
         <ThemeProvider attribute="class">

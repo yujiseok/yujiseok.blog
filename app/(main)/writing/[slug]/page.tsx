@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { getAllWritings } from "@/lib/utils";
 import { Mdx } from "@/app/components/mdx";
+import BlurContainer from "@/app/components/blurContainer";
 
 export function generateStaticParams() {
   const writings = getAllWritings();
@@ -50,7 +51,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   }
 
   return (
-    <section>
+    <BlurContainer className="gap-0">
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">
           {writing.metadata.title}
@@ -62,7 +63,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
       </div>
 
       <Mdx source={writing.content} />
-    </section>
+    </BlurContainer>
   );
 };
 export default Post;

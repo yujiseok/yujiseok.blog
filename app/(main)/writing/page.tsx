@@ -12,7 +12,7 @@ function PostPage() {
   const writings = getAllWritings();
 
   return (
-    <BlurContainer>
+    <BlurContainer className="gap-8">
       {writings.map(({ metadata, slug }) => (
         <Writing key={slug} metadata={metadata} slug={slug} />
       ))}
