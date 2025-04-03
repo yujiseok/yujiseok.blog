@@ -37,7 +37,7 @@ export default function Home() {
         <h2 className="mb-0.5 font-medium">Now</h2>
         <div className="grid gap-3">
           <p>
-            사용자 경험을 개선하는 인터랙션과 인터페이스 구현에 집중하고
+            사용자 경험을 개선하는 인터랙션과 인터페이스 구현을 위해 노력하고
             있습니다. 웹의 창의적 가능성을 탐구하며 더 나은 제품을 만드는 것을
             목표로 합니다.
           </p>
@@ -120,7 +120,7 @@ export default function Home() {
           </a>
           에서 저를 만나보세요, 또는 저의{" "}
           <a href="mailto:koesijuy@gmail.com" className="underline">
-            koesijuy@gmail.com
+            이메일
           </a>
           로 연락해 주세요.
         </p>
