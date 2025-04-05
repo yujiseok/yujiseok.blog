@@ -7,7 +7,7 @@ function Footer() {
       <div className="mt-10 flex w-full justify-between gap-4 py-6">
         <Link href="/">© {new Date().getFullYear()} 유지석</Link>
         <div className="flex items-center gap-4">
-          <Link href="/resume">Resume</Link>
+          {/* <Link href="/resume">Resume</Link> */}
           <DarkModeBtn />
         </div>
       </div>
