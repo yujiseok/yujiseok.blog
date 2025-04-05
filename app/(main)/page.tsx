@@ -28,8 +28,10 @@ export default function Home() {
       <div>
         <h2 className="mb-0.5 font-medium">About Me</h2>
         <p>
-          데이원 컴퍼니에서 프론트엔드 엔지니어로 일하며, UI를 만들고 있습니다.
-          좋은 디자인에서 즐거움과 영감을 얻습니다.
+          데이원 컴퍼니 Coloso
+          <span className="mr-1 ml-0.5 inline-block size-0.5 rounded-full bg-[#ffb200]" />
+          에서 프론트엔드 엔지니어로 일하며, UI를 만들고 있습니다. 좋은
+          디자인에서 즐거움과 영감을 얻습니다.
         </p>
       </div>
 
