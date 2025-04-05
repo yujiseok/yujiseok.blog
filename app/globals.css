@@ -14,11 +14,32 @@
 html {
   scrollbar-width: thin;
   scrollbar-color: #e8e8e8 transparent;
+  transition: scrollbar-color 0.2s ease;
 }
 
 html.dark {
   scrollbar-width: thin;
   scrollbar-color: #404040 transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #e8e8e8;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background-color: #404040;
 }
 
 body {
@@ -165,4 +186,18 @@ summary {
 .fadeDown {
   animation: fadeDown 0.6s ease-in-out both;
   will-change: opacity, transform;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.6s ease-in-out both;
+  will-change: opacity;
 }
