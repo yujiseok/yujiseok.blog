@@ -27,6 +27,18 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  redirects: async () => [
+    {
+      source: "/post",
+      destination: "/writing",
+      permanent: true,
+    },
+    {
+      source: "/post/:slug",
+      destination: "/writing/:slug",
+      permanent: true,
+    },
+  ],
   experimental: {
     typedEnv: true,
     viewTransition: true,
