@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 
+type ContentType = "writing" | "atelier";
+
 export interface Metadata {
   title: string;
   summary: string;
@@ -25,21 +27,26 @@ const parseFrontmatter = (mdxContent: string) => {
   return { metadata, content };
 };
 
-const getMdxFiles = () =>
-  fs.readdirSync(ROOT_DIR).filter((file) => path.extname(file) === ".mdx");
+const getMdxFiles = (contentType: ContentType) => {
+  const contentPath = path.join(ROOT_DIR, contentType);
+  return fs
+    .readdirSync(contentPath)
+    .filter((file) => path.extname(file) === ".mdx");
+};
 
-const readMdxFile = (filePath: string) => {
+const readMdxFile = (contentType: ContentType, fileName: string) => {
+  const filePath = path.join(ROOT_DIR, contentType, fileName);
   const mdxContent = fs.readFileSync(filePath, "utf8");
 
   return parseFrontmatter(mdxContent);
 };
 
-export const getAllWritings = () => {
-  const mdxFiles = getMdxFiles();
+const getAllContent = (contentType: ContentType) => {
+  const mdxFiles = getMdxFiles(contentType);
 
   return mdxFiles
     .map((file) => {
-      const { metadata, content } = readMdxFile(path.join(ROOT_DIR, file));
+      const { metadata, content } = readMdxFile(contentType, file);
       const slug = path.basename(file, ".mdx");
       return { metadata, content, slug };
     })
@@ -49,3 +56,6 @@ export const getAllWritings = () => {
         new Date(a.metadata.publishedAt).getTime(),
     );
 };
+
+export const getAllWritings = () => getAllContent("writing");
+export const getAllAtelier = () => getAllContent("atelier");
