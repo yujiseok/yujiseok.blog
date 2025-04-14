@@ -83,14 +83,14 @@ export default function Home() {
         <h2 className="mb-0.5 font-medium">More</h2>
         <div>
           <p>
-            저는 음악 감상을 아주 사랑하며, 제 음악적 취향을 나누는{" "}
+            저는 음악 감상을 아주 사랑하며, 음악적 취향을 나누는{" "}
             <Link href="/music" className="underline">
               공간
             </Link>
-            을 마련했습니다.
+            을 마련해 보았습니다.
           </p>
           <p>
-            인터페이스 탐구를 의한{" "}
+            또, 인터페이스 탐구를 의한{" "}
             <Link href="/atelier" className="underline">
               공방
             </Link>
