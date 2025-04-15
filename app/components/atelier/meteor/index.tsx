@@ -61,10 +61,21 @@ const Star = ({ top, left }: { top: number; left: number }) => {
 };
 
 const ShootingStar = () => {
-  const top = Math.random() * 20;
-  const left = Math.random() * 100;
-  const duration = Math.random() * 4 + 4;
-  const width = Math.random() * 23 + 90;
+  const [styles, setStyles] = useState(() => ({
+    top: 0,
+    left: 0,
+    duration: 0,
+    width: 0,
+  }));
+
+  useEffect(() => {
+    setStyles({
+      top: Math.random() * 20,
+      left: Math.random() * 100,
+      duration: Math.random() * 4 + 4,
+      width: Math.random() * 23 + 90,
+    });
+  }, []);
 
   return (
     <div
@@ -72,10 +83,10 @@ const ShootingStar = () => {
       className="shooting absolute h-0.5 bg-gradient-to-r from-transparent to-white shadow"
       style={
         {
-          top: `${top}%`,
-          left: `${left}%`,
-          width,
-          "--duration": `${duration}s`,
+          top: `${styles.top}%`,
+          left: `${styles.left}%`,
+          width: `${styles.width}px`,
+          "--duration": `${styles.duration}s`,
         } as React.CSSProperties
       }
     />
