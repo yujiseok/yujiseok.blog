@@ -5,12 +5,9 @@ import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 
 const FixedBackLink = () => {
-  const pathname = usePathname();
-  const isWritingIndex = pathname === "/writing";
+  const { href } = useBackHref();
 
-  if (!pathname.startsWith("/writing")) return null;
-
-  const href = isWritingIndex ? "/" : "/writing";
+  if (!href) return null;
 
   return (
     <nav
@@ -21,7 +18,7 @@ const FixedBackLink = () => {
         <Link
           href={href}
           className="group pointer-events-auto flex w-fit items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400"
-          aria-label="back"
+          aria-label={`back to ${href}`}
         >
           <ArrowUTurnLeft aria-hidden="true" role="presentation" />
           <span>뒤로 가기</span>
@@ -50,3 +47,21 @@ const ArrowUTurnLeft = (props: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
+
+const useBackHref = () => {
+  const pathname = usePathname();
+
+  const getBackHref = () => {
+    if (pathname === "/") return "";
+
+    const segments = pathname.split("/").filter(Boolean);
+
+    if (segments.length === 0) return "/";
+
+    return segments.length === 1 ? "/" : `/${segments.slice(0, -1).join("/")}`;
+  };
+
+  const href = getBackHref();
+
+  return { href };
+};
