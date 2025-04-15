@@ -14,7 +14,7 @@ const FixedBackLink = () => {
       className="fadeIn pointer-events-none inset-x-0 top-24 z-50 lg:fixed lg:top-28"
       aria-label="navigation"
     >
-      <div className="mb-4 -ml-3 max-w-4xl lg:mx-auto">
+      <div className="mb-6 -ml-1 max-w-4xl lg:mx-auto">
         <Link
           href={href}
           className="group pointer-events-auto flex w-fit items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400"

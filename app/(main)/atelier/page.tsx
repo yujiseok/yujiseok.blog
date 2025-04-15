@@ -11,7 +11,7 @@ const page = () => {
   const atelier = getAllAtelier();
 
   return (
-    <BlurContainer className="grid-cols-2 gap-4">
+    <BlurContainer className="grid-cols-2 gap-2 md:gap-4">
       {atelier.map(({ metadata, slug }) => (
         <GridItem key={slug} metadata={metadata} slug={slug} />
       ))}

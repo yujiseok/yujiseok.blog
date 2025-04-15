@@ -19,7 +19,7 @@ const GridItem = ({ metadata, slug }: { metadata: Metadata; slug: string }) => {
           quality={100}
           className="size-full object-cover"
         />
-        <h3 className="text-sm font-medium">{title}</h3>
+        <h3 className="text-xs font-normal md:text-sm">{title}</h3>
       </div>
     </Link>
   );
