@@ -201,3 +201,44 @@ summary {
   animation: fadeIn 0.6s ease-in-out both;
   will-change: opacity;
 }
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.twinkle {
+  --duration: 1s;
+  animation: twinkle var(--duration) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: opacity;
+}
+
+@keyframes shooting {
+  0% {
+    transform: translateX(-100px) translateY(-100px) rotate(var(--angle));
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(calc(100vh + 100px))
+      rotate(var(--angle));
+    opacity: 0;
+  }
+}
+
+.shooting {
+  --angle: 45deg;
+  --duration: 8s;
+  animation: shooting var(--duration) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
