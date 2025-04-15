@@ -16,6 +16,22 @@ export const generateStaticParams = async () => {
   }));
 };
 
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const playlistId = (await params).id;
+  const playlists = await getPlaylists();
+  const playlist = playlists.find(
+    (playlist) => playlist.id === playlistId,
+  ) as TypeSpotifyPlaylist;
+
+  return {
+    title: playlist.name,
+  };
+};
+
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const playlistId = (await params).id;
   const playlistTracks = await getPlaylistTrack(playlistId, 10, 0);

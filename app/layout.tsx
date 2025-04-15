@@ -16,10 +16,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yujiseok.blog"),
-  title: {
-    default: "Yujiseok",
-    template: "%s | Yujiseok",
-  },
+  title: "Yujiseok",
   description: "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그",
   openGraph: {
     title: "유지석",

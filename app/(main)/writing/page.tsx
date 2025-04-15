@@ -4,7 +4,7 @@ import { getAllWritings } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Post",
+  title: "Writing",
   description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
 };
 

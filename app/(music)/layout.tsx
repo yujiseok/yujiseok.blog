@@ -1,4 +1,11 @@
+import { Metadata } from "next";
 import NavBar from "../components/music/navBar";
+
+export const metadata: Metadata = {
+  title: "Music",
+  description: "음악적 취향을 나누는 공간",
+};
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
