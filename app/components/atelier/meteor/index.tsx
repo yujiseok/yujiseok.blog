@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 
 const starColors = [
   "rgb(255, 255, 255)",
@@ -19,9 +19,13 @@ const makeStars = (count: number) =>
     left: Math.random() * 100,
   }));
 
-const stars = makeStars(300);
-
 const Meteor = () => {
+  const [stars, setStars] = useState(makeStars(300));
+
+  useLayoutEffect(() => {
+    setStars(makeStars(300));
+  }, []);
+
   return (
     <div className="absolute size-full bg-black">
       {stars.map((star, index) => (
@@ -61,14 +65,14 @@ const Star = ({ top, left }: { top: number; left: number }) => {
 };
 
 const ShootingStar = () => {
-  const [styles, setStyles] = useState(() => ({
+  const [styles, setStyles] = useState({
     top: 0,
     left: 0,
     duration: 0,
     width: 0,
-  }));
+  });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setStyles({
       top: Math.random() * 20,
       left: Math.random() * 100,
