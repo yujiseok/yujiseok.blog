@@ -51,7 +51,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   }
 
   return (
-    <BlurContainer className="gap-0">
+    <BlurContainer className="block gap-0">
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">
           {writing.metadata.title}
