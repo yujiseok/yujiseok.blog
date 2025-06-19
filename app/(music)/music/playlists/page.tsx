@@ -31,7 +31,7 @@ const PlaylistCard = async ({
   const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
 
   return (
-    <ViewTransition name="playlist" className="contain-paint">
+    <ViewTransition name="playlist">
       <Link
         href={`/music/playlists/${playlist.id}`}
         className={cn(
