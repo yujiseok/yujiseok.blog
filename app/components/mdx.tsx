@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import rehypePrettyCode, { Options } from "rehype-pretty-code";
 import Typewriter from "./2024-gencon/typewriter";
+import GridMasonry from "./portfolio/GridMasonry";
 
 function CustomLink(props: any) {
   const href = props.href;
@@ -32,6 +33,7 @@ const mdxComponents = {
   a: CustomLink,
   Image: CustomImage,
   Typewriter,
+  GridMasonry,
 };
 
 const options: Options = {
