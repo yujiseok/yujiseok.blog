@@ -1,0 +1,1055 @@
+---
+title: 서비스 Masonry 레이아웃 구현 회고
+publishedAt: "2025-07-24"
+summary: 각기 다른 크기의 포트폴리오를 차곡차곡 쌓아봅시다.
+---
+
+## 개요
+
+[포트폴리오](https://coloso.co.kr/portfolio)는 크리에이터들의 포트폴리오와 경력을 한데 모은 전시 서비스입니다.
+해당 서비스는 마케팅 비용을 효율적으로 처리하고, 보다 많은 잠재 고객의 유입을 유도하는 것이 핵심 목표였습니다.
+이를 위해서는 단순한 작품 전시를 넘어, 각 크리에이터의 브랜드 가치를 효과적으로 드러내고, 고객이 컨텐츠에 쉽게 접근할 수 있도록 UI를 강화하는 것이 필수적이었습니다.
+
+시각적 다양성과 정보 밀도가 매우 중요한 서비스 특성상, Masonry 레이아웃을 도입해 유저 경험을 극대화하는 것이 주요 요구사항이었습니다.
+해당 포스팅에선 포트폴리오 서비스에 Masonry 레이아웃을 실제 도입한 구현 과정과 고민을 정리해 봅니다.
+
+## Masonry란?
+
+<div className="flex flex-col items-center">
+  <Image
+    src={`/images/how-to-implement-portfolio/pinterest.png`}
+    width={680}
+    height={1024}
+    alt="Pinterest Masonry 레이아웃"
+  />
+  <small>Pinterest의 Masonry 레이아웃</small>
+</div>
+
+우선 UI 구현 전에 Masonry 레이아웃에 대해 간단하게 조사해 보았습니다.
+
+**Masonry**는 아래와 같은 정의를 갖습니다.
+
+- 벽돌이나 돌 등 개별 유닛을 쌓아 올린 구조
+- ‘**조적**’ 또는 ‘**석공**’이라는 의미로, 벽돌이나 돌을 쌓아 올린 기술 또는 그 결과물
+
+이러한 구조적 특성을 차용해, 웹에서 여러 요소(카드, 이미지 등)를 벽돌처럼 빈틈 없이 자연스럽게 쌓은 레이아웃을 ‘**Masonry 레이아웃**’이라고 부릅니다.
+
+## Masonry 레이아웃의 특장점
+
+그렇다면, Masonry 레이아웃의 특징과 이를 통해 얻을 수 있는 장점은 무엇일까요?
+
+### 1. 공간 활용 극대화
+
+- 불규칙한 크기의 컨텐츠(이미지, 카드 등)를 빈틈 없이 배치하여, 화면의 유휴 공간 최소화
+- 대규모 이미지/포트폴리오 서비스에서 스크롤 효율과 정보 밀도를 극대화
+
+### 2. 시각적 다양성 및 동적 표현
+
+- 각 요소가 자유롭게 쌓이며 화면에 리듬감과 생동감 부여
+- 정형화된 그리드와 달리, Masonry는 비정형적이고 유연한 배열로 유저에게 신선한 경험 제공
+
+### 3. 반응형 및 확장성
+
+- Masonry 레이아웃은 화면 크기 변화에 따라 자동으로 컬럼 수와 배치를 조정할 수 있어, 모바일·태블릿·데스크탑 등 모든 디바이스에서 일관된 UX 보장
+- 동적으로 컨텐츠가 추가/삭제되어도 레이아웃이 자연스럽게 재배치되어, 실시간 피드나 무한 스크롤 환경에 적합
+
+### 4. 이미지 크기 대응성
+
+- 세로 길이가 불규칙한 이미지도 자연스럽게 쌓을 수 있어, 다양한 크기의 포트폴리오/작품/이미지 전시 최적화
+- 각 이미지의 고유한 비율과 크기를 그대로 살리면서, 공간 활용과 시각적 완성도를 동시에 달성
+
+### 5. UX 및 비즈니스 임팩트
+
+- 첫인상(First Impression): Masonry는 한눈에 다양한 컨텐츠를 노출해, 유저의 흥미와 체류 시간 향상
+- 탐색 효율성: 유저는 더 많은 컨텐츠를 빠르게 탐색할 수 있어, 전환율 및 재방문율 향상
+- 브랜드 차별화: 카드 그리드 대비 차별화된 비주얼을 제공해, 브랜드 인지도와 신뢰도 향상
+
+이러한 특장점 덕분에 Masonry 레이아웃은 포트폴리오 서비스의 시각적 요구사항을 가장 효과적으로 해결할 수 있는 방안이었고,
+이를 기반으로 화면 구조 전반을 설계하게 되었습니다.
+
+## 초기 구현 과정
+
+초기 단계에, 단순히 CSS로 구현할 수 있지 않을까 하는 막연한 생각이 들었습니다.
+블로그에 CSS로 만 구현한 [경험](https://www.yujiseok.blog/music/playlists)이 있었기에, 이번에도 grid 레이아웃 시스템을 사용해 순수 CSS로 구현해 보려고 했습니다.
+
+> CSS로 구현할 수 있을 것 같은 괜한 오기가 생겨서..🤣
+
+### grid를 사용해 구현해보기
+
+grid는 2차원 레이아웃을 구현할 수 있는 레이아웃 시스템으로 아이템은 row(행)와 column(열)으로 배치됩니다.
+이때 grid의 `grid-row` 속성을 사용해 row의 위치를 지정할 수 있습니다.
+해당 속성은 개별 아이템을 여러 row에 걸쳐 배치할 수 있게 해주는 속성입니다. 이때 span을 사용해 배치할 row의 수를 지정할 수 있습니다.
+
+<GridMasonry />
+
+정책이 존재하지 않는 단순한 레이아웃의 경우 별다른 문제가 없었지만,
+**뷰포트 별 컬럼 수**, **아이템 크기**, **gap** 등 복잡한 세부 정책이 요구될 경우 CSS 구현의 명확한 한계가 드러났습니다.
+
+<GridMasonry item1={2} item2={1} text="높이가 어긋난 레이아웃" />
+
+### 왜 grid-row 방식만으로는 Masonry 레이아웃이 어려운가?
+
+1. row 단위 배치의 한계
+
+   - grid-row로는 반드시 “**행 단위(row의 합계)**”로만 배치할 수밖에 없습니다.
+     → 카드별 세로 길이가 달라져도, 나란히 위치하는 카드들과 항상 행을 공유해야 하므로
+     → 결국 일부 카드는 의도치 않은 빈 공간이 생기고, Masonry 특유의 “**자연스럽게 맞물린 쌓기**”는 불가능해집니다.
+
+2. 아이템 높이의 자동 결정
+
+   - 그리드 컨테이너에서 row의 높이가 명시적으로 정의되어 있다면, 각 아이템의 실제 높이는 그에 따라 자동으로 결정됩니다.
+   - ```css title="grid-row.css"
+     .container {
+       display: grid;
+       grid-template-rows: 100px 200px 150px;
+     }
+
+     .item {
+       grid-row: span 2; /* 2 row 걸쳐 배치 */
+     }
+     ```
+
+     (위 `CSS` 코드처럼 명시적 그리드 정의라면 `.item`의 높이는 2 row의 합인 `100px + 200px = 300px`로 결정됩니다.)
+
+     > 명시적 그리드란 개발자가 명확하게 row과 column을 지정해 만든 그리드를, 이와 반대로 암시적 그리드는 브라우저가 자동으로 row과 column을 결정하는 그리드를 의미합니다.
+
+3. 개별 아이템 높이의 세밀한 제어 불가
+
+   - 각 아이템마다 원하는 높이를 직접 지정해도, 그리드 시스템 특성상 row의 높이와 span 규칙이 우선 적용되어 실제 배치가 의도와 다르게 나타날 수 있습니다.
+   - 예를 들어, 위의 어긋난 레이아웃의 3번째 아이템의 높이가 `476px`로 설정되면, 해당 row 전체가 `476px`로 맞춰져 버립니다. 이로 인해 2번째 아이템이 `274px`로 설정되어도, 빈 공간이 생겨 레이아웃이 어긋나게 됩니다.
+
+간단한 데모나 프로토타입 단계에서는 Masonry 레이아웃을 어느 정도 모방하는 데 적합했으나, 실제 서비스 수준의 복잡한 요구사항을 충족하기에는 한계가 있었습니다.
+이에 따라, 순수 CSS만으로 Masonry 스타일의 레이아웃을 구현하는 것은 무리가 있음을 인지하고, 실제 구현을 위해 방향성을 재설정하게 되었습니다.
+
+## 구현을 위한 준비물
+
+### 정책 예시
+
+<table>
+  <thead>
+    <tr>
+      <th>뷰포트</th>
+      <th>{'~719px'}</th>
+      <th>{'720px~959px'}</th>
+      <th>{'960px~1279px'}</th>
+      <th>{'1280px~1727px'}</th>
+      <th>...</th>
+    </tr>
+
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>그리드 컬럼 수</b></td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td><b>그리드 max-width</b></td>
+      <td></td>
+      <td>1120px</td>
+      <td>1120px</td>
+      <td>1688px</td>
+    </tr>
+    <tr>
+      <td><b>그리드 min-width</b></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>1120px</td>
+    </tr>
+    <tr>
+      <td><b>컨테이너 min-width</b></td>
+      <td>320px</td>
+      <td>680px</td>
+      <td>890px</td>
+      <td>1120px</td>
+    </tr>
+    <tr>
+      <td><b>컨테이너 max-width</b></td>
+      <td>679px</td>
+      <td>889px</td>
+      <td>1119px</td>
+      <td>1495px</td>
+    </tr>
+    <tr>
+      <td><b>그리드 gap x</b></td>
+      <td>12px</td>
+      <td>16px</td>
+      <td>16px</td>
+      <td>16px</td>
+    </tr>
+    <tr>
+      <td><b>그리드 gap y</b></td>
+      <td>16px</td>
+      <td>18px</td>
+      <td>18px</td>
+      <td>20px</td>
+    </tr>
+    <tr>
+      <td><b>아이템 min-width</b></td>
+      <td>154px</td>
+      <td>216px</td>
+      <td>210.5px</td>
+      <td>240px</td>
+    </tr>
+    <tr>
+      <td><b>아이템 max-width</b></td>
+      <td></td>
+      <td>268px</td>
+      <td>268px</td>
+      <td>268px</td>
+    </tr>
+    <tr>
+      <td><b>아이템 min-height</b></td>
+      <td>60px</td>
+      <td>145px</td>
+      <td>145px</td>
+      <td>145px</td>
+    </tr>
+    <tr>
+      <td><b>아이템 max-height</b></td>
+      <td>274px</td>
+      <td>476px</td>
+      <td>476px</td>
+      <td>448px</td>
+    </tr>
+  </tbody>
+</table>
+
+실제 서비스의 경우 위의 표와 같이 뷰포트 별 컬럼 수, 컨테이너 너비, 아이템 너비, 아이템 높이 등 복잡한 정책이 요구됩니다.
+
+### 레퍼런스 찾기
+
+Masonry 레이아웃 정책 구현을 위해 레퍼런스를 조사한 결과, [핀터레스트](https://www.pinterest.com)의 구조가 서비스 요구사항에 가장 적합하다고 판단하여 이를 참고해 구현하기로 했습니다.
+
+<div className="flex flex-col items-center">
+  <Image
+    src={`/images/how-to-implement-portfolio/pinterest-html.png`}
+    width={680}
+    height={1024}
+    alt="Pinterest Masonry 레이아웃"
+  />
+  <small>Pinterest의 HTML 구조</small>
+</div>
+
+핀터레스트의 경우 각 리스트의 x, y 좌표를 계산하여 CSS `transform` 속성을 사용해 리스트를 동적으로 배치하는 구조를 사용하고 있습니다.
+서비스의 포트폴리오 역시 너비와 높이에 따라 개별 아이템을 배치해야 하기에 이를 참고하는 것이 좋다고 판단하였습니다.
+
+그 후, 배치에 필요한 값들을 정리하였습니다.
+
+- **viewport**: 현재 사용자의 전체 브라우저 width
+- **containerWidth**: masonry가 위치한 부모 컨테이너의 너비
+- **pageType**: 좋아요 페이지 / 크리에이터 페이지 / 메인 페이지
+- **policy**: 뷰포트 별 정책 구조체
+- **columnWidth**: 실제 렌더링 될 컬럼 하나의 너비
+- **columnHeights**: 각 컬럼의 누적 높이 (배치용)
+- **imageWidth/Height**: 카드에 포함된 이미지의 원본 크기
+- **centerOffset**: 전체 레이아웃을 가운데 정렬하기 위한 값
+- **masonryContainerHeight**: wrapper div의 최종 height
+
+실제 구현에 필요한 준비물들이 정해졌으니 본격적으로 레이아웃 배치를 위한 로직을 작성해봅시다.
+
+## 실제 구현 과정
+
+### 1. 정책 반환 함수 (getPolicy)
+
+먼저 가장 중요한 현재 화면에 맞는 정책을 결정하는 함수를 작성해줍니다.
+
+```ts
+/**
+ * 현재 컨테이너 너비와 옵션에 따라 정책 반환
+ *
+ * @returns Masonry 정책
+ */
+const getPolicy = ({
+  viewport,
+  containerWidth,
+  isLikePage,
+  isCreatorPage,
+  isMobile,
+}: GetPolicyParams): MasonryPolicy => {
+  if (isLikePage && !isMobile) return MASONRY_POLICIES_LIKE.at(-1)!;
+
+  const policies = isLikePage ? MASONRY_POLICIES_LIKE : MASONRY_POLICIES;
+
+  // isCreatorPage면 containerWidth 기준
+  if (isCreatorPage && containerWidth) {
+    const matched = policies.find(
+      (policy) => containerWidth >= policy.containerMin && containerWidth <= policy.containerMax,
+    );
+    return matched || policies[0];
+  }
+
+  // 그 외에는 viewport 기준
+  const matched = policies.find((policy) => viewport <= policy.maxViewport);
+  return matched || policies.at(-1)!;
+};
+```
+
+해당 함수는 페이지 타입과 컨테이너 너비에 따라 정책을 반환합니다.
+Masonry의 경우 각 페이지(메인, 좋아요, 크리에이터 상세)에 따라 다른 정책을 적용해야 하기에 조건에 따라 정책을 반환하도록 하였습니다.
+
+1. **좋아요 페이지일 경우**: 데스크탑 뷰포트(960px 이상)일 경우 마지막 좋아요 정책 반환
+2. **크리에이터 페이지일 경우**: Masonry의 컨테이너 너비 기준으로 정책 찾기 (`policy.containerMin ≤ containerWidth ≤ policy.containerMax`)
+3. **그 외에는 뷰포트에 따라 정책 반환**: `viewport ≤ policy.maxViewport`
+
+### 2. 개별 Masonry 컬럼 너비 반환 함수 (getColumnWidth)
+
+정책이 결정되면, 해당 정책에 따라 개별 컬럼의 너비를 계산합니다.
+
+```ts
+/**
+ * 정책과 컨테이너 너비로 컬럼 너비 계산
+ *
+ * @returns 개별 Masonry 아이템 컬럼 너비
+ */
+const getColumnWidth = ({ policy, containerWidth }: GetColumnWidthParams): number => {
+  const baseWidth = Math.min(containerWidth, policy.maxWidth);
+  const totalGap = policy.gapX * (policy.columns - 1);
+  const rawColumnWidth = (baseWidth - totalGap) / policy.columns;
+
+  return Math.min(Math.max(rawColumnWidth, policy.itemMinWidth), policy.itemMaxWidth);
+};
+
+```
+
+이 함수는 다음과 같은 순서로 컬럼 너비를 계산합니다:
+
+1. **기본 너비 계산**: 컨테이너 너비와 정책의 최대 너비 중 작은 값을 선택
+2. **갭 공간 계산**: 컬럼 사이의 총 갭 공간 계산 (`gapX × (columns - 1)`)
+   - 컬럼에서 `- 1`을 하는 이유 -> 마지막 컬럼은 갭 존재 x
+3. **원시 컬럼 너비 계산**: (기본 너비 - 총 갭 공간) / 컬럼 수
+4. **최종 컬럼 너비 계산**: 원시 너비를 최소/최대 너비 범위 내로 제한
+
+### 3. 개별 Masonry 아이템 높이 반환 함수 (getItemHeight)
+
+컬럼 너비가 결정되면, 각 아이템의 높이를 이미지 비율에 따라 계산합니다.
+
+```ts
+/**
+ * 아이템의 첫 번째 asset의 이미지 비율로 높이 계산
+ *
+ * @returns 개별 Masonry 아이템 높이
+ */
+const getItemHeight = ({ item, policy, columnWidth }: GetItemHeightParams<TypePortfolio>): number => {
+  const firstAsset = item.items[0]?.asset;
+  const imageWidth = firstAsset?.imageWidth;
+  const imageHeight = firstAsset?.imageHeight;
+
+  if (!imageWidth || !imageHeight) return policy.itemMinHeight;
+
+  const scaledHeight = (imageHeight / imageWidth) * columnWidth;
+  return Math.max(policy.itemMinHeight, Math.min(scaledHeight, policy.itemMaxHeight));
+};
+```
+
+이 함수는 이미지의 원본 비율을 유지하면서 컬럼 너비에 맞는 높이를 계산합니다:
+
+1. **이미지 크기 추출**: 첫 번째 asset에서 이미지의 원본 너비와 높이를 가져옴
+2. **비율 계산**: 이미지의 높이를 너비로 나눈 후(aspect ratio) 컬럼 너비를 곱해 새로운 높이 도출
+   - 원본 너비 : 원본 높이 = 컬럼 너비 : X (구하려는 높이)
+   - 예시) 1000 : 800 = 200 : X → X = (800 × 200) / 1000 = 160
+3. **범위 제한**: 계산된 높이를 정책의 최대 높이로 제한한 후, 정책의 최소 높이와 비교하여 더 큰 값 반환
+
+### 4. Masonry 레이아웃 계산 함수 (getMasonryLayout)
+
+이제 모든 아이템의 위치와 크기를 계산하여 실제 레이아웃을 생성합니다.
+
+```ts
+/**
+ * Masonry 레이아웃 계산
+ *
+ * @returns Masonry 레이아웃
+ */
+const getMasonryLayout = ({
+  items,
+  policy,
+  columnWidth,
+}: {
+  items: TypePortfolio[];
+  policy: MasonryPolicy;
+  columnWidth: number;
+}) => {
+  const { columns, gapX, gapY } = policy;
+  const columnHeights = Array(columns).fill(0);
+  const layoutItems: TypePortfolioMasonryItem<TypePortfolio>[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const height = getItemHeight({ item, policy, columnWidth });
+    const column = i % columns;
+    const top = columnHeights[column];
+    const left = column * (columnWidth + gapX);
+
+    layoutItems.push({
+      item,
+      masonry: { top, left, width: columnWidth, height, column },
+    });
+
+    columnHeights[column] += height + gapY;
+  }
+
+  const containerHeight = Math.max(...columnHeights) - gapY;
+  return { layoutItems, containerHeight };
+};
+```
+
+이 함수는 다음과 같은 과정으로 레이아웃을 계산합니다:
+
+1. **초기화**: 정책에서 컬럼 수와 갭을 읽어오고, 각 컬럼의 높이를 추적할 배열과 레이아웃 아이템 배열을 생성
+2. **아이템 순회**: 각 아이템을 순회하며 개별 높이를 계산 (위의 `getItemHeight` 함수 사용)
+3. **위치 계산**:
+   - 배치될 컬럼 계산 (`i % columns`로 순차 배치)
+   - 컬럼의 현재 높이를 top 위치로 사용
+   - 컬럼 위치와 컬럼 너비, x축 갭을 곱해 left 위치 계산
+4. **레이아웃 정보 저장**: 계산된 위치와 크기 정보를 레이아웃 아이템에 저장
+5. **컬럼 높이 업데이트**: 해당 컬럼의 높이에 아이템 높이와 y축 갭을 추가
+6. **컨테이너 높이 계산**: 모든 컬럼 중 최대 높이에서 y축 갭을 뺀 값을 전체 컨테이너 높이로 반환
+
+### 5. Masonry 레이아웃 옵션 반환 함수 (getMasonryOptions)
+
+마지막으로 모든 계산을 종합하여 최종 Masonry 옵션을 반환합니다.
+
+```ts
+/**
+ * Masonry 옵션 반환
+ *
+ * @returns Masonry 레이아웃 옵션 (아이템 레이아웃, 컨테이너 높이, 컬럼 너비, 중앙 오프셋, 정책)
+ */
+export const getMasonryOptions = ({
+  containerWidth,
+  items,
+  listType,
+  isMobile,
+  viewport,
+}: MasonryOptionsParams<TypePortfolio>) => {
+  const isLikePage = listType === 'like';
+  const isCreatorPage = listType === 'creator';
+
+  const policy = getPolicy({
+    viewport,
+    containerWidth,
+    isLikePage,
+    isCreatorPage,
+    isMobile,
+  });
+
+  const columnWidth = getColumnWidth({ policy, containerWidth });
+  const totalGridWidth = policy.columns * columnWidth + policy.gapX * (policy.columns - 1);
+  const centerOffset = Math.max(0, (containerWidth - totalGridWidth) / 2);
+
+  const { layoutItems: masonryItems, containerHeight: masonryContainerHeight } = getMasonryLayout({
+    items,
+    policy,
+    columnWidth,
+  });
+
+  return {
+    masonryItems,
+    masonryContainerHeight,
+    columnWidth,
+    centerOffset,
+    policy,
+  };
+};
+```
+
+1. 페이지 타입 확인
+2. 정책 반환
+3. 컬럼 너비 계산
+4. 전체 그리드 너비 = (컬럼 개수 × 컬럼 너비) + (컬럼 사이 간격 × (컬럼 개수 - 1))
+5. 가운데 정렬 오프셋 계산
+   - 컨테이너 너비와 전체 그리드 너비의 차이를 반으로 나눠서
+   - 그리드가 가운데에 오도록 하는 여백(오프셋)을 계산
+6. 레이아웃 생성 후 반환
+
+각 함수는 독립적으로 역할을 수행하지만, 서로 유기적으로 연결되어 전체 레이아웃 시스템을 구성합니다.  
+즉, 정책 반환(getPolicy) → 컬럼 너비 계산(getColumnWidth) → 아이템 높이 계산(getItemHeight) → 레이아웃 계산(getMasonryLayout) → 최종 옵션 반환(getMasonryOptions) 순서로 호출하면,
+복잡한 뷰포트별 정책과 다양한 이미지 크기에 대응하는 유연하고 확장성 높은 Masonry 레이아웃을 구현할 수 있습니다.
+
+## 실제 컴포넌트에 적용하기
+
+```tsx title="Masonry.tsx" {3-9}
+// ...
+const Masonry = ({ items, renderItem, className, listType = 'main', isMobile }: MasonryProps) => {
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = getMasonryOptions({
+    containerWidth,
+    items,
+    listType,
+    isMobile,
+    viewport,
+  });
+
+  return (
+    <div ref={containerRef} className={clsx(styles.container, className)} style={{ height: masonryContainerHeight }}>
+      {visibleItems.map(({ item, masonry }, index) => {
+        const style: React.CSSProperties = {
+          width: columnWidth,
+          height: Math.max(policy.itemMinHeight, Math.min(masonry.height, policy.itemMaxHeight)),
+          transform: `translate3d(${centerOffset + masonry.left}px, ${masonry.top}px, 0)`,
+        };
+        return renderItem({ item, masonry }, index, style);
+      })}
+    </div>
+  );
+};
+
+export default Masonry;
+```
+
+`getMasonryOptions`의 반환값들을 사용하여 실제 Masonry 컴포넌트에 아이템을 배치합니다. render prop 패턴을 사용해 레이아웃 배치만을 집중할 수 있도록 하였습니다.
+이때 레이아웃 배치를 위해 `translate3d` 속성을 사용하였습니다.
+
+### 왜 translate3d를 사용했는가?
+
+`translate3d`는 일반적인 `translate` 속성과 달리 하드웨어 가속(Hardware Acceleration)을 강제로 활성화합니다. 이는 다음과 같은 성능상 이점을 제공합니다:
+
+1. **GPU 가속 렌더링**
+
+   - 브라우저가 해당 요소를 별도의 레이어로 분리하여 GPU에서 직접 처리
+   - CPU 대신 GPU의 병렬 처리 능력을 활용하여 더 빠른 렌더링
+
+2. **리플로우(Reflow) 최소화**
+
+   - `translate3d`는 레이아웃에 영향을 주지 않는 변환 속성
+   - 다른 요소들의 위치 재계산 없이 해당 요소만 이동
+
+3. **부드러운 애니메이션**
+
+   - 60fps의 부드러운 애니메이션을 보장
+   - 특히 많은 아이템이 동시에 움직이는 Masonry 레이아웃에서 성능 향상
+   - 스크롤 성능 향상
+
+4. **메모리 효율성**
+   - GPU 메모리에 텍스처로 저장되어 CPU 메모리 사용량 감소
+   - 복잡한 레이아웃에서도 일관된 성능 유지
+
+Masonry 레이아웃에서는 수백 개의 아이템이 각각 다른 위치에 배치되므로, 이러한 성능 최적화가 사용자 경험에 직접적인 영향을 미칩니다.
+이렇게 구현이 완료된 컴포넌트는 화면에 다음과 같이 보이게 됩니다:
+
+<Image
+  src="/images/how-to-implement-portfolio/main.png"
+  alt="Masonry Layout"
+  width={1000}
+  height={1000}
+/>
+
+> 크리에이터들의 포트폴리오를 보여주기에 아주 제격인 레이아웃이 완성되었습니다. 🎨
+
+## 리팩토링 과정
+
+실제 구현이 이후 몇 가지 개선점을 발견하여 리팩토링을 진행하였습니다.
+
+### 1. 이미지 배치 관련 스타일 추가
+
+정책 상 존재했던 이미지의 위치 조정을 위해 스타일을 추가하였습니다.
+요구사항은 다음과 같았습니다:
+
+- 상단 고정
+  - 일러스트와 같은 이미지가 많기 때문에, 자칫 시작점이 너무 높게 배치될 가능성 존재
+  - 인물 일러스트일 경우 머리가 잘리는 경우 발생
+- 중앙정렬
+- 하단 크롭
+  - 기존 정책의 maxHeight 보다 이미지 높이가 더 클 경우 하단 크롭
+
+이와 같은 이미지의 배치 정책을 어떻게 하면 좋을까 고민을 하다 `object-position` 속성을 사용해 간단히 구현할 수 있었습니다.
+object-position 속성은 이미지의 배치 위치를 지정할 수 있습니다.
+
+```css
+object-position: center top;
+```
+
+이와 같은 스타일을 이미지에 적용하게 되면 머리가 잘리는 경우를 방지할 수 있습니다.
+
+<div>
+  <div className="text-center">
+    <Image
+      src="/images/how-to-implement-portfolio/not-apply-position.png"
+      alt="not apply position"
+      width={1000}
+      height={1000}
+    />
+    <small>object-position 적용 전 머리가 잘리는 경우</small>
+  </div>
+  <div className="text-center">
+    <Image
+      src="/images/how-to-implement-portfolio/apply-position.png"
+      alt="apply position"
+      width={1000}
+      height={1000}
+    />
+    <small>object-position 적용 후 머리가 잘리지 않는 경우</small>
+  </div>
+</div>
+
+> 스타일 적용이 없었다면, 제법 살벌한 포트폴리오 서비스가 되었을지도..? 🫣
+
+### 2. 가상 스크롤 적용
+
+가상 스크롤(윈도윙)이란 대량의 데이터를 효율적으로 렌더링하기 위한 성능 최적화 기법입니다.
+주요 원리는 사용자가 보고 있는 화면(뷰포트) 내의 아이템만 DOM에 렌더링하고, 스크롤로 인해 벗어난 아이템은 DOM에서 제거하는 것입니다.
+
+개발 초기 단계에 가상 스크롤을 적용을 염두하였지만, 그 당시 데이터 양이 많지 않고 가상 스크롤을 적용하는 것보다 다른 기능을 구현하는 것이 더 중요하다고 판단하였습니다.
+이후 데이터 양이 지속적으로 증가하면서 가상 스크롤이 필요하다고 판단하여, 가상 스크롤을 적용하였습니다.
+
+무한히 증가하는 데이터를 DOM에 모두 렌더링하는 것은 성능 저하를 유발합니다.
+예를 들어, 10,000개의 아이템이 있는 경우, 모든 아이템을 DOM에 렌더링하면 10,000개의 DOM 요소가 실제로 생성됩니다.
+아이템 개수가 많을수록 DOM 노드 수도 직선적으로 증가하게 되어, 브라우저의 렌더링 성능 저하와 메모리 부하가 심각해질 수 있습니다.
+
+#### 필요한 작업 및 값
+
+가상 스크롤을 적용하기 전에 어떤 식으로 작업을 진행할 지 고민하고 아래와 같은 단계로 작업을 진행하였습니다.
+
+- 스크롤 위치 변경에 따른 최신 `scrollY` 값 및 **뷰포트 높이** 계산
+- 위의 정보를 바탕으로 화면에 보여야 할 아이템 배열 필터링
+
+위의 작업을 원할히 진행하기 위해 몇 가지 필요한 값들이 존재합니다.
+
+1. `scrollY`
+
+   - 현재 윈도우의 스크롤 위치(window.scrollY)
+   - 화면에서 어떤 영역을 사용자에게 보여줘야 할지 계산할 기준
+
+2. `viewportHeight`
+
+   - 현재 뷰포트의 높이(window.innerHeight)
+   - 사용자가 볼 수 있는 실제 화면의 높이
+
+3. `bufferSize`
+
+   - 화면 위·아래로 추가 렌더링할 여유 공간
+   - 빠른 스크롤 시 사용자 경험 개선용으로, 화면에 아직 들어오지 않은 아이템도 미리 렌더링
+   - 버퍼가 없으면 스크롤할 때 컨텐츠가 갑자기 보일 가능성 존재
+
+4. `masonryItems`
+
+   - 실제로 화면에 그릴 모든 아이템의 레이아웃 정보 배열
+   - 각 아이템이 어느 위치(top)에서 어느 높이(height)만큼 차지하는지 정보
+
+5. 렌더링 범위(`start`, `end`)
+
+   - 실제로 가상 목록에서 렌더링할 최소/최대 영역
+   - start = scrollY - bufferSize -> 사용자가 보는 화면 바로 앞 영역까지 포함해 보여줄 아이템의 시작 범위
+   - end = scrollY + viewportHeight + bufferSize -> 화면의 아래쪽으로 buffer까지 포함해서 보여줄 아이템의 끝 범위
+
+위의 값들을 바탕으로 아이템 배열을 순회하면서, 각 아이템의 실제 위치(itemTop, itemBottom)가 범위에 속하면 렌더링하도록 합니다.
+
+<Image
+  src="/images/how-to-implement-portfolio/windowing.png"
+  alt="windowing layout items"
+  width={1000}
+  height={500}
+/>
+
+#### 함수 구현
+
+이제 실제로 작업을 담당하는 함수를 살펴보겠습니다.
+
+```ts title="useWindowing.ts"
+import { useEffect, useRef, useState } from 'react';
+
+const useWindowing = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const viewportHeight = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      setScrollY(window.scrollY);
+      viewportHeight.current = window.innerHeight;
+      rafId.current = null;
+    };
+
+    const handleEvent = () => {
+      if (rafId.current === null) {
+        rafId.current = window.requestAnimationFrame(update);
+      }
+    };
+
+    update();
+
+    window.addEventListener('scroll', handleEvent, { passive: true });
+    window.addEventListener('resize', handleEvent);
+
+    return () => {
+      window.removeEventListener('scroll', handleEvent);
+      window.removeEventListener('resize', handleEvent);
+
+      if (rafId.current !== null) {
+        window.cancelAnimationFrame(rafId.current);
+      }
+    };
+  }, []);
+
+  return { scrollY, viewportHeight: viewportHeight.current, bufferSize: viewportHeight.current / 2 };
+};
+
+export default useWindowing;
+```
+
+`useWindowing`이 하는 역할은 스크롤 이벤트 시 `scrollY`를 최신 값으로 갱신하고, 뷰포트 높이를 계산하는 것입니다.
+가상 스크롤에 필요한 값인 `scrollY`, `viewportHeight`, `bufferSize`를 반환합니다.
+
+해당 값들을 사용해 화면에 보여줄 아이템을 필터링하고, 렌더링 범위를 계산하는 함수는 다음과 같습니다.
+
+```ts
+const windowingLayoutItems = ({ masonryItems, scrollY, viewportHeight, bufferSize }: WindowingLayoutOptions) => {
+  const start = scrollY - bufferSize; // 앞 영역을 포함해 보여줄 아이템의 시작 범위
+  const end = scrollY + viewportHeight + bufferSize; // 아래 영역을 포함해 보여줄 아이템의 끝 범위
+
+  return masonryItems.filter((layout) => {
+    const itemTop = layout.masonry.top;
+    const itemBottom = itemTop + layout.masonry.height;
+    return itemBottom >= start && itemTop <= end;
+  });
+};
+```
+
+`windowingLayoutItems` 함수는 아이템을 위치 정보를 기반으로 필터링하여 렌더링에 포함되는 아이템을 반환합니다.
+이때 이미 Masonry 레이아웃 계산 시 계산된 아이템의 위치 정보(top, height)를 사용합니다.
+
+- `itemBottom >= start` -> 아이템의 하단이 화면의 시작 위치보다 아래에 있는 경우
+- `itemTop <= end` -> 아이템의 상단이 화면의 끝 위치보다 위에 있는 경우
+
+두 조건이 참일 경우 렌더링 범위에 포함되는 아이템이라고 판단할 수 있습니다.
+이렇게 계산된 범위를 바탕으로 masonryItems를 순회하면서, 각 아이템의 실제 위치(itemTop, itemBottom)가 start~end 범위에 속하는 아이템을 배열로 반환합니다.
+
+```tsx title="Masonry.tsx"
+'use client';
+
+const Masonry = ({ items, renderItem, className, listType = 'main', isMobile }: MasonryProps) => {
+  // ... 생략
+
+  const viewport = useElementWidth();
+  const { scrollY, viewportHeight, bufferSize } = useWindowing();
+
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = getMasonryOptions({ containerWidth, items, listType, isMobile, viewport });
+
+  const visibleItems = windowingLayoutItems({ masonryItems, scrollY, viewportHeight, bufferSize });
+
+  return (
+    <div ref={containerRef} className={clsx(styles.container, className)} style={{ height: masonryContainerHeight }}>
+      {visibleItems.map(({ item, masonry }, index) => {
+        const style: React.CSSProperties = {
+          width: columnWidth,
+          height: Math.max(policy.itemMinHeight, Math.min(masonry.height, policy.itemMaxHeight)),
+          transform: `translate3d(${centerOffset + masonry.left}px, ${masonry.top}px, 0)`,
+        };
+        return renderItem({ item, masonry }, index, style);
+      })}
+    </div>
+  );
+};
+
+```
+
+이처럼 가상 스크롤을 적용할 경우 기존 데이터양 만큼 DOM에 아이템을 렌더링하는 방식에서 뷰포트에 보이는 아이템(평균적으로 60~70개)만을 렌더링하게 됩니다.
+
+> Masonry 레이아웃 계산 단계에서 각 아이템의 top 값이 미리 산정되어 있어,
+> 가상 스크롤 구현 시 별도의 위치 연산 없이 해당 값을 활용해
+> 뷰포트 내 노출 대상 아이템을 효율적으로 선별할 수 있었습니다. ✌️
+
+#### 개선 후 성능 지표
+
+<div className="text-center">
+  <Image
+    src="/images/how-to-implement-portfolio/vna.png"
+    alt="windowing performance"
+    width={1000}
+    height={1000}
+  />
+  <small>가상 스크롤 미적용</small>
+</div>
+<div className="text-center">
+  <Image
+    src="/images/how-to-implement-portfolio/va.png"
+    alt="windowing performance"
+    width={1000}
+    height={1000}
+  />
+  <small>가상 스크롤 적용</small>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>성능 지표</th>
+      <th>가상 스크롤 미적용</th>
+      <th>가상 스크롤 적용</th>
+      <th>감소율</th>
+      <th>개선 효과</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>Scripting</b>
+      </td>
+      <td>3.550ms</td>
+      <td>2.797ms</td>
+      <td>21.2%</td>
+      <td>JavaScript 실행 시간 단축</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Rendering</b>
+      </td>
+      <td>0.864ms</td>
+      <td>0.460ms</td>
+      <td>46.8%</td>
+      <td>렌더링 비용 대폭 절감</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Painting</b>
+      </td>
+      <td>0.339ms</td>
+      <td>0.174ms</td>
+      <td>48.7%</td>
+      <td>페인팅 부하 현저히 감소</td>
+    </tr>
+    <tr>
+      <td>
+        <b>System</b>
+      </td>
+      <td>1.804ms</td>
+      <td>1.217ms</td>
+      <td>32.5%</td>
+      <td>시스템 레벨 성능 향상</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Main Thread Time</b>
+      </td>
+      <td>8.839ms</td>
+      <td>7.737ms</td>
+      <td>12.5%</td>
+      <td>메인 스레드 부하 감소</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>롱태스크 지표</th>
+      <th>가상 스크롤 미적용</th>
+      <th>가상 스크롤 적용</th>
+      <th>감소율</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>태스크 지속 시간</b>
+      </td>
+      <td>1.28s (self 36μs)</td>
+      <td>759.23ms (self 37μs)</td>
+      <td>40.7%</td>
+    </tr>
+    <tr>
+      <td>
+        <b>브라우저 차단 시간</b>
+      </td>
+      <td>1.23s</td>
+      <td>709.23ms</td>
+      <td>42.3%</td>
+    </tr>
+  </tbody>
+</table>
+
+이처럼 가상 스크롤을 적용하여 데이터 크기가 증가해도 성능 저하를 방지하고 부드러운 유저 경험을 제공할 수 있게 되었습니다.
+
+### 3. 메모이제이션
+
+메모이제이션은 이전에 계산한 결과를 저장하여 동일한 입력이 주어지면 이전 계산 결과를 재사용하는 기법입니다.
+이를 통해 동일한 입력에 대해 반복적인 계산을 피하고, 성능을 향상시킬 수 있습니다.
+
+가상 스크롤 적용 이후에는 스크롤 이동 시마다 scrollY 상태가 변경되며,
+이에 따라 컴포넌트의 렌더링과 Masonry 레이아웃 계산이 빈번하게 발생하는 문제가 있었습니다.
+이로 인한 불필요한 연산과 렌더링을 최소화하기 위해, 메모이제이션 기법을 도입해 성능을 최적화하였습니다.
+
+#### `MasonryItem` 컴포넌트 메모이제이션
+
+먼저 컴포넌트의 렌더링 횟수를 줄이기 위해 리액트의 `memo` 함수를 사용하였습니다.
+MasonryItem은 개별 아이템을 렌더링하는 컴포넌트입니다. 해당 컴포넌트는 props로 레이아웃 정보를 받아 렌더링하는 역할을 합니다.
+
+```tsx title="MasonryItem.tsx"
+import { memo } from 'react';
+
+const MasonryItem = memo(
+  ({ item, index, style, href, showLikeButton = true }) => {
+    // ...생략
+  },
+  (prev, next) =>
+    prev.item.id === next.item.id &&
+    prev.index === next.index &&
+    prev.href === next.href &&
+    prev.style.height === next.style.height &&
+    prev.style.width === next.style.width &&
+    prev.style.transform === next.style.transform
+);
+
+MasonryItem.displayName = 'MasonryItem';
+```
+
+React.memo로 MasonryItem을 래핑 한 후, props 비교 함수(`arePropsEqual`)를 커스터마이즈하여, 핵심 프로퍼티(item.id, index, href, style)의 변화가 있을 때만 리렌더링 되도록 하였습니다.
+
+이처럼 메모이제이션을 적용하여 컴포넌트의 렌더링 횟수를 줄일 수 있었습니다. 수치로 확인해보면 다음과 같습니다.
+
+<table>
+  <thead>
+    <tr>
+      <th>항목</th>
+      <th>미적용(ms)</th>
+      <th>적용(ms)</th>
+      <th>감소율(%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>전체 측정 구간</td>
+      <td>12,795ms</td>
+      <td>12,079ms</td>
+      <td>5.6%</td>
+    </tr>
+    <tr>
+      <td>Experience</td>
+      <td>8,327ms</td>
+      <td>6,439ms</td>
+      <td>22.7%</td>
+    </tr>
+    <tr>
+      <td>System</td>
+      <td>1,966ms</td>
+      <td>1,212ms</td>
+      <td>38.4%</td>
+    </tr>
+    <tr>
+      <td>Scripting</td>
+      <td>998ms</td>
+      <td>576ms</td>
+      <td>42.3%</td>
+    </tr>
+    <tr>
+      <td>Main thread time</td>
+      <td>8,225.2ms</td>
+      <td>7,450.0ms</td>
+      <td>9.4%</td>
+    </tr>
+  </tbody>
+</table>
+
+불필요한 리렌더링이 줄어들어 자바스크립트 실행 시간(scripting)과 메인 스레드 부하(main thread time)가 감소하였습니다.
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/not-apply-memo-c.mp4" />
+  </video>
+  <figcaption className="text-center">메모이제이션 적용 전</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/apply-memo-c.mp4" />
+  </video>
+  <figcaption className="text-center">메모이제이션 적용 후</figcaption>
+</figure>
+
+> 미적용 대비 20회 정도 렌더링 횟수가 감소하는 것을 확인할 수 있습니다. 🔁
+
+#### `getMasonryOptions` 함수 메모이제이션
+
+getMasonryOptions 함수는 Masonry 레이아웃 구현 시, 각 아이템의 위치와 레이아웃 옵션을 결정하는 핵심 역할을 하는 함수입니다.
+하지만, 이 함수가 컴포넌트 내에서 스크롤 될 때마다(즉, 무의미하게 자주) 호출되는 문제가 있었습니다.
+
+실제로 Masonry 레이아웃에서는 가로 너비가 변경되지 않는 한 대부분의 옵션이 동일하게 유지됩니다.
+하지만 기존 코드에서는 스크롤 값(scrollY)이 변할 때마다 getMasonryOptions 함수가 반복적으로 호출되어, 불필요하게 레이아웃 연산이 계속 발생했습니다.
+이 함수는 전체 배열 리스트를 순회하며 레이아웃 옵션을 계산하기 때문에, 데이터가 많아질수록 연산 비용이 크게 증가합니다.
+예를 들어, 데이터가 1,000개라면 스크롤 한 번마다 1,000번의 연산이 매번 반복되는 셈이었습니다.
+
+이를 개선하기 위해 메모이제이션을 적용하였습니다.
+
+```tsx title="Masonry.tsx"
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = useMemo(
+    () =>
+      getMasonryOptions({
+        containerWidth,
+        items,
+        listType,
+        isMobile,
+        viewport,
+      }),
+    [containerWidth, items, listType, isMobile, viewport],
+  );
+
+```
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/option-no.mp4" />
+  </video>
+  <figcaption className="text-center">메모이제이션 적용 전</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/option-memo.mp4" />
+  </video>
+  <figcaption className="text-center">메모이제이션 적용 후</figcaption>
+</figure>
+
+이렇게 하면, 세로 스크롤 상태 변화로 인한 불필요한 재계산이 완전히 사라집니다. 실제 옵션이 변경될 때만 함수가 실행되어, 불필요한 계산을 방지하도록 개선하였습니다.
+
+### 4. 루트 마진을 활용한 데이터 프리페치
+
+Masonry 레이아웃을 구현하기 위해 `IntersectionObserver`를 사용하여 무한 스크롤을 적용하였습니다.
+Masonry 경우 일반 리스트와 다르게 아이템 요소들이 비정형으로 쌓이게 됩니다.
+이로 인해 옵저버 타켓 요소를 최하단에 두어 교차 영역을 감지하게 되면, 각 컬럼별로 높이가 다르게 쌓이기 때문에 빈 공간이 생기게 됩니다.
+이런 현상은 유저에게 데이터가 끊기는 것처럼 보이게 됩니다. 이는 유저 경험에 좋지 않은 영향을 줄 수 있습니다.
+
+이 문제를 해결하기 위해 `rootMargin` 속성을 사용해 데이터를 프리페치 하여 미리 데이터를 로드하였습니다.
+rootMargin의 바텀 값을 높게 설정하여 데이터를 미리 로드하도록 하였습니다.
+
+```ts
+new IntersectionObserver(
+  (entries) => {
+    // ...생략
+  },
+  { rootMargin: '0px 0px 5000px 0px', threshold: 0.01 },
+);
+```
+
+이렇게 하면 유저가 스크롤을 내리면 미리 데이터를 로드하여 데이터가 끊기는 현상을 방지할 수 있습니다.
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/root-not.mp4" />
+  </video>
+  <figcaption className="text-center">rootMargin 미적용</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/root-apply.mp4" />
+  </video>
+  <figcaption className="text-center">rootMargin 적용</figcaption>
+</figure>
+
+## 마무리
+
+Masonry 레이아웃을 직접 서비스에 도입하는 과정은 예상보다 훨씬 많은 시행착오와 고민의 연속이었습니다. 개인적으로 UI를 구현하는 작업을 즐기고, 스스로도 UI 구현 역량에 자부심을 갖고 있었지만, 이번 Masonry 레이아웃은 가장 도전적이고 어려웠던 과제였습니다.
+그만큼 복잡한 정책 설계와 다양한 데이터, 성능 이슈까지 다각도로 고민해야 했고, 시행착오를 거치며 정말 많은 것을 새롭게 배울 수 있었습니다.
+
+단순한 리스트를 넘어 다양한 뷰포트와 상황에 효과적으로 대응하기 위해 여러 기술적 시도를 이어갔고,
+그 결과 성능 최적화, 사용자 경험 개선, 메모리 효율성 향상 등 다방면의 개선을 달성할 수 있었습니다.
+특히 개선 성과가 실제 수치로도 검증되어 더욱 의미 있는 작업이었습니다.
+
+이러한 Masonry 도입 여정은 UI·UX 차별화는 물론, 서비스의 확장성 및 유지 보수성 측면에서도 그 효용을 직접 체감할 수 있던 값진 경험이었습니다.
+
+개발을 하며 단순히 기능 구현에 그치는 것이 아닌 개선점을 고민하고 실행하는 것이 중요하다는 것을 다시 한번 느꼈습니다.
+무엇보다 개발자로서 작성한 코드에 지속적으로 관심을 갖고, 마치 식물에 물을 주듯 꾸준히 개선점을 찾아 코드를 발전시켜 나가는 자세가 얼마나 중요한지 깨달았습니다.
+
+또한 측정 가능한 성능 문제가 있을 때 최적화하되, 구조적으로 큰 영향을 미치는 부분은 초기 설계 시점에서 고려하는 것이 중요하다는 것을 알게 되었습니다.
