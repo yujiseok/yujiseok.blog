@@ -23,6 +23,15 @@ html.dark {
   transition: scrollbar-color 0.2s ease;
 }
 
+html:has([data-resume-page="true"]) {
+  & footer {
+    display: none;
+  }
+  & body {
+    padding-inline: 0;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -43,7 +52,7 @@ html.dark {
 }
 
 body {
-  height: 100vh;
+  height: 100dvh;
   font-family:
     var(--font-sans) system-ui,
     -apple-system,
