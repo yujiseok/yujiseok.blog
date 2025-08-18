@@ -1,6 +1,11 @@
 import ArrowUpRight from "@/app/components/arrowUpRight";
 import BlurContainer from "@/app/components/blurContainer";
 
+export const metadata = {
+  title: "유지석 이력서",
+  description: "Frontend Engineer 유지석의 이력서",
+};
+
 const page = () => {
   return (
     <div
