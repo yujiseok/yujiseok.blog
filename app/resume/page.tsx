@@ -3,17 +3,72 @@ import BlurContainer from "@/app/components/blurContainer";
 import { resumeData } from "./resume";
 
 export const metadata = {
-  title: "유지석 이력서",
-  description: "Frontend Engineer 유지석의 이력서",
+  title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
+  description: resumeData.profile.introduction[0],
+  keywords: [
+    resumeData.profile.title,
+    "React",
+    "Next.js",
+    "TypeScript",
+    "JavaScript",
+    "UI/UX",
+    "웹 개발",
+    "프론트엔드",
+  ],
+  authors: [{ name: resumeData.profile.name }],
+  creator: resumeData.profile.name,
+  publisher: resumeData.profile.name,
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL("https://yujiseok.blog"),
+  alternates: {
+    canonical: "/resume",
+  },
+  openGraph: {
+    title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
+    description: resumeData.profile.introduction[0],
+    url: "https://yujiseok.blog/resume",
+    siteName: "유지석 블로그",
+    locale: "ko_KR",
+    type: "profile",
+    images: [
+      {
+        url: "/images/avatar.jpg",
+        width: 400,
+        height: 400,
+        alt: `${resumeData.profile.name} 프로필 이미지`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
+    description: resumeData.profile.introduction[0],
+    images: ["/images/avatar.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 const page = () => {
   return (
     <div
       data-resume-page="true"
-      className="py-4 text-sm break-keep sm:px-4 sm:py-12"
+      className="py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12"
     >
-      <BlurContainer className="mx-auto max-w-4xl gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
+      <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
         <ResumeProfile profile={resumeData.profile} />
 
         <ContentContainer title="Careers">
@@ -21,7 +76,7 @@ const page = () => {
             {resumeData.careers.map((career) => (
               <ResumeContent
                 key={career.company}
-                leftContent={<time dateTime="2023-11">{career.period}</time>}
+                leftContent={<time>{career.period}</time>}
                 rightContent={
                   <div className="grid gap-2">
                     <div>
@@ -45,8 +100,6 @@ const page = () => {
                       {career.projects.map((project, projectIndex) => (
                         <li key={projectIndex}>
                           <strong>{project.title}</strong>
-                          <br />
-                          {project.description}
                           <ul className="mt-1 list-disc space-y-1 pl-8">
                             {project.achievements.map(
                               (achievement, achievementIndex) => (
@@ -78,7 +131,11 @@ const page = () => {
           {resumeData.openSource.map((contribution) => (
             <ResumeContent
               key={contribution.title}
-              leftContent={<time>{contribution.period}</time>}
+              leftContent={
+                <time dateTime={contribution.period}>
+                  {contribution.period}
+                </time>
+              }
               rightContent={
                 <div className="grid gap-2">
                   <div>
@@ -117,7 +174,7 @@ const page = () => {
           {resumeData.etc.map((item) => (
             <ResumeContent
               key={item.title}
-              leftContent={<time>{item.period}</time>}
+              leftContent={<time dateTime={item.period}>{item.period}</time>}
               rightContent={
                 <div className="grid gap-2">
                   <div>
@@ -204,7 +261,7 @@ const page = () => {
           {resumeData.education.map((edu) => (
             <ResumeContent
               key={edu.school}
-              leftContent={<time>{edu.period}</time>}
+              leftContent={<time dateTime={edu.period}>{edu.period}</time>}
               rightContent={
                 <div className="grid gap-2">
                   <div className="mb-1">{edu.school}</div>
@@ -233,13 +290,13 @@ const ResumeProfile = ({
     <div className="grid gap-8">
       <div>
         <h1 className="text-xl font-semibold">{profile.name}</h1>
-        <small className="text-neutral-600 dark:text-neutral-400">
+        <small className="text-xs text-neutral-600 dark:text-neutral-400">
           {profile.title}
         </small>
       </div>
 
-      <div className="grid gap-2 leading-6">
-        {profile.introduction.map((paragraph: string) => (
+      <div className="grid gap-2">
+        {profile.introduction.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
       </div>
@@ -255,7 +312,7 @@ const ResumeContent = ({
   leftContent: React.ReactNode;
 }) => {
   return (
-    <div className="grid gap-2 leading-6 sm:grid-cols-[150px_1fr] sm:gap-9">
+    <div className="grid gap-2 sm:grid-cols-[160px_1fr] sm:gap-10">
       <div className="text-neutral-600 dark:text-neutral-400">
         {leftContent}
       </div>
