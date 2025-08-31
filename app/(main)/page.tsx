@@ -1,6 +1,4 @@
-import Image from "next/image";
 import Link from "next/link";
-import Avatar from "@/public/images/avatar.jpg";
 import BlurContainer from "../components/blurContainer";
 import Writing from "../components/writing";
 import { getAllWritings } from "@/lib/utils";
@@ -11,15 +9,9 @@ export default function Home() {
 
   return (
     <BlurContainer className="gap-12 leading-7 break-keep">
-      <header className="flex items-center gap-4">
-        <Image
-          src={Avatar}
-          alt="유지석"
-          placeholder="blur"
-          className="size-16 rounded-full object-cover"
-        />
+      <header>
         <div>
-          <h1 className="font-medium">유지석</h1>
+          <h1 className="text-lg font-semibold">유지석</h1>
           <p className="text-neutral-600 dark:text-neutral-400">
             Frontend Engineer
           </p>
@@ -96,32 +88,39 @@ export default function Home() {
       </div>
 
       <div>
-        <h2 className="mb-0.5 font-medium">Connect</h2>
-        <p>
-          저의 코드가 궁금하시다면{" "}
-          <a
-            href="https://github.com/yujiseok"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            GitHub
-          </a>
-          를 방문해 주세요.{" "}
-          <a
-            href="https://www.linkedin.com/in/yujiseok/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            LinkedIn
-          </a>
-          에서 저를 만나보세요, 또는 저의{" "}
-          <a href="mailto:koesijuy@gmail.com" className="underline">
-            이메일
-          </a>
-          로 연락해 주세요.
-        </p>
+        <h2 className="mb-0.5 font-medium">Contact</h2>
+        <ul className="flex list-disc flex-col gap-1 pl-4">
+          <li>
+            <a
+              href="https://github.com/yujiseok"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              GitHub
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.linkedin.com/in/yujiseok/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              LinkedIn
+            </a>
+          </li>
+          <li>
+            <a href="mailto:koesijuy@gmail.com" className="underline">
+              Email
+            </a>
+          </li>
+          <li>
+            <Link href="/resume" className="underline" target="_blank">
+              Resume
+            </Link>
+          </li>
+        </ul>
       </div>
     </BlurContainer>
   );
