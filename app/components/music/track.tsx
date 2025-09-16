@@ -1,14 +1,12 @@
-import { getBlurDataUrl } from "@/lib/blurUrl";
+import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { TypeRecentlyPlayedTrack, TypeTopTrack } from "@/types/spotify";
 import Image from "next/image";
 
-const Track = async ({
+const Track = ({
   track,
 }: {
   track: TypeRecentlyPlayedTrack | TypeTopTrack;
 }) => {
-  const blurDataUrl = await getBlurDataUrl(track.albumCover.url);
-
   return (
     <a
       href={track.spotifyUrl}
@@ -23,7 +21,7 @@ const Track = async ({
         height={track.albumCover.height}
         className="pointer-events-none aspect-square size-14 rounded-lg shadow-xs"
         placeholder="blur"
-        blurDataURL={blurDataUrl}
+        blurDataURL={BLUR_DATA_URL}
       />
       <div className="flex flex-col">
         <h2>{track.trackName}</h2>

@@ -1,5 +1,5 @@
 import Track from "@/app/components/music/track";
-import { getBlurDataUrl } from "@/lib/blurUrl";
+import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { getPlaylists, getPlaylistTrack } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
 import { unstable_ViewTransition as ViewTransition } from "react";
@@ -41,8 +41,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     (playlist) => playlist.id === playlistId,
   ) as TypeSpotifyPlaylist;
 
-  const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
-
   return (
     <div>
       <ViewTransition name="playlist">
@@ -53,7 +51,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           height={playlist.images[0].height ?? 640}
           className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
           placeholder="blur"
-          blurDataURL={blurDataUrl}
+          blurDataURL={BLUR_DATA_URL}
         />
       </ViewTransition>
       <BlurContainer className="gap-0">

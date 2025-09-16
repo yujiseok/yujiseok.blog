@@ -1,4 +1,4 @@
-import { getBlurDataUrl } from "@/lib/blurUrl";
+import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { cn } from "@/lib/cn";
 import { getPlaylists } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
@@ -21,15 +21,13 @@ const page = async () => {
 
 export default page;
 
-const PlaylistCard = async ({
+const PlaylistCard = ({
   playlist,
   index,
 }: {
   playlist: TypeSpotifyPlaylist;
   index: number;
 }) => {
-  const blurDataUrl = await getBlurDataUrl(playlist.images[0].url);
-
   return (
     <ViewTransition name="playlist">
       <Link
@@ -47,7 +45,7 @@ const PlaylistCard = async ({
           height={playlist.images[0].height ?? 640}
           className="pointer-events-none size-full object-cover"
           placeholder="blur"
-          blurDataURL={blurDataUrl}
+          blurDataURL={BLUR_DATA_URL}
         />
       </Link>
     </ViewTransition>
