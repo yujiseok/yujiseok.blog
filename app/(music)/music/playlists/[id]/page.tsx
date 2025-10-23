@@ -2,7 +2,7 @@ import Track from "@/app/components/music/track";
 import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { getPlaylists, getPlaylistTrack } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
-import { unstable_ViewTransition as ViewTransition } from "react";
+import { ViewTransition } from 'react'
 import Image from "next/image";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
@@ -43,7 +43,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <div>
-      <ViewTransition name="playlist">
+      <ViewTransition name={`playlist-${playlist.id}`}>
         <Image
           src={playlist.images[0].url}
           alt={playlist.name}

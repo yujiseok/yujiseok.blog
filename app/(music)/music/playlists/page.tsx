@@ -4,7 +4,7 @@ import { getPlaylists } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
 import Image from "next/image";
 import Link from "next/link";
-import { unstable_ViewTransition as ViewTransition } from "react";
+import { ViewTransition } from "react";
 export const revalidate = 86_400;
 
 const page = async () => {
@@ -29,7 +29,7 @@ const PlaylistCard = ({
   index: number;
 }) => {
   return (
-    <ViewTransition name="playlist">
+    <ViewTransition name={`playlist-${playlist.id}`}>
       <Link
         href={`/music/playlists/${playlist.id}`}
         className={cn(
