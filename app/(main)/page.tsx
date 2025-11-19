@@ -5,10 +5,10 @@ import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
 export default function Home() {
-  const writings = getAllWritings().slice(0, 3);
+  const writings = getAllWritings().slice(0, 5);
 
   return (
-    <BlurContainer className="gap-12 leading-7 break-keep">
+    <BlurContainer className="gap-10 leading-7 break-keep">
       <header>
         <div>
           <h1 className="text-lg font-semibold">유지석</h1>
@@ -17,16 +17,16 @@ export default function Home() {
           </p>
         </div>
       </header>
-      <div>
+      {/* <div>
         <h2 className="mb-0.5 font-medium">About Me</h2>
         <p>
           Coloso
           <span className="mr-1 ml-0.5 inline-block size-0.5 rounded-full bg-[#ffb200]" />
           에서 프론트엔드 엔지니어로 일하며, UI를 만들고 있습니다.
         </p>
-      </div>
+      </div> */}
 
-      <div>
+      {/* <div>
         <h2 className="mb-0.5 font-medium">Now</h2>
         <div className="grid gap-3">
           <p>
@@ -40,7 +40,7 @@ export default function Home() {
             경험을 소중히 여깁니다.
           </p>
         </div>
-      </div>
+      </div> */}
 
       <div>
         <h2 className="mb-0.5 font-medium">
@@ -67,7 +67,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div>
+      {/* <div>
         <h2 className="mb-0.5 font-medium">More</h2>
         <div>
           <p>
@@ -85,11 +85,21 @@ export default function Home() {
             을 운영하고 있습니다.
           </p>
         </div>
-      </div>
+      </div> */}
 
       <div>
-        <h2 className="mb-0.5 font-medium">Contact</h2>
+        <h2 className="mb-0.5 font-medium">Links</h2>
         <ul className="flex list-disc flex-col gap-1 pl-4">
+          <li>
+            <Link href="/music" className="underline">
+              Music
+            </Link>
+          </li>
+          <li>
+            <Link href="/atelier" className="underline">
+              Atelier
+            </Link>
+          </li>
           <li>
             <a
               href="https://github.com/yujiseok"
@@ -109,16 +119,6 @@ export default function Home() {
             >
               LinkedIn
             </a>
-          </li>
-          <li>
-            <a href="mailto:koesijuy@gmail.com" className="underline">
-              Email
-            </a>
-          </li>
-          <li>
-            <Link href="/resume" className="underline" target="_blank">
-              Resume
-            </Link>
           </li>
         </ul>
       </div>
