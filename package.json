@@ -33,11 +33,5 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.2",
-      "@types/react-dom": "19.2.2"
-    }
   }
 }
