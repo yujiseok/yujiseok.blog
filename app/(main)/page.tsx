@@ -5,7 +5,7 @@ import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
 export default function Home() {
-  const writings = getAllWritings().slice(0, 5);
+  const writings = getAllWritings().slice(0, 10);
 
   return (
     <BlurContainer className="gap-10 leading-7 break-keep">
@@ -87,7 +87,7 @@ export default function Home() {
         </div>
       </div> */}
 
-      <div>
+      {/* <div>
         <h2 className="mb-0.5 font-medium">Links</h2>
         <ul className="flex list-disc flex-col gap-1 pl-4">
           <li>
@@ -110,18 +110,8 @@ export default function Home() {
               GitHub
             </a>
           </li>
-          <li>
-            <a
-              href="https://www.linkedin.com/in/yujiseok/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              LinkedIn
-            </a>
-          </li>
         </ul>
-      </div>
+      </div> */}
     </BlurContainer>
   );
 }

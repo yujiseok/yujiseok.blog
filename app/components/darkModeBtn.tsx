@@ -25,7 +25,7 @@ function DarkModeBtn() {
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={clsx(
-        "cursor-pointer rounded-lg p-2 transition-colors duration-250 ease-out",
+        "cursor-pointer rounded-lg p-2 transition-colors duration-200 ease-linear",
         {
           "hover:bg-neutral-700/50": isDark,
           "hover:bg-neutral-200/50": !isDark,
