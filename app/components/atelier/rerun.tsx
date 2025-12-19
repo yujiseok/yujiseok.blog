@@ -16,7 +16,7 @@ const Rerun = ({ handleRerun }: { handleRerun: VoidFunction }) => {
 
   return (
     <button
-      className="absolute top-4 right-4 cursor-pointer rounded-lg border border-neutral-300/80 bg-neutral-100/50 p-1.5 transition-colors duration-250 ease-out hover:bg-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-900/50 dark:hover:bg-neutral-700/50"
+      className="absolute top-4 right-4 cursor-pointer rounded-lg border border-black/20 bg-white/50 p-1.5 transition-colors duration-250 ease-out hover:bg-black/5 dark:border-white/20 dark:bg-black/50 dark:hover:bg-white/10"
       onClick={handleClick}
     >
       <RerunIcon isRotating={isRotating} />

@@ -12,11 +12,16 @@ export function generateStaticParams() {
   }));
 }
 
+const getWritingBySlug = (slug: string) => {
+  const writings = getAllWritings();
+  return writings.find((writing) => writing.slug === slug);
+};
+
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata | undefined> {
   const { slug } = await props.params;
-  const writing = getAllWritings().find((writing) => writing.slug === slug);
+  const writing = getWritingBySlug(slug);
 
   if (!writing) {
     return;
@@ -43,9 +48,7 @@ export async function generateMetadata(props: {
 
 const Post = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
-  const writing = getAllWritings().find(
-    (writing) => writing.slug === params.slug,
-  );
+  const writing = getWritingBySlug(params.slug);
   if (!writing) {
     return false;
   }

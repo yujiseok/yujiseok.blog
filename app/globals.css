@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme {
   --font-sans: var(--font-geist-sans);
@@ -14,13 +14,13 @@
 html {
   scrollbar-width: thin;
   scrollbar-color: #e8e8e8 transparent;
-  transition: scrollbar-color 0.2s ease;
 }
 
-html.dark {
-  scrollbar-width: thin;
-  scrollbar-color: #404040 transparent;
-  transition: scrollbar-color 0.2s ease;
+@media (prefers-color-scheme: dark) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #404040 transparent;
+  }
 }
 
 html:has([data-resume-page="true"]) {
@@ -44,15 +44,15 @@ html:has([data-resume-page="true"]) {
 ::-webkit-scrollbar-thumb {
   background-color: #e8e8e8;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
 }
 
-.dark::-webkit-scrollbar-thumb {
-  background-color: #404040;
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background-color: #404040;
+  }
 }
 
 body {
-  height: 100dvh;
   font-family:
     var(--font-sans) system-ui,
     -apple-system,
@@ -83,7 +83,7 @@ body {
 
 .prose a {
   text-decoration-color: #374151;
-  @apply decoration-[0.1em] underline-offset-2 transition-all dark:decoration-gray-300;
+  @apply decoration-[0.1em] underline-offset-2 dark:decoration-gray-300;
 }
 
 .prose .anchor:after {
@@ -114,7 +114,7 @@ figcaption[data-rehype-pretty-code-title] {
 }
 
 code {
-  @apply bg-neutral-200 dark:bg-neutral-700;
+  @apply bg-white dark:bg-black;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
 }
@@ -135,7 +135,7 @@ pre code {
 }
 
 [data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full rounded-none border-0 bg-transparent p-0 text-sm break-words text-black;
+  @apply grid min-w-full rounded-none border-0 bg-transparent p-0 text-sm break-words text-black dark:text-white;
   counter-reset: line;
   box-decoration-break: clone;
 }
@@ -162,7 +162,7 @@ mark[data-highlighted-chars] {
 }
 
 details {
-  @apply my-4 h-10 rounded-md bg-neutral-200 px-4 py-2 dark:bg-neutral-700;
+  @apply my-4 h-10 rounded-md bg-white px-4 py-2 dark:bg-black;
   transition: height 0.5s ease;
 
   &[open] {
