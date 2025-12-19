@@ -43,6 +43,11 @@ export async function generateMetadata(props: {
       publishedTime,
       url: `https://www.yujiseok.blog/writing/${writing.slug}`,
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 

@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://yujiseok.blog/sitemap.xml",
-    host: "https://yujiseok.blog",
+    sitemap: "https://www.yujiseok.blog/sitemap.xml",
+    host: "https://www.yujiseok.blog",
   };
 }

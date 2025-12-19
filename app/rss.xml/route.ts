@@ -1,6 +1,15 @@
 import { baseURL } from "../sitemap";
 import { getAllWritings } from "@/lib/utils";
 
+const escapeXml = (str: string): string => {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+};
+
 export async function GET() {
   const posts = getAllWritings();
 
@@ -8,9 +17,9 @@ export async function GET() {
     .map(
       (post) =>
         `<item>
-          <title>${post.metadata.title}</title>
-          <link>${baseURL}/post/${post.slug}</link>
-          <description>${post.metadata.summary}</description>
+          <title>${escapeXml(post.metadata.title)}</title>
+          <link>${baseURL}/writing/${post.slug}</link>
+          <description>${escapeXml(post.metadata.summary)}</description>
           <pubDate>${new Date(post.metadata.publishedAt).toUTCString()}</pubDate>
         </item>`,
     )
@@ -26,9 +35,8 @@ export async function GET() {
       </channel>
     </rss>`;
 
-  return new Response(RSS, {
-    headers: {
-      "Content-Type": "application/xml",
-    },
-  });
+  const headers = new Headers({ "content-type": "application/xml" });
+
+  return new Response(RSS, { headers });
 }
+
