@@ -38,7 +38,6 @@ const mdxComponents = {
 
 const options: Options = {
   theme: "ayu-dark",
-  defaultLang: "tsx",
 };
 
 export function Mdx({ components, source }: any) {
