@@ -37,7 +37,7 @@ const mdxComponents = {
 };
 
 const options: Options = {
-  theme: "ayu-dark",
+  theme: "poimandres",
 };
 
 export function Mdx({ components, source }: any) {
