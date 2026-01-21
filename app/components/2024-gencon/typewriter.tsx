@@ -40,7 +40,7 @@ const TypewriterWrapper = () => {
   const { ref, isVisible } = useInViewAnimation(0.5);
 
   return (
-    <div className="border rounded-md p-4 overscroll-contain max-h-40 overflow-y-auto">
+    <div data-lenis-prevent className="border rounded-md p-4 overscroll-contain max-h-40 overflow-y-auto">
       <Typewriter
         as="div"
         text="안녕하세요. 저의 젠콘 개발 회고는 재밌게 읽고 계신가요? 해당 컴포넌트는 뷰포트에 상관없이 보여요. 만약 뷰포트에 따라 보여지길 원하신다면, framer-motion의 useInView 훅을 사용해 구현할 수 있습니다. 💫"

@@ -19,7 +19,7 @@ const Track = ({
         alt={track.trackName}
         width={track.albumCover.width}
         height={track.albumCover.height}
-        className="pointer-events-none aspect-square size-14 rounded-lg shadow-xs"
+        className="pointer-events-none aspect-square size-14 rounded-lg shadow-xs border border-neutral-200 dark:border-neutral-800"
         placeholder="blur"
         blurDataURL={BLUR_DATA_URL}
       />
