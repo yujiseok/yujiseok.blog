@@ -16,7 +16,7 @@ const Writing = ({
       <Link
         href={`/writing/${slug}`}
         className={cn(
-          "block rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-400/5",
+          "block rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-200/10",
           offset ? "-m-3" : "-ml-3",
         )}
       >

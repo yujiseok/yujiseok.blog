@@ -12,7 +12,7 @@ const Track = ({
       href={track.spotifyUrl}
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-4 rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-400/5"
+      className="flex items-center gap-4 rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-200/10"
     >
       <Image
         src={track.albumCover.url}
