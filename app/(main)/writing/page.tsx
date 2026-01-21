@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
 };
 
-function PostPage() {
-  const writings = getAllWritings();
+const writings = getAllWritings();
 
+function PostPage() {
   return (
     <BlurContainer className="gap-8">
       {writings.map(({ metadata, slug }) => (

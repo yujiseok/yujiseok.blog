@@ -12,7 +12,7 @@ const Writing = ({
   offset?: boolean;
 }) => {
   return (
-    <article key={slug} className="rounded-lg">
+    <article className="rounded-lg">
       <Link
         href={`/writing/${slug}`}
         className={cn(

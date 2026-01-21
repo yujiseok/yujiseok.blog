@@ -4,9 +4,9 @@ import Writing from "../components/writing";
 import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
-export default function Home() {
-  const writings = getAllWritings().slice(0, 10);
+const writings = getAllWritings().slice(0, 10);
 
+export default function Home() {
   return (
     <BlurContainer className="gap-10 leading-7 break-keep">
       <header>
