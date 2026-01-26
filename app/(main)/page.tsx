@@ -4,7 +4,7 @@ import Writing from "../components/writing";
 import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
-const writings = getAllWritings().slice(0, 10);
+const writings = getAllWritings().slice(0, 8);
 
 export default function Home() {
   return (
