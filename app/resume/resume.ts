@@ -4,11 +4,11 @@ export const resumeData = {
     title: "Frontend Engineer",
     introduction: [
       "사용성과 심미성의 균형을 고민하며, 기능적으로 뛰어나고 아름다운 UI 구현을 추구합니다.",
-      '"왜?"라는 질문으로 문제의 본질을 파악하고, 이를 바탕으로 개선책을 설계·구현하는 과정을 즐깁니다. 이런 과정에서 서비스의 SSR로 강제되던 구조를 SSG와 SSR 병행 구조로 개선하고, Next 캐시를 적용해 서버 응답 시간을 최대 75% 단축한 경험이 있습니다.',
+      '"왜?"라는 질문으로 문제의 본질을 파악하고, 이를 바탕으로 개선책을 설계·구현하는 과정을 즐깁니다. 이런 과정에서 SSR로 강제되던 서비스 구조를 SSG, SSR, ISR 혼합 전략으로 개선하고, Next.js 캐시를 적용해 서버 응답 시간을 최대 75% 단축한 경험이 있습니다.',
       "개발 과정과 기술적 의사결정을 블로그에 기록하고, 동료와 함께 성장하는 문화를 지향합니다.",
     ],
   },
-  careers: [
+  workExperience: [
     {
       company: "주식회사 데이원컴퍼니 Coloso",
       period: "2023.11 - 현재",
@@ -19,7 +19,7 @@ export const resumeData = {
           title:
             "Next.js 렌더링 전략 개선을 통한 서비스 성능 및 인프라 효율 최적화",
           achievements: [
-            "강제 SSR 구조를 개선하여 SSG + SSR + ISR 혼합 전략 및 Next.js 내장 캐시 도입",
+            "강제 SSR 구조를 개선하여 SSG • SSR • ISR 혼합 전략 및 Next.js 캐시 도입",
             "캐싱 도입으로 응답 시간 최대 75% 단축 (800ms → 200ms)",
             "네트워크 트래픽 80% 및 활성 컨테이너 수 60% 절감하여 GCP 인프라 비용 절감 기여",
           ],
@@ -100,7 +100,7 @@ export const resumeData = {
       blogLinkText: "React 공식 문서 기여 회고",
     },
   ],
-  etc: [
+  otherExperience: [
     {
       title: "김민태의 데브 캠프 멘토",
       period: "2024.05 - 2025.01",

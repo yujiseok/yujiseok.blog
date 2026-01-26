@@ -71,9 +71,9 @@ const page = () => {
       <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
         <ResumeProfile profile={resumeData.profile} />
 
-        <ContentContainer title="Careers">
+        <ContentContainer title="Work Experience">
           <div className="grid gap-4">
-            {resumeData.careers.map((career) => (
+            {resumeData.workExperience.map((career) => (
               <ResumeContent
                 key={career.company}
                 leftContent={<time>{career.period}</time>}
@@ -172,8 +172,8 @@ const page = () => {
           ))}
         </ContentContainer>
 
-        <ContentContainer title="Etc">
-          {resumeData.etc.map((item) => (
+        <ContentContainer title="Other Experience">
+          {resumeData.otherExperience.map((item) => (
             <ResumeContent
               key={item.title}
               leftContent={<time dateTime={item.period}>{item.period}</time>}
@@ -328,10 +328,10 @@ const ContentContainer = ({
   children,
 }: {
   title:
-  | "Careers"
+  | "Work Experience"
   | "Open Source Contribution"
   | "Education"
-  | "Etc"
+  | "Other Experience"
   | "Contact";
   children: React.ReactNode;
 }) => {
