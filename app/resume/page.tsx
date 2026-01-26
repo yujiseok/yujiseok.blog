@@ -80,7 +80,7 @@ const page = () => {
                 rightContent={
                   <div className="grid gap-2">
                     <div>
-                      <h4 className="mb-1 flex gap-0.5">
+                      <h4 className="mb-1 text-[15px] font-bold flex gap-0.5">
                         {career.company.split(" ").slice(0, -1).join(" ")}
                         <a
                           href={career.url}
@@ -106,16 +106,18 @@ const page = () => {
                                 <li key={achievementIndex}>{achievement}</li>
                               ),
                             )}
-                            <li>
-                              <a
-                                href={project.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline underline-offset-2"
-                              >
-                                {project.linkText}
-                              </a>
-                            </li>
+                            {project.link && (
+                              <li>
+                                <a
+                                  href={project.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline underline-offset-2"
+                                >
+                                  {project.linkText}
+                                </a>
+                              </li>
+                            )}
                           </ul>
                         </li>
                       ))}
@@ -206,7 +208,7 @@ const page = () => {
                 href={`mailto:${resumeData.contact.email}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex hover:underline"
+                className="group inline-flex hover:underline"
               >
                 {resumeData.contact.email}
                 <ArrowUpRight className="mb-1 scale-75" />
@@ -220,7 +222,7 @@ const page = () => {
                 href={resumeData.contact.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex hover:underline"
+                className="group inline-flex hover:underline"
               >
                 yujiseok
                 <ArrowUpRight className="mb-1 scale-75" />
@@ -234,7 +236,7 @@ const page = () => {
                 href={resumeData.contact.blog}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex hover:underline"
+                className="group inline-flex hover:underline"
               >
                 yujiseok.blog
                 <ArrowUpRight className="mb-1 scale-75" />
@@ -248,7 +250,7 @@ const page = () => {
                 href={`tel:+82${resumeData.contact.phone.replace(/-/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex hover:underline"
+                className="group inline-flex hover:underline"
               >
                 {resumeData.contact.phone}
                 <ArrowUpRight className="mb-1 scale-75" />
@@ -326,16 +328,16 @@ const ContentContainer = ({
   children,
 }: {
   title:
-    | "Careers"
-    | "Open Source Contribution"
-    | "Education"
-    | "Etc"
-    | "Contact";
+  | "Careers"
+  | "Open Source Contribution"
+  | "Education"
+  | "Etc"
+  | "Contact";
   children: React.ReactNode;
 }) => {
   return (
     <div className="grid gap-4 sm:gap-6">
-      <h3 className="font-semibold">{title}</h3>
+      <h3 className="font-semibold text-base">{title}</h3>
       <div className="grid gap-4">{children}</div>
     </div>
   );
