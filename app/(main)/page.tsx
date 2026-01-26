@@ -19,16 +19,14 @@ export default function Home() {
       </header>
 
       <div>
-        <div>
-          {writings.map(({ metadata, slug }) => (
-            <Writing
-              key={slug}
-              metadata={metadata}
-              slug={slug}
-              offset={false}
-            />
-          ))}
-        </div>
+        {writings.map(({ metadata, slug }) => (
+          <Writing
+            key={slug}
+            metadata={metadata}
+            slug={slug}
+            offset={false}
+          />
+        ))}
         <div className="flex justify-end">
           <Link
             href="/writing"
