@@ -55,13 +55,13 @@ Next.js는 React의 서버 사이드 프레임워크로 기본적으로 모든 �
 아래와 같이 직접 `export` 하여 설정할 수 있습니다.
 
 ```tsx
-export const dynamic = 'auto'
-export const dynamicParams = true
-export const revalidate = false
-export const fetchCache = 'auto'
-export const runtime = 'nodejs'
-export const preferredRegion = 'auto'
-export const maxDuration = 5
+export const dynamic = "auto";
+export const dynamicParams = true;
+export const revalidate = false;
+export const fetchCache = "auto";
+export const runtime = "nodejs";
+export const preferredRegion = "auto";
+export const maxDuration = 5;
 
 export default function MyComponent() {}
 ```
@@ -74,7 +74,7 @@ export default function MyComponent() {}
 1. **dynamic**
 
 ```tsx
-export const dynamic = 'auto' | 'force-dynamic' | 'error' | 'force-static'
+export const dynamic = "auto" | "force-dynamic" | "error" | "force-static";
 ```
 
 dynamic 옵션은 레이아웃 또는 페이지의 동작 방식을 결정하는 옵션입니다.
@@ -101,7 +101,7 @@ dynamic 옵션은 레이아웃 또는 페이지의 동작 방식을 결정하는
 2. **revalidate**
 
 ```tsx
-export const revalidate = false | 0 | number
+export const revalidate = false | 0 | number;
 ```
 
 revalidate 옵션은 레이아웃 또는 페이지의 기본 캐시 재검증 시간(초)을 설정하여 ISR 또는 동적 렌더링을 제어합니다.
@@ -129,12 +129,12 @@ revalidate 옵션은 레이아웃 또는 페이지의 기본 캐시 재검증 �
 
 ## 문제점
 
-Next.js는 흑마술을 🔮 부려 최대한 많은 페이지를 정적 페이지로 만드는데 실제 서비스에선 모든 페이지가 동적으로 생성되고 있었습니다.
+Next.js는 흑마법을 🔮 부려 기본적으로 페이지를 정적으로 만드는데 실제 서비스에선 모든 페이지가 동적으로 생성되고 있었습니다.
 
 <strong>"왜 모든 페이지가 빌드 시 동적으로 생성되는 거지?"</strong>라는 의문을
 시작으로 문제점을 파악하게 되었습니다.
 
-### 모든 페이지의 동적 생성
+### 1. 모든 페이지의 동적 생성
 
 분명 Next.js는 기본적으로 최대한 정적으로 생성하려는 철학을 가지고 있을 텐데, 서비스 내 페이지들이 아래와 같이
 빌드 시 모두 동적으로 생성되고 있었습니다.
@@ -154,8 +154,9 @@ Next.js는 흑마술을 🔮 부려 최대한 많은 페이지를 정적 페이�
 > 마치 f 학점을 받은 느낌이라 기분이 썩 좋지 않았습니다..🎓
 
 사실, 동적으로 모든 페이지가 생성되는 것은 기능적 관점에서 문제라고 보기에는 어렵습니다.
-하지만, 모든 페이지를 동적으로 생성하면 서버가 사용자의 요청마다 HTML을 새롭게 만들어야 합니다.
-이로 인해 서버 과부하 및 비용 증가, 페이지 깜빡임과 느린 페이지 전환, 클라이언트 상태 유실로 인한 유저 경험 저하 등 비효율적인 상황을 초래합니다.
+하지만 모든 페이지를 동적으로 생성하면 Next.js의 풀 라우트 캐시(Full Route Cache)를 활용하지 못하고 무시하게 됩니다.
+이로 인해 서버는 이미 만들어진 결과물을 재사용하는 대신 사용자의 요청마다 HTML과 데이터(RSC Payload)를 매번 새롭게 생성해야 합니다.
+결과적으로 서버 과부하 및 비용 증가, 페이지 깜빡임과 느린 페이지 전환, 클라이언트 상태 유실로 인한 유저 경험 저하 등 비효율적인 상황을 초래합니다.
 
 이런 동적 생성의 또 다른 문제가 있었는데, 바로 모든 캐싱이 무시되는 문제였습니다.
 
@@ -188,7 +189,7 @@ Next.js는 흑마술을 🔮 부려 최대한 많은 페이지를 정적 페이�
 범인을 찾기 위해 루트 레이아웃을 살펴보았는데, 아래와 같은 코드를 발견했습니다.
 
 ```tsx
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 // ...
@@ -210,7 +211,7 @@ export const revalidate = 300;
 해결법은 너무 간단합니다. 루트 레이아웃에 적용된 세그먼트 옵션을 망설임 없이 제거하면 됩니다.
 
 ```tsx {1}
-export const dynamic = 'force-dynamic' //  제거
+export const dynamic = "force-dynamic"; //  제거
 export const revalidate = 300;
 ```
 
@@ -307,7 +308,7 @@ async rewrites() {
 ```ts title="fetch 함수 호출 코드"
 const apiServer = `http://localhost:${process.env.USE_DYNAMIC_PORTS ?? 8080}`;
 
-fetch(`${apiServer}/api/...`)
+fetch(`${apiServer}/api/...`);
 ```
 
 Next.js는 빌드 시 페이지를 생성하기 위해 해당 페이지에 종속된 데이터를 위한 API 요청이 필요합니다.
@@ -318,13 +319,13 @@ Next.js는 빌드 시 페이지를 생성하기 위해 해당 페이지에 종�
 ```ts title="환경별 API 주소 정의"
 // ...
 const apiBaseUrl = {
-  development: 'http://dev.api.kr',
-  staging: 'http://staging.api.kr',
-  qa: 'http://qa.api.kr',
-  production: 'https://api.kr',
-}
+  development: "http://dev.api.kr",
+  staging: "http://staging.api.kr",
+  qa: "http://qa.api.kr",
+  production: "https://api.kr",
+};
 
-const apiServer = apiBaseUrl[environment]
+const apiServer = apiBaseUrl[environment];
 ```
 
 이제 문제가 다 해결되었습니다. 실제로 잘 적용이 되었는지 확인해 보겠습니다.
@@ -339,11 +340,11 @@ const apiServer = apiBaseUrl[environment]
   <small>빌드 시 정적 페이지 생성</small>
 </div>
 
-짜잔.. 드디어 정적 페이지들이 생성되게 되었습니다 🥳
+짜잔.. 드디어 정적 페이지들이 생성되게 되었습니다.
 
 이 과정에 저는 rewrites 옵션이 저뿐만 아니라 팀원들에게 불필요한 혼란을 주고 있고, 또 프록시 설정이 필요 없다는 생각이 들어 의사결정 후 제거하였습니다.
 
-> CORS 대응이 서버에서 되어 있으며, 각 환경별 API 주소가 명확하게 정의되어 있어, 굳이 프록시 설정을 두는 것보다 코드에서 직접 실제 API 주소를 호출하는 것이 더 직관적이라고 판단했습니다.
+> CORS 대응이 서버에서 되어 있으며, 각 환경별 API 주소가 명확하게 정의되어 있어 굳이 프록시 설정을 두는 것보다 코드에서 직접 실제 API 주소를 호출하는 것이 더 직관적이라고 판단했습니다.
 
 ## 그럼 왜 force-dynamic 옵션이 존재했을까?
 
@@ -557,7 +558,7 @@ const apiServer = apiBaseUrl[environment]
 
 결론적으로, Next.js의 렌더링 전략을 올바르게 이해하고 적용하는 것만으로도 서버 부하와 비용은 극적으로 줄이고, 사용자 경험과 서비스 안정성을 크게 향상시킬 수 있게 되었습니다.
 
-## 개선 과정에서 배운 점
+## 개선 과정에서 배운 점 (버전별 차이 존재 가능)
 
 Next.js를 실제로 사용하면서, 너무 자주 바뀌는 스펙과 API 등에 치여 피로도가 높아져 "버셀 또 너야?"라고 생각한 게 하루에도 수십 번이었습니다. 🥹
 코드 상에도 기술 부채가 존재했지만, 저 스스로도 기술 부채가 점점 쌓이고 있음을 느꼈습니다.
@@ -577,7 +578,7 @@ revalidate = 0은 해당 라우트의 기본 재검증 주기를 0초로 설정�
 dynamic = 'force-dynamic'은 해당 라우트의 **모든 캐싱을 비활성화하고 무조건 동적으로 렌더링**하도록 강제합니다. 이 설정의 특징은 다음과 같습니다.
 
 - **강제적 동적 렌더링:** 페이지는 항상 요청 시에 렌더링 되며, 정적으로 분석될 여지를 남기지 않습니다. 이는 과거 Pages Router의 `getServerSideProps`와 가장 유사한 동작 방식입니다.
-- **모든 `fetch` 요청 캐시 무시:** 페이지 내의 모든 `fetch` 요청은 `{ cache: 'no-store' }`로 처리되는 것과 동일합니다. 개별 `fetch` 요청에 `cache` 옵션을 설정하더라도 이 설정이 우선되어 캐시가 비활성화됩니다.
+- **모든 `fetch` 요청 캐시 무시:** 페이지 내의 특별한 설정이 존재하지 않는 `fetch` 요청은 `{ cache: 'no-store' }`로 처리되는 것과 동일합니다. 개별 `fetch` 요청에 `cache` 옵션을 설정하면 해당 캐시 옵션이 우선됩니다.
 
 ---
 
@@ -585,7 +586,7 @@ dynamic = 'force-dynamic'은 해당 라우트의 **모든 캐싱을 비활성화
 
 `revalidate = 0`: 개별 `fetch` 캐시 옵션을 따라감 ✅
 
-이 설정은 페이지의 **기본 동작**을 동적으로 만들 뿐, 개별 `fetch` 요청에 설정된 고유한 캐시 전략을 막지 않습니다.
+이 설정은 페이지의 **기본 동작**을 동적으로 만들 뿐, 개별 `fetch` 요청에 설정된 고유한 캐시 설정을 무시하지 않습니다.
 
 따라서 페이지 자체는 매번 새로 렌더링 되도록 준비되지만, 그 안의 특정 `fetch` 요청에 `next: { revalidate: 60 }`과 같은 캐시 옵션이 있다면, 해당 데이터는 **설정된 캐시 옵션을 그대로 따라갑니다.** 이는 페이지의 동적 렌더링과 데이터의 선택적 캐시를 조합할 수 있는 유연성을 제공합니다.
 
@@ -593,11 +594,11 @@ dynamic = 'force-dynamic'은 해당 라우트의 **모든 캐싱을 비활성화
 
 ### 3. dynamic = ‘force-dynamic’ , 개별 fetch 캐시 옵션
 
-`dynamic = 'force-dynamic'`: 개별 `fetch` 캐시 옵션을 상쇄(무시)함 ✅
+`dynamic = 'force-dynamic'`: 풀 라우트 캐시 무시 ✅
 
-이 설정은 더 강력하고 포괄적인 규칙입니다. 라우트 전체에 "어떠한 캐시도 허용하지 말고 무조건 동적으로만 동작해"라는 명령과 같습니다.
+이 설정은 더 강력하고 포괄적인 규칙입니다. 라우트 전체에 "풀 라우트 캐시를 허용하지 않고 무조건 동적으로만 동작해"라는 명령과 같습니다.
 
-그 결과, 해당 라우트 내의 모든 `fetch` 요청은 **개별적으로 어떤 캐시 옵션(`force-cache`나 `revalidate` 시간 설정 등)을 가지고 있더라도 모두 무시**되고 `{ cache: 'no-store' }`로 강제됩니다.
+그 결과, 개별 `fetch`에 명시적인 캐시 옵션이 없다면 `{ cache: 'no-store' }`가 기본값으로 강제되지만, 직접 설정한 옵션이 있다면 그 설정이 우선 적용됩니다.
 
 ---
 
@@ -638,21 +639,21 @@ Next.js가 가장 짧은 주기를 선택하는 이유는 **데이터의 최신�
 
 ---
 
-### 6. 데이터 캐시 vs 전체 라우트 캐시
+### 6. 데이터 캐시 vs 풀 라우트 캐시
 
 Next.js의 캐싱은 크게 두 가지로 나뉩니다.
 
 - **데이터 캐시 (Data Cache)**: `fetch`를 통해 가져온 **개별 데이터**를 캐싱 합니다. 요청 간에 공유됩니다.
-- **전체 라우트 캐시 (Full Route Cache)**: 렌더링 된 페이지와 RSC 페이로드를 캐싱 합니다. 이 덕분에 정적 페이지(SSG/ISR)는 매우 빠르게 로드될 수 있습니다. 또한 페이지 이동 시 RSC 페이로드를 사용하여 빠르게 탐색할 수 있습니다.
+- **풀 라우트 캐시 (Full Route Cache)**: 렌더링 된 페이지와 RSC 페이로드를 캐싱 합니다. 이 덕분에 정적 페이지(SSG/ISR)는 매우 빠르게 로드될 수 있습니다. 또한 페이지 이동 시 RSC 페이로드를 사용하여 빠르게 탐색할 수 있습니다.
 
 **렌더링 전략별 캐시 사용법**
 
 어떤 렌더링 전략을 사용하느냐에 따라 사용하는 캐시가 다릅니다.
 
 - **SSG / ISR (정적 페이지)**: **두 캐시 모두 사용 ✅**
-  - `fetch`로 데이터를 가져와 **데이터 캐시**에 저장하고, 그 데이터로 렌더링 한 페이지를 **전체 라우트 캐시**에 저장합니다.
+  - `fetch`로 데이터를 가져와 **데이터 캐시**에 저장하고, 그 데이터로 렌더링 한 페이지를 **풀 라우트 캐시**에 저장합니다.
 - **SSR (동적 페이지)**: **데이터 캐시만 사용 ✅**
-  - 페이지를 요청마다 새로 렌더링 하므로 **전체 라우트 캐시**는 사용하지 않습니다.
+  - 페이지를 요청마다 새로 렌더링 하므로 **풀 라우트 캐시**는 사용하지 않습니다.
   - 하지만 렌더링 과정에서 **데이터 캐시**를 활용하여 불필요한 API 호출을 줄이고 속도를 높입니다.
 
 ---
@@ -663,12 +664,13 @@ Next.js의 캐싱은 크게 두 가지로 나뉩니다.
 
 - `fetch(..., { cache: 'no-store' })`: 상향식(Bottom-up) 결정
   - 개별 데이터 하나를 캐싱 하지 않겠다고 선언하는 것입니다.
-  - 이 동적인 특성 때문에, 해당 데이터를 사용하는 **페이지 전체가 동적 렌더링으로 전환**됩니다.
+  - 이 데이터의 동적인 특성 때문에, 해당 데이터를 사용하는 페이지 전체가 자동으로 동적 렌더링으로 전환됩니다.
   - 하지만 이 결정이 페이지 내의 **다른 `fetch` 요청에는 영향을 주지 않습니다.** 다른 `fetch`가 `force-cache`나 `revalidate` 시간을 가지고 있다면 그 캐시는 여전히 존중됩니다.
 
 - `dynamic = 'force-dynamic'`: 하향식(Top-down) 결정
-  - **페이지 전체**가 동적으로 렌더링 되어야 한다고 명령하는 것입니다.
-  - 이 라우트 세그먼트는 그 하위 **모든 `fetch` 요청에 전파**되어, 개별 `fetch`가 어떤 캐시 설정을 가지고 있더라도 모두 무시하고 강제로 `no-store`처럼 동작하게 만듭니다.
+  - 페이지 전체를 무조건 동적으로 렌더링하라고 명령하는 설정입니다. (풀 라우트 캐시 비활성화)
+  - 이 라우트 세그먼트는 그 하위 **모든 `fetch` 요청에 전파**되어, 별도의 설정이 없다면 `{ cache: 'no-store' }`가 기본값으로 강제됩니다.
+  - 하지만, 명시적인 캐시 설정이 있다면 그 설정이 우선 적용됩니다.
 
 ---
 
@@ -682,14 +684,14 @@ Next.js 15의 기본값(auto no cache)은 개발 환경에서 항상 신선한 �
 
 ### 8. `dynamic = 'force-dynamic'` 아닌 동적 API를 만나서 동적 렌더링으로 전환될 경우도 데이터 캐시는 유지되는가
 
-- **`cookies()` 등 동적 API 사용 시:**
+- **`cookies()`, `headers()` 등 동적 API 사용 시:**
   1. Next.js가 동적 API를 감지하고 "이 페이지는 요청 시 렌더링 해야겠다"고 결정합니다.
   2. 페이지 렌더링 과정에서 만나는 `fetch` 요청들은 **자신이 가진 캐시 옵션(`revalidate` 시간 등)을 그대로 유지**합니다.
   3. 따라서 캐시 된 데이터가 유효하면 데이터 캐시에서 값을 가져와 렌더링 속도를 높이고, 유효하지 않으면 새로 가져옵니다. **데이터 캐시를 적극적으로 활용합니다**.
 - **`export const dynamic = 'force-dynamic'` 사용 시:**
   1. Next.js가 이 설정을 보고 "이 페이지의 모든 것은 예외 없이 동적이어야 해"라고 결정합니다.
-  2. 페이지 내의 **모든 `fetch` 요청에 전파되어, 개별 캐시 설정을 무시하고 `{ cache: 'no-store' }`로 강제**합니다.
-  3. 결과적으로 **데이터 캐시를 전혀 사용하지 않게 됩니다.**
+  2. 이 설정은 페이지 내 fetch 요청들의 **기본값(Default)**을 `{ cache: 'no-store' }`로 변경합니다. 옵션을 생략한 `fetch`들은 캐싱되지 않습니다.
+  3. 개발자의 의도에 따른 명시적인 설정이 있다면 그 설정이 우선 적용됩니다.
 
 ## 후기
 
@@ -698,3 +700,5 @@ Next.js 15의 기본값(auto no cache)은 개발 환경에서 항상 신선한 �
 
 단순 개선에 그치지 않고 Next.js의 렌더링 전략과 라우트 세그먼트의 동작 방식 등에 대해 습득할 수 있었으며, 이를 바탕으로 서비스 특성에 맞는 렌더링 전략으로 적용할 수 있었습니다.
 또한 데이터 기반의 성과 측정을 통해 개선 효과를 정량적으로 입증할 수 있었던 점이 특히 만족스럽습니다.
+
+> 변경되는 버전에 대해 항상 확인하고 학습하는 습관을 가져야겠다고 느꼈습니다.
