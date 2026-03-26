@@ -8,6 +8,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Suspense } from "react";
 import Footer from "@/app/components/footer";
 import Lenis from "./components/lenis";
+import { SITE_URL } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,13 +17,13 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.yujiseok.blog"),
+  metadataBase: new URL(SITE_URL),
   title: "Yujiseok",
   description: "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그",
   openGraph: {
     title: "유지석",
     description: "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그",
-    url: "https://www.yujiseok.blog/",
+    url: `${SITE_URL}/`,
     locale: "ko_KR",
     type: "website",
     siteName: "유지석",

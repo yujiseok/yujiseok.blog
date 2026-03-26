@@ -1,7 +1,8 @@
 import { getAllWritings } from "@/lib/utils";
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/constants";
 
-export const baseURL = "https://www.yujiseok.blog";
+export const baseURL = SITE_URL;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const writings = getAllWritings().map((writing) => ({
