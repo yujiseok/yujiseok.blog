@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug } from "@/lib/utils";
 import { Mdx } from "@/app/components/mdx";
 import BlurContainer from "@/app/components/blurContainer";
@@ -51,7 +52,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
   const writing = getWritingBySlug(params.slug);
   if (!writing) {
-    return false;
+    notFound();
   }
 
   return (

@@ -1,4 +1,4 @@
-import { getAllWritings } from "@/lib/utils";
+import { getAllWritings, getAllAtelier } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 
@@ -10,6 +10,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: writing.metadata.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.8,
+  }));
+
+  const ateliers = getAllAtelier().map((item) => ({
+    url: `${baseURL}/atelier/${item.slug}`,
+    lastModified: item.metadata.publishedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
   }));
 
   const routes = [
@@ -25,7 +32,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
+    {
+      url: `${baseURL}/atelier`,
+      lastModified: new Date().toISOString().split("T")[0],
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${baseURL}/resume`,
+      lastModified: new Date().toISOString().split("T")[0],
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    },
+    {
+      url: `${baseURL}/music`,
+      lastModified: new Date().toISOString().split("T")[0],
+      changeFrequency: "daily" as const,
+      priority: 0.5,
+    },
   ];
 
-  return [...routes, ...writings];
+  return [...routes, ...writings, ...ateliers];
 }

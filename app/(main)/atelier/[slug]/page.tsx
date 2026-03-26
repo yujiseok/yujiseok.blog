@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
 import AtelierMdx from "@/app/components/atelier/atelierMdx";
 import { getAllAtelier } from "@/lib/utils";
 import { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const generateStaticParams = async () => {
   const atelier = getAllAtelier();
@@ -19,6 +21,13 @@ export const generateMetadata = async (props: {
 
   return {
     title: atelier.metadata.title,
+    description: atelier.metadata.summary,
+    openGraph: {
+      title: { absolute: atelier.metadata.title },
+      description: atelier.metadata.summary,
+      type: "article",
+      url: `${SITE_URL}/atelier/${slug}`,
+    },
   };
 };
 
@@ -28,7 +37,7 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
     (atelier) => atelier.slug === params.slug,
   );
   if (!atelier) {
-    return false;
+    notFound();
   }
 
   return (
