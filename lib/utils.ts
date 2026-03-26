@@ -58,4 +58,10 @@ const getAllContent = (contentType: ContentType) => {
 };
 
 export const getAllWritings = () => getAllContent("writing");
+
+export const getWritingBySlug = (slug: string) => {
+  const writings = getAllWritings();
+  return writings.find((writing) => writing.slug === slug);
+};
+
 export const getAllAtelier = () => getAllContent("atelier");
