@@ -2,8 +2,6 @@ import BlurContainer from "@/app/components/blurContainer";
 import Track from "@/app/components/music/track";
 import { getRecentlyPlayed } from "@/lib/spotify/api";
 
-export const revalidate = 180;
-
 const page = async () => {
   const recentlyPlayedTracks = await getRecentlyPlayed();
 

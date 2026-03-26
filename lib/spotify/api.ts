@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import {
   extractCurrentlyPlayingTrack,
   extractTrack,
@@ -40,6 +41,9 @@ export const getAccessToken = async () => {
 export const getRecentlyPlayed = async (): Promise<
   TypeRecentlyPlayedTrack[]
 > => {
+  "use cache";
+  cacheLife({ revalidate: 180 });
+
   const access_token = await getAccessToken();
 
   const res = await fetch(
@@ -59,6 +63,9 @@ export const getRecentlyPlayed = async (): Promise<
 
 export const getCurrentlyPlaying =
   async (): Promise<TypeCurrentlyPlayingTrack> => {
+    "use cache";
+    cacheLife({ revalidate: 60 });
+
     const access_token = await getAccessToken();
 
     const res = await fetch(
@@ -66,9 +73,6 @@ export const getCurrentlyPlaying =
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
-        },
-        next: {
-          revalidate: 60,
         },
       },
     );
@@ -97,6 +101,9 @@ export const getPlaylists = async (
   limit = 20,
   offset = 0,
 ): Promise<TypeSpotifyPlaylist[]> => {
+  "use cache";
+  cacheLife("days");
+
   const access_token = await getAccessToken();
 
   const res = await fetch(
@@ -112,6 +119,9 @@ export const getPlaylists = async (
 };
 
 export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
+  "use cache";
+  cacheLife("days");
+
   const access_token = await getAccessToken();
 
   const res = await fetch(
@@ -132,6 +142,9 @@ export const getPlaylistTrack = async (
   limit = 10,
   offset = 0,
 ): Promise<TypeRecentlyPlayedTrack[]> => {
+  "use cache";
+  cacheLife("days");
+
   const access_token = await getAccessToken();
 
   const res = await fetch(

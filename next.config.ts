@@ -40,6 +40,7 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
   ],
+  cacheComponents: true,
   experimental: {
     typedEnv: true,
     viewTransition: true,

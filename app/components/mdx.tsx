@@ -4,6 +4,7 @@ import Link from "next/link";
 import rehypePrettyCode, { Options } from "rehype-pretty-code";
 import Typewriter from "./2024-gencon/typewriter";
 import GridMasonry from "./portfolio/GridMasonry";
+import { Callout } from "./callout";
 
 function CustomLink(props: any) {
   const href = props.href;
@@ -29,18 +30,22 @@ function CustomImage(props: any) {
   );
 }
 
+
 const mdxComponents = {
   a: CustomLink,
   Image: CustomImage,
   Typewriter,
   GridMasonry,
+  Callout,
 };
 
 const options: Options = {
   theme: "poimandres",
 };
 
-export function Mdx({ components, source }: any) {
+export async function Mdx({ components, source }: any) {
+  "use cache";
+
   return (
     <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
       <MDXRemote

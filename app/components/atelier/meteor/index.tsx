@@ -20,7 +20,7 @@ const makeStars = (count: number) =>
   }));
 
 const Meteor = () => {
-  const [stars, setStars] = useState(makeStars(300));
+  const [stars, setStars] = useState<{ top: number; left: number }[]>([]);
 
   useLayoutEffect(() => {
     setStars(makeStars(300));

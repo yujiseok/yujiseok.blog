@@ -5,7 +5,6 @@ import { TypeSpotifyPlaylist } from "@/types/spotify";
 import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
-export const revalidate = 86_400;
 
 const page = async () => {
   const playlists = await getPlaylists();

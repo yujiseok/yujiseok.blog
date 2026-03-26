@@ -7,8 +7,6 @@ import Image from "next/image";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
 
-export const revalidate = 86_400;
-
 export const generateStaticParams = async () => {
   const playlists = await getPlaylists();
   return playlists.map((playlist) => ({
