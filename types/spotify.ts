@@ -1,8 +1,4 @@
-import {
-  extractCurrentlyPlayingTrack,
-  extractTrack,
-  extractTopTrack,
-} from "@/lib/spotify/extract";
+import { extractTrack, extractTopTrack } from "@/lib/spotify/extract";
 
 // 공통으로 사용되는 기본 타입들
 interface SpotifyImage {
@@ -43,23 +39,6 @@ export interface RawSpotifyTrack {
   played_at: string;
 }
 
-// Currently Playing Track 관련 타입
-export interface SpotifyData {
-  is_playing: boolean;
-  actions: {
-    disallows: {
-      pausing: boolean;
-    };
-  };
-  item: {
-    album: SpotifyAlbum;
-    artists: SpotifyArtist[];
-    name: string;
-    external_urls: SpotifyExternalUrls;
-  };
-  timestamp: number;
-}
-
 export type SpotifyPlaylist = {
   collaborative: boolean;
   description: string;
@@ -98,10 +77,6 @@ export type SpotifyPlaylist = {
 export type TypeTopTrack = ReturnType<typeof extractTopTrack>;
 
 export type TypeRecentlyPlayedTrack = ReturnType<typeof extractTrack>;
-
-export type TypeCurrentlyPlayingTrack = ReturnType<
-  typeof extractCurrentlyPlayingTrack
->;
 
 export interface TypeSpotifyPlaylist {
   owner: { display_name: string };

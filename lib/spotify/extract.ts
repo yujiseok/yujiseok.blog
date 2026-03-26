@@ -1,7 +1,6 @@
 import {
   RawSpotifyTrack,
   SpotifyArtist,
-  SpotifyData,
   SpotifyTopTrack,
 } from "@/types/spotify";
 
@@ -24,11 +23,3 @@ export const extractTrack = (rawTrack: RawSpotifyTrack) => ({
   playedAt: new Date(rawTrack.played_at),
 });
 
-export const extractCurrentlyPlayingTrack = (track: SpotifyData) => ({
-  isPlaying: track.is_playing,
-  artistName: normalizeArtists(track.item.artists),
-  trackName: track.item.name,
-  albumImage: track.item.album.images[0],
-  spotifyUrl: track.item.external_urls.spotify,
-  timestamp: track.timestamp,
-});

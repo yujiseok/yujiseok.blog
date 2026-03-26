@@ -1,11 +1,6 @@
 import { cacheLife } from "next/cache";
+import { extractTrack, extractTopTrack } from "./extract";
 import {
-  extractCurrentlyPlayingTrack,
-  extractTrack,
-  extractTopTrack,
-} from "./extract";
-import {
-  TypeCurrentlyPlayingTrack,
   TypeRecentlyPlayedTrack,
   TypeSpotifyPlaylist,
   TypeTopTrack,
@@ -60,42 +55,6 @@ export const getRecentlyPlayed = async (): Promise<
 
   return tracks;
 };
-
-export const getCurrentlyPlaying =
-  async (): Promise<TypeCurrentlyPlayingTrack> => {
-    "use cache";
-    cacheLife({ revalidate: 60 });
-
-    const access_token = await getAccessToken();
-
-    const res = await fetch(
-      `https://api.spotify.com/v1/me/player/currently-playing`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      },
-    );
-
-    if (res.status === 204) {
-      return {
-        isPlaying: false,
-        artistName: "",
-        trackName: "",
-        albumImage: {
-          url: "",
-          width: 0,
-          height: 0,
-        },
-        spotifyUrl: "",
-        timestamp: 0,
-      };
-    }
-
-    const data = await res.json();
-
-    return extractCurrentlyPlayingTrack(data);
-  };
 
 export const getPlaylists = async (
   limit = 20,
