@@ -2,6 +2,9 @@ import ArrowUpRight from "@/app/components/arrowUpRight";
 import BlurContainer from "@/app/components/blurContainer";
 import { resumeData } from "./resume";
 import { SITE_URL } from "@/lib/constants";
+import ResumeProfile from "./components/ResumeProfile";
+import ResumeContent from "./components/ResumeContent";
+import ContentContainer from "./components/ContentContainer";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -279,67 +282,3 @@ const page = () => {
 };
 
 export default page;
-
-const ResumeProfile = ({
-  profile,
-}: {
-  profile: {
-    name: string;
-    title: string;
-    introduction: readonly string[];
-  };
-}) => {
-  return (
-    <div className="grid gap-8">
-      <div>
-        <h1 className="text-xl font-semibold">{profile.name}</h1>
-        <small className="text-xs text-neutral-600 dark:text-neutral-400">
-          {profile.title}
-        </small>
-      </div>
-
-      <div className="grid gap-2">
-        {profile.introduction.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const ResumeContent = ({
-  rightContent,
-  leftContent,
-}: {
-  rightContent: React.ReactNode;
-  leftContent: React.ReactNode;
-}) => {
-  return (
-    <div className="grid gap-2 sm:grid-cols-[160px_1fr] sm:gap-10">
-      <div className="text-neutral-600 dark:text-neutral-400">
-        {leftContent}
-      </div>
-      <div>{rightContent}</div>
-    </div>
-  );
-};
-
-const ContentContainer = ({
-  title,
-  children,
-}: {
-  title:
-  | "Work Experience"
-  | "Open Source Contribution"
-  | "Education"
-  | "Other Experience"
-  | "Contact";
-  children: React.ReactNode;
-}) => {
-  return (
-    <div className="grid gap-4 sm:gap-6">
-      <h3 className="font-semibold text-base">{title}</h3>
-      <div className="grid gap-4">{children}</div>
-    </div>
-  );
-};
