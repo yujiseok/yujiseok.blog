@@ -2,6 +2,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
 import rehypePrettyCode, { Options } from "rehype-pretty-code";
+
 import Typewriter from "./2024-gencon/typewriter";
 import GridMasonry from "./portfolio/GridMasonry";
 import { Callout } from "./callout";
@@ -24,9 +25,19 @@ function CustomLink(props: any) {
   return <a target="_blank" rel="noreferrer" {...props} />;
 }
 
-function CustomImage(props: any) {
+function CustomImage({ width, height, ...props }: any) {
+  const w = Number(width) || 768;
+  const h = Number(height) || 400;
+
   return (
-    <Image alt={props.alt} {...props} className="mx-auto rounded-md" priority />
+    <Image
+      alt={props.alt}
+      width={w}
+      height={h}
+      {...props}
+      className="mx-auto rounded-md"
+      priority
+    />
   );
 }
 

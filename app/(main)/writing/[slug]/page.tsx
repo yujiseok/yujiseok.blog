@@ -4,6 +4,7 @@ import { getAllWritings } from "@/lib/utils";
 import { Mdx } from "@/app/components/mdx";
 import BlurContainer from "@/app/components/blurContainer";
 
+
 export function generateStaticParams() {
   const writings = getAllWritings();
 
@@ -71,6 +72,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
       </div>
 
       <Mdx source={writing.content} />
+
     </BlurContainer>
   );
 };

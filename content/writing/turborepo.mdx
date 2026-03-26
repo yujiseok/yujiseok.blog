@@ -1,0 +1,336 @@
+---
+title: Turborepo Remote Cache 적용기
+publishedAt: 2026-03-10
+summary: Turborepo Remote Cache 적용기
+---
+
+## 개요
+
+모노레포의 CI 빌드가 점점 느려지고 있었다.
+패키지가 늘고, 앱이 추가될수록 PR 하나 올리면 빌드 끝날 때까지 멍하니 기다리는 시간이 길어졌다.
+
+우리는 이미 Turborepo를 쓰고 있었고, `actions/cache`로 `.turbo` 디렉토리를 캐싱하고 있었다.
+그런데 기대만큼 캐시가 잘 안 됐다. rebase만 해도 캐시가 날아가고, 브랜치 간 캐시 공유도 안 됐다.
+
+결국 Turborepo의 Remote Cache를 직접 구축하게 되었고, 그 과정을 정리해 본다.
+
+---
+
+## Turborepo 캐싱, 간단히 짚고 넘어가기
+
+Turborepo의 핵심은 **같은 일을 두 번 하지 않는 것**이다.
+각 task의 입력(소스 파일, 환경변수, 의존성)을 해싱해서 캐시 키를 만들고, 입력이 동일하면 실행을 건너뛰고 이전 결과물을 그대로 복원한다.
+
+```
+turbo run build
+  → 해시 계산: abc123def
+  → 캐시 확인: .turbo/cache/abc123def.tar.zst
+  → HIT → 빌드 스킵, 결과물 복원 ✅
+```
+
+이 해시는 **Global Hash**와 **Task Hash** 두 개로 나뉘는데, 둘 중 하나라도 바뀌면 캐시 MISS다.
+
+- **Global Hash** — `turbo.json` 설정, 루트 lockfile, `globalDependencies`, `globalEnv`
+- **Task Hash** — 패키지 소스 파일, `package.json`, `env` 환경변수, 의존 패키지의 해시
+
+여기서 중요한 건, 해시가 커밋 SHA가 아니라 **실제 파일 내용 기반**이라는 점이다.
+커밋을 100번 해도 코드가 안 바뀌었으면 캐시 HIT다.
+
+로컬에서는 `.turbo/cache`가 유지되니까 이 캐싱이 잘 동작한다.
+문제는 CI였다.
+
+---
+
+## actions/cache, 왜 부족했나
+
+GitHub Actions 러너는 매 실행마다 깨끗한 환경에서 시작한다.
+이전 빌드의 `.turbo/cache`가 없으니 매번 처음부터 빌드해야 한다.
+
+그래서 우리는 `actions/cache`로 `.turbo` 디렉토리를 캐싱했다.
+
+```yaml title=".github/workflows/deploy.yml"
+- name: Cache turbo build setup
+  uses: actions/cache@v4
+  with:
+    path: .turbo
+    key: ${{ runner.os }}-turbo-${{ github.sha }}
+    restore-keys: |
+      ${{ runner.os }}-turbo-
+```
+
+캐시 키가 매칭되면 `.turbo`를 복원해서 Turborepo가 로컬 캐시로 활용한다.
+
+<div>
+  <Image
+    src="/images/turborepo/actions-cache-miss.png"
+    width={768}
+    height={100}
+    alt="actions/cache 캐시 MISS"
+  />
+</div>
+
+<div>
+  <Image
+    src="/images/turborepo/actions-cache-build.png"
+    width={768}
+    height={100}
+    alt="actions/cache 캐시 HIT"
+  />
+</div>
+
+얼핏 잘 되는 것 같았는데, 실제로 써보니 캐시 MISS가 생각보다 자주 발생했다.
+원인을 파악해보니 `actions/cache`에는 구조적인 한계가 있었다.
+
+- **커밋 SHA 기반 캐시 키** — 코드를 안 바꿔도 `amend`나 `rebase`만 하면 SHA가 바뀌어서 캐시가 깨진다
+- **브랜치 단위 격리** — feature 브랜치 A의 캐시를 feature 브랜치 B에서 쓸 수 없다
+- **용량 제한** — GitHub 무료 기준 10GB, 7일 미사용 시 자동 삭제
+
+정리하면 이런 불일치가 생긴다:
+
+```
+actions/cache:  f(runner.os, github.sha)       ← 커밋 ID 기반
+Turborepo 해시:  f(파일 내용, env, deps, config)  ← 실제 내용 기반
+```
+
+Turborepo가 아무리 똑똑하게 해시를 계산해도, 캐시 저장소 자체가 커밋 단위로 격리되면 소용이 없다.
+이 문제를 근본적으로 해결하려면 Turborepo의 **Remote Cache**가 필요했다.
+
+---
+
+## Remote Cache로 전환하기
+
+Remote Cache는 캐시 아티팩트를 원격 서버에 저장하고, 브랜치·환경 상관없이 동일 해시면 재사용할 수 있게 해준다.
+
+Turborepo는 공식적으로 Vercel Remote Cache를 제공하지만, 우리는 이미 GCP 위에서 서비스를 운영하고 있었다.
+굳이 Vercel에 의존성을 만들기보다는, 기존 인프라 안에서 self-hosted로 구성하는 쪽을 택했다.
+캐시 서버 리전도 서울(`asia-northeast3`)로 맞출 수 있어서 CI 러너와의 레이턴시도 최소화할 수 있었다.
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>`actions/cache`</th>
+      <th>Remote Cache</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>캐시 범위</b>
+      </td>
+      <td>브랜치 단위 격리</td>
+      <td>전체 팀 공유</td>
+    </tr>
+    <tr>
+      <td>
+        <b>캐시 키</b>
+      </td>
+      <td>커밋 SHA (직접 관리)</td>
+      <td>소스 해시 (자동 계산)</td>
+    </tr>
+    <tr>
+      <td>
+        <b>팀 간 공유</b>
+      </td>
+      <td>불가</td>
+      <td>가능</td>
+    </tr>
+    <tr>
+      <td>
+        <b>로컬 연동</b>
+      </td>
+      <td>불가</td>
+      <td>가능</td>
+    </tr>
+    <tr>
+      <td>
+        <b>설정 복잡도</b>
+      </td>
+      <td>낮음</td>
+      <td>높음 (인프라 구성 필요)</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## 구현
+
+Turborepo의 Remote Cache API는 생각보다 단순하다.
+`GET /v8/artifacts/:hash`로 다운로드, `PUT /v8/artifacts/:hash`로 업로드.
+모든 요청에 `Authorization: Bearer {TURBO_TOKEN}` 헤더가 포함되고, 서버가 토큰으로 인증을 처리한다.
+
+이 스펙에 맞춰 Cloud Run에 캐시 서버를 직접 만들고, 아티팩트는 GCS 버킷에 저장하는 구조로 구성했다.
+
+```
+GitHub Actions (CI)
+    │  TURBO_TOKEN, TURBO_TEAM, TURBO_API
+    ▼
+Cloud Run (캐시 서버)
+    ▼
+GCS 버킷 (coloso-turbo-cache)
+```
+
+구현 순서를 간단히 정리하면:
+
+1. GCS 버킷 생성 (서울 리전)
+2. Cloud Run에 캐시 서버 배포
+3. Cloud Run 공개 액세스 설정 — Turbo CLI의 토큰은 IAM 토큰이 아니므로, Cloud Run 레벨 인증을 열고 서버 내부에서 토큰을 검증한다
+4. GitHub Actions 워크플로우에 환경변수 추가
+
+```yaml title=".github/workflows/deploy.yml"
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: my-team
+  TURBO_API: ${{ secrets.TURBO_REMOTE_CACHE_URL }}
+```
+
+<Callout>
+  GitHub Secret의 `TURBO_TOKEN`과 Cloud Run 캐시 서버의 인증 토큰은 반드시
+  동일한 값이어야 한다.
+</Callout>
+
+여기까지 설정하면 `Remote caching enabled` 상태로 전환된다.
+
+<div>
+  <Image
+    src="/images/turborepo/remote-cache-hit.png"
+    width={768}
+    height={200}
+    alt="Remote Cache 적용 후 — 5 cached, FULL TURBO 6.5초"
+  />
+</div>
+
+---
+
+## 트러블슈팅
+
+구현 자체는 어렵지 않았는데, 예상 못한 곳에서 시간을 좀 잡아먹었다.
+
+**Apple Silicon + Docker** — 로컬에서 빌드한 Docker 이미지가 Cloud Run에서 `exec format error`를 뿜었다. Apple Silicon은 기본적으로 `linux/arm64`로 빌드하는데, Cloud Run은 `linux/amd64`가 필요하다. `--platform linux/amd64`를 명시하면 해결된다.
+
+**Cloud Run 인증** — Cloud Run은 기본적으로 IAM 인증이 걸려 있다. Turbo CLI가 보내는 `TURBO_TOKEN`은 IAM 토큰이 아니라서 401이 반환됐다. `allUsers`에게 `roles/run.invoker`를 부여해서 공개 액세스로 전환하고, 보안은 서버 내부 토큰 검증으로 처리했다.
+
+**413 Payload Too Large** — 이건 좀 당황스러웠다. Cloud Run의 HTTP/1.1은 요청당 32MB 제한이 있는데, Next.js 빌드 아웃풋이 이걸 가볍게 넘겼다. `--use-http2` 옵션으로 HTTP/2를 활성화하니 바로 해결됐다.
+
+---
+
+## 캐시 히트율 높이기
+
+Remote Cache를 달았다고 끝이 아니다. `turbo.json` 설정을 얼마나 잘 잡느냐에 따라 히트율이 크게 달라진다.
+
+우리가 가장 효과를 본 건 **globalEnv 축소**였다.
+기존에는 8개 변수가 `globalEnv`에 몰려 있었는데, 실제로 전역에 필요한 건 `NODE_ENV`와 `D1_ENV` 두 개뿐이었다. 나머지는 빌드에만 영향을 주는 변수들이어서 task별 `env`로 분리했다.
+
+```jsonc title="turbo.json"
+// 개선 전
+{
+  "globalEnv": [
+    "D1_ENV", "NODE_ENV", "ASSET_URL", "USE_DYNAMIC_PORTS",
+    "NEXT_PHASE", "FLIPT_URL", "FLIPT_API_TOKEN", "FEATURE_FLAG_SIDEBAR_ENABLED"
+  ]
+}
+
+// 개선 후
+{
+  "globalEnv": ["NODE_ENV", "D1_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": ["ASSET_URL", "USE_DYNAMIC_PORTS", "NEXT_PHASE"],
+      "inputs": ["src/**", "app/**", "components/**", "lib/**",
+                 "next.config.*", "tsconfig.json", "tailwind.config.*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx}", "eslint.config.*"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.*", "tsconfig.json"],
+      "outputs": []
+    }
+  }
+}
+```
+
+이렇게 하니 `ASSET_URL` 하나 바꿨다고 lint/test 캐시까지 전부 날아가던 문제가 사라졌다.
+`inputs`를 명시한 덕분에 README 수정으로 빌드가 돌아가는 일도 없어졌다.
+
+그리고 모노레포에는 빌드 도구가 다른 패키지들이 섞여 있으니, 패키지별로 `turbo.json`을 만들어 `inputs`/`outputs`를 오버라이드했다.
+
+```jsonc title="apps/my-app/turbo.json (Next.js)"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["app/**", "components/**", "hooks/**", "lib/**", "styles/**"],
+      "outputs": [".next/**", "!.next/cache/**"],
+    },
+  },
+}
+```
+
+```jsonc title="apps/backoffice/turbo.json (Vite)"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["client/**", "server/**", "scripts/**"],
+      "outputs": ["dist/**", "dist-api/**"],
+    },
+  },
+}
+```
+
+```jsonc title="packages/ui/turbo.json"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["src/**", "tsconfig.json", "tsdown.config.ts"],
+      "outputs": ["dist/**"],
+    },
+  },
+}
+```
+
+Vite 앱에 `.next/**` outputs가 걸려 있으면 의미 없는 캐시만 쌓이니, 이런 부분까지 맞춰주면 히트율이 확실히 올라간다.
+
+---
+
+## 로컬에서도 쓸 수 있다
+
+Remote Cache는 CI 전용이 아니다.
+`.turbo/config.json`에 서버 URL을 넣고 `TURBO_TOKEN`만 설정하면, CI에서 빌드한 캐시를 로컬에서도 그대로 가져다 쓸 수 있다.
+
+```json title=".turbo/config.json"
+{ "teamId": "my-team", "apiUrl": "<TURBO_REMOTE_CACHE_URL>" }
+```
+
+팀원 A가 빌드한 패키지 캐시를 팀원 B가 재사용하거나, `main` 브랜치 CI 캐시를 feature 브랜치 로컬 개발에서 활용할 수 있다.
+
+<Callout>
+  `globalEnv`에 선언된 환경변수가 CI와 로컬에서 다르면 해시가 달라져 캐시 MISS가
+  발생한다.
+</Callout>
+
+---
+
+## 후기
+
+`actions/cache`에서 Remote Cache로 전환한 이후, rebase만 했다고 풀 빌드가 돌던 문제가 완전히 사라졌다.
+`globalEnv` 정리, `inputs` 명시, 패키지별 오버라이드까지 적용하니 캐시 히트율이 확 올라갔다.
+
+설정할 게 많긴 하다. Cloud Run, GCS 버킷, 인증까지 신경 쓸 게 꽤 있다.
+하지만 한 번 구성해두면 브랜치·팀원 간 캐시 공유가 자동으로 이루어지니, 충분히 가치 있는 투자였다.
+
+얼마 전까지만 해도 AI가 개발의 재미를 뺏는 것 같아서 좀 회의적이었는데, 요즘은 생각이 바뀌었다. 이번 작업에서도 [Claude Code](https://claude.ai/claude-code)로 Remote Cache API 스펙 분석부터 Cloud Run 설정, `turbo.json` 최적화까지 빠르게 진행할 수 있었다. 혼자 했으면 쩔쩔맸을 일을, 더 빠르게 해낼 수 있다는 게 확실히 체감된다.
+
+---
+
+출처 및 참조
+
+- [Turborepo 공식 문서](https://turborepo.dev/docs)
+- [GitHub Actions에서 Remote Cache 설정](https://turborepo.dev/docs/guides/ci-vendors/github-actions)
