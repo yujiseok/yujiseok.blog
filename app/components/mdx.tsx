@@ -7,8 +7,8 @@ import Typewriter from "./2024-gencon/typewriter";
 import GridMasonry from "./portfolio/GridMasonry";
 import { Callout } from "./callout";
 
-function CustomLink(props: any) {
-  const href = props.href;
+function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  const href = props.href ?? "";
 
   if (href.startsWith("/")) {
     return (
@@ -25,13 +25,17 @@ function CustomLink(props: any) {
   return <a target="_blank" rel="noreferrer" {...props} />;
 }
 
-function CustomImage({ width, height, ...props }: any) {
+interface CustomImageProps extends Omit<React.ComponentProps<typeof Image>, 'width' | 'height'> {
+  width?: string | number;
+  height?: string | number;
+}
+
+function CustomImage({ width, height, ...props }: CustomImageProps) {
   const w = Number(width) || 768;
   const h = Number(height) || 400;
 
   return (
     <Image
-      alt={props.alt}
       width={w}
       height={h}
       {...props}
@@ -54,7 +58,12 @@ const options: Options = {
   theme: "poimandres",
 };
 
-export async function Mdx({ components, source }: any) {
+interface MdxProps {
+  components?: Record<string, React.ComponentType>;
+  source: string;
+}
+
+export async function Mdx({ components, source }: MdxProps) {
   "use cache";
 
   return (

@@ -9,7 +9,7 @@ const atelierComponents = {
   Meteor,
 };
 
-const AtelierMdx = ({ source }: any) => {
+const AtelierMdx = ({ source }: { source: string }) => {
   return (
     <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
       <MDXRemote source={source} components={atelierComponents} />
