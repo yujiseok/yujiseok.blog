@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getAllWritings } from "@/lib/utils";
+import { getWritingBySlug } from "@/lib/utils";
 
 export const alt = "Yujiseok's Blog Post";
 export const size = {
@@ -7,11 +7,6 @@ export const size = {
   height: 1080,
 };
 export const contentType = "image/png";
-
-const getWritingBySlug = (slug: string) => {
-  const writings = getAllWritings();
-  return writings.find((writing) => writing.slug === slug);
-};
 
 export default async function Image({
   params,

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
-import { getAllWritings } from "@/lib/utils";
+import { getAllWritings, getWritingBySlug } from "@/lib/utils";
 import { Mdx } from "@/app/components/mdx";
 import BlurContainer from "@/app/components/blurContainer";
-
 
 export function generateStaticParams() {
   const writings = getAllWritings();
@@ -12,11 +11,6 @@ export function generateStaticParams() {
     slug: writing.slug,
   }));
 }
-
-const getWritingBySlug = (slug: string) => {
-  const writings = getAllWritings();
-  return writings.find((writing) => writing.slug === slug);
-};
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
