@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getAllWritings } from "@/lib/utils";
 import { Mdx } from "@/app/components/mdx";
 import BlurContainer from "@/app/components/blurContainer";
+import { SITE_URL } from "@/lib/constants";
 
 
 export function generateStaticParams() {
@@ -42,7 +43,7 @@ export async function generateMetadata(props: {
       description,
       type: "article",
       publishedTime,
-      url: `https://www.yujiseok.blog/writing/${writing.slug}`,
+      url: `${SITE_URL}/writing/${writing.slug}`,
     },
     twitter: {
       card: "summary_large_image",

@@ -1,6 +1,7 @@
 import ArrowUpRight from "@/app/components/arrowUpRight";
 import BlurContainer from "@/app/components/blurContainer";
 import { resumeData } from "./resume";
+import { SITE_URL } from "@/lib/constants";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -23,14 +24,14 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://yujiseok.blog"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/resume",
   },
   openGraph: {
     title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
     description: resumeData.profile.introduction[0],
-    url: "https://yujiseok.blog/resume",
+    url: `${SITE_URL}/resume`,
     siteName: "유지석 블로그",
     locale: "ko_KR",
     type: "profile",

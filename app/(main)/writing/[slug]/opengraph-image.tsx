@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getAllWritings } from "@/lib/utils";
+import { SITE_URL } from "@/lib/constants";
 
 export const alt = "Yujiseok's Blog Post";
 export const size = {
@@ -53,7 +54,7 @@ export default async function Image({
         flexDirection: "column",
         alignItems: "flex-start",
         justifyContent: "center",
-        backgroundImage: "url(https://yujiseok.blog/og-bg.png)",
+        backgroundImage: `url(${SITE_URL}/og-bg.png)`,
       }}
     >
       <div
