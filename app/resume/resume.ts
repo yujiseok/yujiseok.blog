@@ -30,11 +30,11 @@ export const resumeData = {
           title: "Turborepo 기반 모노레포 전환 및 CI 빌드 성능 최적화",
           achievements: [
             "Turborepo 도입 및 tsdown 중심의 빌드 체계를 구축하여 패키지 간 의존성 관리 효율화",
-            "GitHub Actions를 활용한 리모트 캐싱 전략 도입으로 CI 빌드 재사용성 극대화",
+            "GitHub Actions 캐시의 한계를 파악하고, GCS 기반 Turborepo Remote Cache를 자체 구축하여 CI 빌드 재사용성 극대화",
             "FULL TURBO 시 빌드 소요 시간 최대 99.6% 단축 (146s → 0.6s)",
           ],
-          link: "",
-          linkText: "",
+          link: "https://yujiseok.blog/writing/turborepo",
+          linkText: "Turborepo Remote Cache 적용기",
         },
         {
           title: "콜로소 서비스 디자인 시스템 기반 설계 및 구축",
