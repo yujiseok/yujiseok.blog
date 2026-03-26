@@ -5,6 +5,12 @@ import { TypeSpotifyPlaylist } from "@/types/spotify";
 import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Playlists",
+  description: "내가 만든 스포티파이 플레이리스트 모음",
+};
 
 const page = async () => {
   const playlists = await getPlaylists();

@@ -1,11 +1,26 @@
 import BlurContainer from "@/app/components/blurContainer";
 import Writing from "@/app/components/writing";
 import { getAllWritings } from "@/lib/utils";
+import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Writing",
   description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
+  alternates: {
+    canonical: "/writing",
+  },
+  openGraph: {
+    title: "Writing",
+    description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
+    url: `${SITE_URL}/writing`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Writing",
+    description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
+  },
 };
 
 const writings = getAllWritings();

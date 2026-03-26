@@ -27,6 +27,7 @@ export const generateMetadata = async ({
 
   return {
     title: playlist.name,
+    description: `${playlist.name} 플레이리스트의 트랙 목록`,
   };
 };
 

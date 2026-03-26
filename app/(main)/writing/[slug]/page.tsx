@@ -33,6 +33,9 @@ export async function generateMetadata(props: {
   return {
     title,
     description,
+    alternates: {
+      canonical: `/writing/${writing.slug}`,
+    },
     openGraph: {
       title: { absolute: title },
       description,
@@ -55,8 +58,26 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: writing.metadata.title,
+    description: writing.metadata.summary,
+    datePublished: writing.metadata.publishedAt,
+    url: `${SITE_URL}/writing/${params.slug}`,
+    author: {
+      "@type": "Person",
+      name: "유지석",
+      url: SITE_URL,
+    },
+  };
+
   return (
     <BlurContainer className="block gap-0">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">
           {writing.metadata.title}
