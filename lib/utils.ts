@@ -22,7 +22,11 @@ const parseMetadataExport = (mdxContent: string) => {
     return { metadata: {} as Metadata };
   }
 
-  const metadata = JSON.parse(match[1]) as Metadata;
+  const obj = match[1]
+    .replace(/,\s*\}/, "}")
+    .replace(/(\w+)\s*:/g, '"$1":')
+    .replace(/'/g, '"');
+  const metadata = JSON.parse(obj) as Metadata;
   return { metadata };
 };
 
