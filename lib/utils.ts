@@ -13,18 +13,17 @@ export interface Metadata {
 const MDX_CONTENT_DIR = "content";
 const ROOT_DIR = path.join(process.cwd(), MDX_CONTENT_DIR);
 
-const parseFrontmatter = (mdxContent: string) => {
-  const frontmatterRegEx = /---\s*([\s\S]*?)\s*---/;
-  const matchedFrontMatter = frontmatterRegEx.exec(mdxContent)?.at(1) as string;
-  const content = mdxContent.replace(frontmatterRegEx, "").trim();
-  const frontMatterLines = matchedFrontMatter?.trim().split("\n");
+const parseMetadataExport = (mdxContent: string) => {
+  const metadataRegEx =
+    /export\s+const\s+metadata\s*=\s*(\{[\s\S]*?\n\})/;
+  const match = metadataRegEx.exec(mdxContent);
 
-  const metadata = frontMatterLines.reduce((acc, line) => {
-    const [key, value] = line.split(":").map((str) => str.trim());
-    return { ...acc, [key]: value.replaceAll('"', "") };
-  }, {} as Metadata);
+  if (!match) {
+    return { metadata: {} as Metadata };
+  }
 
-  return { metadata, content };
+  const metadata = JSON.parse(match[1]) as Metadata;
+  return { metadata };
 };
 
 const getMdxFiles = (contentType: ContentType) => {
@@ -38,7 +37,7 @@ const readMdxFile = (contentType: ContentType, fileName: string) => {
   const filePath = path.join(ROOT_DIR, contentType, fileName);
   const mdxContent = fs.readFileSync(filePath, "utf8");
 
-  return parseFrontmatter(mdxContent);
+  return parseMetadataExport(mdxContent);
 };
 
 const getAllContent = (contentType: ContentType) => {
@@ -46,9 +45,9 @@ const getAllContent = (contentType: ContentType) => {
 
   return mdxFiles
     .map((file) => {
-      const { metadata, content } = readMdxFile(contentType, file);
+      const { metadata } = readMdxFile(contentType, file);
       const slug = path.basename(file, ".mdx");
-      return { metadata, content, slug };
+      return { metadata, slug };
     })
     .sort(
       (a, b) =>

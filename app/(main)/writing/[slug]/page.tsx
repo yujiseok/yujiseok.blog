@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug } from "@/lib/utils";
-import { Mdx } from "@/app/components/mdx";
 import BlurContainer from "@/app/components/blurContainer";
 import { SITE_URL } from "@/lib/constants";
 
@@ -51,12 +50,27 @@ export async function generateMetadata(props: {
   };
 }
 
+async function importMdx(slug: string) {
+  try {
+    return await import(`@/content/writing/${slug}.mdx`);
+  } catch {
+    return null;
+  }
+}
+
 const Post = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
   const writing = getWritingBySlug(params.slug);
   if (!writing) {
     notFound();
   }
+
+  const mdxModule = await importMdx(params.slug);
+  if (!mdxModule) {
+    notFound();
+  }
+
+  const Content = mdxModule.default;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -88,8 +102,9 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
         <small>{writing.metadata.publishedAt}</small>
       </div>
 
-      <Mdx source={writing.content} />
-
+      <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
+        <Content />
+      </article>
     </BlurContainer>
   );
 };

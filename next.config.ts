@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["next-mdx-remote"],
+  pageExtensions: ["ts", "tsx", "md", "mdx"],
   serverExternalPackages: ["shiki", "shiki/wasm", "rehype-pretty-code"],
   images: {
     remotePatterns: [
@@ -47,4 +48,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  options: {
+    rehypePlugins: [
+      ["rehype-pretty-code", { theme: "poimandres" }],
+    ],
+  },
+});
+
+export default withMDX(nextConfig);

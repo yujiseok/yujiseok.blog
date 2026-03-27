@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import AtelierMdx from "@/app/components/atelier/atelierMdx";
 import { getAllAtelier } from "@/lib/utils";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
@@ -39,6 +38,14 @@ export const generateMetadata = async (props: {
   };
 };
 
+async function importMdx(slug: string) {
+  try {
+    return await import(`@/content/atelier/${slug}.mdx`);
+  } catch {
+    return null;
+  }
+}
+
 const page = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
   const atelier = getAllAtelier().find(
@@ -47,6 +54,13 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
   if (!atelier) {
     notFound();
   }
+
+  const mdxModule = await importMdx(params.slug);
+  if (!mdxModule) {
+    notFound();
+  }
+
+  const Content = mdxModule.default;
 
   return (
     <section>
@@ -59,7 +73,9 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
         </time>
       </div>
 
-      <AtelierMdx source={atelier.content} />
+      <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
+        <Content />
+      </article>
     </section>
   );
 };
