@@ -3,7 +3,7 @@ import Writing from "@/app/components/writing";
 import { getAllWritings } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Writing",
@@ -14,8 +14,7 @@ export const metadata: Metadata = {
     description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
     url: `${SITE_URL}/writing`,
     type: "website",
-    siteName: "유지석",
-    locale: "ko_KR",
+    ...SITE_OG,
   },
 };
 

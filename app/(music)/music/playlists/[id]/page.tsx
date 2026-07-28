@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
 import type { Metadata } from "next";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const generateStaticParams = async () => {
   try {
@@ -41,8 +41,7 @@ export const generateMetadata = async ({
     openGraph: {
       url: `/music/playlists/${id}`,
       type: "website",
-      siteName: "유지석",
-      locale: "ko_KR",
+      ...SITE_OG,
     },
   };
 };

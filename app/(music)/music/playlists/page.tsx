@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import type { Metadata } from "next";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Playlists",
@@ -14,8 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     url: "/music/playlists",
     type: "website",
-    siteName: "유지석",
-    locale: "ko_KR",
+    ...SITE_OG,
   },
 };
 

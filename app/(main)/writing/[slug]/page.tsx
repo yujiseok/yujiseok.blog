@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
 import { SITE_URL } from "@/lib/constants";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export async function generateStaticParams() {
   const writings = await getAllWritings();
@@ -40,8 +40,7 @@ export async function generateMetadata(props: {
       type: "article",
       publishedTime,
       url: `${SITE_URL}/writing/${writing.slug}`,
-      siteName: "유지석",
-      locale: "ko_KR",
+      ...SITE_OG,
     },
   };
 }

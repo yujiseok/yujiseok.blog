@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getAllAtelier, getAtelierBySlug, importMdx } from "@/lib/utils";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const generateStaticParams = async () => {
   const atelier = await getAllAtelier();
@@ -28,8 +28,7 @@ export const generateMetadata = async (props: {
       description: atelier.metadata.summary,
       type: "article",
       url: `${SITE_URL}/atelier/${slug}`,
-      siteName: "유지석",
-      locale: "ko_KR",
+      ...SITE_OG,
     },
   };
 };

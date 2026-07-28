@@ -2,7 +2,7 @@ import BlurContainer from "@/app/components/blurContainer";
 import Track from "@/app/components/music/track";
 import { getRecentlyPlayed } from "@/lib/spotify/api";
 import type { Metadata } from "next";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Recently Played",
@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     url: "/music",
     type: "website",
-    siteName: "유지석",
-    locale: "ko_KR",
+    ...SITE_OG,
   },
 };
 

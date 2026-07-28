@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/constants";
 import ResumeProfile from "./components/ResumeProfile";
 import ResumeContent from "./components/ResumeContent";
 import ContentContainer from "./components/ContentContainer";
-import { alternates } from "@/lib/metadata";
+import { alternates, SITE_OG } from "@/lib/metadata";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -33,8 +33,7 @@ export const metadata = {
     title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
     description: resumeData.profile.introduction[0],
     url: `${SITE_URL}/resume`,
-    siteName: "유지석",
-    locale: "ko_KR",
+    ...SITE_OG,
     type: "profile",
     images: [
       {

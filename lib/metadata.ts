@@ -4,3 +4,9 @@ export const alternates = (canonical: string) => ({
   canonical,
   types: { "application/rss+xml": "/rss.xml" },
 });
+
+// openGraph도 마찬가지로 통째 교체된다. 사이트 정체성은 여기서만 관리한다.
+export const SITE_OG = {
+  siteName: "유지석",
+  locale: "ko_KR",
+} as const;
