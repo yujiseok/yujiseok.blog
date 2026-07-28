@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["ts", "tsx", "md", "mdx"],
   images: {
     remotePatterns: [
       {
@@ -14,11 +13,6 @@ const nextConfig: NextConfig = {
         hostname: "*.spotifycdn.com",
       },
     ],
-  },
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
   },
   redirects: async () => [
     {
@@ -41,9 +35,7 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   options: {
-    rehypePlugins: [
-      ["rehype-pretty-code", { theme: "poimandres" }],
-    ],
+    rehypePlugins: [["rehype-pretty-code", { theme: "poimandres" }]],
   },
 });
 

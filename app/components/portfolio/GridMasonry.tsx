@@ -1,16 +1,16 @@
-const GRID_ITEMS = [
-  { backgroundColor: "#f1f5f9" },
-  { backgroundColor: "#e0e7ef" },
-  { backgroundColor: "#e0f2fe" },
-  { backgroundColor: "#bae6fd" },
-  { backgroundColor: "#e0e7ff" },
-  { backgroundColor: "#c7d2fe" },
-  { backgroundColor: "#d1fae5" },
-  { backgroundColor: "#a7f3d0" },
-  { backgroundColor: "#ffe4e6" },
-  { backgroundColor: "#fecdd3" },
-  { backgroundColor: "#fef3c7" },
-  { backgroundColor: "#fde68a" },
+const GRID_COLORS = [
+  "#f1f5f9",
+  "#e0e7ef",
+  "#e0f2fe",
+  "#bae6fd",
+  "#e0e7ff",
+  "#c7d2fe",
+  "#d1fae5",
+  "#a7f3d0",
+  "#ffe4e6",
+  "#fecdd3",
+  "#fef3c7",
+  "#fde68a",
 ];
 
 const GridMasonry = ({
@@ -25,7 +25,7 @@ const GridMasonry = ({
   return (
     <div className="text-center">
       <div className="grid grid-cols-3 gap-4 text-zinc-900">
-        {GRID_ITEMS.map(({ backgroundColor }, index) => {
+        {GRID_COLORS.map((backgroundColor, index) => {
           const rowSpan = ((index * 37) % 3) + 1;
           return (
             <div

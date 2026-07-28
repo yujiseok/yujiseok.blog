@@ -1,11 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import React, { useState } from "react";
-
-const Rerun = dynamic(() => import("./rerun"), {
-  ssr: false,
-});
+import Rerun from "./rerun";
 
 const ShowCase = ({
   children,
