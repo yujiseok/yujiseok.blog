@@ -80,7 +80,7 @@ const page = () => {
                 rightContent={
                   <div className="grid gap-2">
                     <div>
-                      <h4 className="mb-1 text-[15px] font-bold flex gap-0.5">
+                      <h4 className="mb-1 flex gap-0.5 text-[15px] font-bold">
                         {career.company.split(" ").slice(0, -1).join(" ")}
                         <a
                           href={career.url}

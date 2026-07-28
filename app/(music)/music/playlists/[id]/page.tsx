@@ -66,8 +66,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
             width={playlist.images[0].width ?? 640}
             height={playlist.images[0].height ?? 640}
             className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
-            placeholder="blur"
-            blurDataURL={playlist.blurDataURL}
           />
         )}
       </ViewTransition>

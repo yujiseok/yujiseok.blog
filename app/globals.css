@@ -24,9 +24,6 @@ html {
 }
 
 html:has([data-resume-page="true"]) {
-  & footer {
-    display: none;
-  }
   & body {
     padding-inline: 0;
   }

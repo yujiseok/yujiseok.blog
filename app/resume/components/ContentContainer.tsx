@@ -12,7 +12,7 @@ const ContentContainer = ({
 }) => {
   return (
     <div className="grid gap-4 sm:gap-6">
-      <h3 className="font-semibold text-base">{title}</h3>
+      <h3 className="text-base font-semibold">{title}</h3>
       <div className="grid gap-4">{children}</div>
     </div>
   );

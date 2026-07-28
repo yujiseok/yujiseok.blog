@@ -1,7 +1,5 @@
 import { cacheLife } from "next/cache";
-import sharp from "sharp";
 import { extractTrack, extractTopTrack } from "./extract";
-import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import {
   RawSpotifyTrack,
   SpotifyTopTrack,
@@ -9,31 +7,6 @@ import {
   TypeSpotifyPlaylist,
   TypeTopTrack,
 } from "@/types/spotify";
-
-/**
- * Spotify images 배열(큰 것부터 정렬됨)의 가장 작은 이미지로 blur placeholder를 만든다.
- * 반드시 "use cache" 함수 안에서만 호출할 것 — 빌드/리밸리데이트당 한 번만 돌게 하기 위함.
- */
-const getBlurDataURL = async (
-  images: { url: string }[] | undefined,
-): Promise<string> => {
-  const src = images?.at(-1)?.url;
-  if (!src) return BLUR_DATA_URL;
-
-  try {
-    const res = await fetch(src);
-    if (!res.ok) return BLUR_DATA_URL;
-
-    const blur = await sharp(Buffer.from(await res.arrayBuffer()))
-      .resize(10)
-      .webp({ quality: 40 })
-      .toBuffer();
-
-    return `data:image/webp;base64,${blur.toString("base64")}`;
-  } catch {
-    return BLUR_DATA_URL;
-  }
-};
 
 const getAccessToken = async () => {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } =
@@ -88,11 +61,7 @@ export const getRecentlyPlayed = async (): Promise<
     "/me/player/recently-played",
   );
 
-  return Promise.all(
-    items.map(async (item) =>
-      extractTrack(item, await getBlurDataURL(item.track.album.images)),
-    ),
-  );
+  return items.map(extractTrack);
 };
 
 export const getPlaylists = async (
@@ -102,18 +71,11 @@ export const getPlaylists = async (
   "use cache";
   cacheLife("days");
 
-  const { items } = await spotifyFetch<{
-    items: Omit<TypeSpotifyPlaylist, "blurDataURL">[];
-  }>(
+  const { items } = await spotifyFetch<{ items: TypeSpotifyPlaylist[] }>(
     `/me/playlists?fields=items(id,name,images,external_urls.spotify)&limit=${limit}&offset=${offset}`,
   );
 
-  return Promise.all(
-    items.map(async (playlist) => ({
-      ...playlist,
-      blurDataURL: await getBlurDataURL(playlist.images),
-    })),
-  );
+  return items;
 };
 
 export const getPlaylistById = async (id: string) =>
@@ -127,11 +89,7 @@ export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
     "/me/top/tracks?limit=20&time_range=short_term",
   );
 
-  return Promise.all(
-    items.map(async (item) =>
-      extractTopTrack(item, await getBlurDataURL(item.album.images)),
-    ),
-  );
+  return items.map(extractTopTrack);
 };
 
 export const getPlaylistTrack = async (
@@ -146,9 +104,5 @@ export const getPlaylistTrack = async (
     `/playlists/${playlistId}/tracks?fields=items(track(name,external_urls.spotify,album(name,images),artists(name)))&limit=${limit}&offset=${offset}`,
   );
 
-  return Promise.all(
-    items.map(async (item) =>
-      extractTrack(item, await getBlurDataURL(item.track.album.images)),
-    ),
-  );
+  return items.map(extractTrack);
 };

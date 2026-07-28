@@ -58,8 +58,6 @@ const PlaylistCard = ({
             width={cover.width ?? 640}
             height={cover.height ?? 640}
             className="pointer-events-none size-full object-cover"
-            placeholder="blur"
-            blurDataURL={playlist.blurDataURL}
           />
         )}
       </Link>

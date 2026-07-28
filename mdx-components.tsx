@@ -2,7 +2,6 @@ import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
 
-import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import GenconTypewriter from "@/app/components/2024-gencon/typewriter";
 import AtelierTypewriter from "@/app/components/atelier/typewriter";
 import GridMasonry from "@/app/components/portfolio/GridMasonry";
@@ -28,8 +27,10 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a target="_blank" rel="noreferrer" {...props} />;
 }
 
-interface CustomImageProps
-  extends Omit<React.ComponentProps<typeof Image>, "width" | "height"> {
+interface CustomImageProps extends Omit<
+  React.ComponentProps<typeof Image>,
+  "width" | "height"
+> {
   width?: string | number;
   height?: string | number;
 }
@@ -39,14 +40,7 @@ function CustomImage({ width, height, ...props }: CustomImageProps) {
   const h = Number(height) || 400;
 
   return (
-    <Image
-      width={w}
-      height={h}
-      placeholder="blur"
-      blurDataURL={BLUR_DATA_URL}
-      {...props}
-      className="mx-auto rounded-md"
-    />
+    <Image width={w} height={h} {...props} className="mx-auto rounded-md" />
   );
 }
 

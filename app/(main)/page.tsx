@@ -20,12 +20,7 @@ export default async function Home() {
 
       <div>
         {writings.map(({ metadata, slug }) => (
-          <Writing
-            key={slug}
-            metadata={metadata}
-            slug={slug}
-            offset={false}
-          />
+          <Writing key={slug} metadata={metadata} slug={slug} offset={false} />
         ))}
         <div className="flex justify-end">
           <Link

@@ -43,4 +43,3 @@ export async function GET() {
 
   return new Response(RSS, { headers });
 }
-

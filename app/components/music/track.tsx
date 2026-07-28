@@ -19,8 +19,6 @@ const Track = ({
         width={track.albumCover.width}
         height={track.albumCover.height}
         className="pointer-events-none aspect-square size-14 rounded-lg border border-neutral-200 shadow-xs dark:border-neutral-800"
-        placeholder="blur"
-        blurDataURL={track.blurDataURL}
       />
       <div className="flex flex-col">
         <h2>{track.trackName}</h2>

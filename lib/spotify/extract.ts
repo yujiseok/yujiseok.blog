@@ -7,23 +7,15 @@ import type {
 const normalizeArtists = (artists: SpotifyArtist[]): string =>
   artists.map((artist) => artist.name).join(", ");
 
-export const extractTopTrack = (
-  track: SpotifyTopTrack,
-  blurDataURL: string,
-) => ({
+export const extractTopTrack = (track: SpotifyTopTrack) => ({
   albumCover: track.album.images[0],
-  blurDataURL,
   artistName: normalizeArtists(track.artists),
   spotifyUrl: track.external_urls.spotify,
   trackName: track.name,
 });
 
-export const extractTrack = (
-  rawTrack: RawSpotifyTrack,
-  blurDataURL: string,
-) => ({
+export const extractTrack = (rawTrack: RawSpotifyTrack) => ({
   albumCover: rawTrack.track.album.images[0],
-  blurDataURL,
   albumName: rawTrack.track.album.name,
   artistName: normalizeArtists(rawTrack.track.artists),
   spotifyUrl: rawTrack.track.external_urls.spotify,

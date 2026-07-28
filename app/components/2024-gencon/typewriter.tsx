@@ -40,7 +40,10 @@ const TypewriterWrapper = () => {
   const { ref, isVisible } = useInViewAnimation(0.5);
 
   return (
-    <div data-lenis-prevent className="border rounded-md p-4 overscroll-contain max-h-40 overflow-y-auto">
+    <div
+      data-lenis-prevent
+      className="max-h-40 overflow-y-auto overscroll-contain rounded-md border p-4"
+    >
       <Typewriter
         as="div"
         text="안녕하세요. 저의 젠콘 개발 회고는 재밌게 읽고 계신가요? 해당 컴포넌트는 뷰포트에 상관없이 보여요. 만약 뷰포트에 따라 보여지길 원하신다면, framer-motion의 useInView 훅을 사용해 구현할 수 있습니다. 💫"
@@ -74,7 +77,10 @@ const Typewriter = ({
       ref={ref}
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}
-      className={cn("whitespace-pre-line break-keep will-change-auto", className)}
+      className={cn(
+        "break-keep whitespace-pre-line will-change-auto",
+        className,
+      )}
       {...props}
     >
       {renderCharacters(text)}
