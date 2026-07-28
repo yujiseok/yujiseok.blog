@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
 import type { Metadata } from "next";
+import { alternates } from "@/lib/metadata";
 
 export const generateStaticParams = async () => {
   try {
@@ -36,7 +37,7 @@ export const generateMetadata = async ({
   return {
     title: playlist.name,
     description: `${playlist.name} 플레이리스트의 트랙 목록`,
-    alternates: { canonical: `/music/playlists/${id}` },
+    alternates: alternates(`/music/playlists/${id}`),
     openGraph: {
       url: `/music/playlists/${id}`,
       type: "website",

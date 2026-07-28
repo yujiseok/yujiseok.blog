@@ -3,13 +3,12 @@ import Writing from "@/app/components/writing";
 import { getAllWritings } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
+import { alternates } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Writing",
   description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
-  alternates: {
-    canonical: "/writing",
-  },
+  alternates: alternates("/writing"),
   openGraph: {
     title: "Writing",
     description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
 import { SITE_URL } from "@/lib/constants";
+import { alternates } from "@/lib/metadata";
 
 export async function generateStaticParams() {
   const writings = await getAllWritings();
@@ -32,9 +33,7 @@ export async function generateMetadata(props: {
   return {
     title,
     description,
-    alternates: {
-      canonical: `/writing/${writing.slug}`,
-    },
+    alternates: alternates(`/writing/${writing.slug}`),
     openGraph: {
       title: { absolute: title },
       description,
@@ -74,7 +73,10 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
     <BlurContainer className="block gap-0">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          // 제목에 </script>가 들어가면 스크립트가 조기 종료된다
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       <div className="mb-6">
         <h1 className="mb-1 text-3xl font-semibold">

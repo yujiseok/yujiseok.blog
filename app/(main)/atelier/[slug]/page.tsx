@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getAllAtelier, getAtelierBySlug, importMdx } from "@/lib/utils";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
+import { alternates } from "@/lib/metadata";
 
 export const generateStaticParams = async () => {
   const atelier = await getAllAtelier();
@@ -21,9 +22,7 @@ export const generateMetadata = async (props: {
   return {
     title: atelier.metadata.title,
     description: atelier.metadata.summary,
-    alternates: {
-      canonical: `/atelier/${slug}`,
-    },
+    alternates: alternates(`/atelier/${slug}`),
     openGraph: {
       title: { absolute: atelier.metadata.title },
       description: atelier.metadata.summary,

@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/constants";
 import ResumeProfile from "./components/ResumeProfile";
 import ResumeContent from "./components/ResumeContent";
 import ContentContainer from "./components/ContentContainer";
+import { alternates } from "@/lib/metadata";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -27,9 +28,7 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  alternates: {
-    canonical: "/resume",
-  },
+  alternates: alternates("/resume"),
   openGraph: {
     title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
     description: resumeData.profile.introduction[0],
@@ -64,7 +63,7 @@ export const metadata = {
 
 const page = () => {
   return (
-    <div
+    <main
       data-resume-page="true"
       className="py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12"
     >
@@ -273,7 +272,7 @@ const page = () => {
           ))}
         </ContentContainer>
       </BlurContainer>
-    </div>
+    </main>
   );
 };
 

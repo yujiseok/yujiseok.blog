@@ -2,11 +2,12 @@ import Track from "@/app/components/music/track";
 import BlurContainer from "@/app/components/blurContainer";
 import { getTopTracks } from "@/lib/spotify/api";
 import type { Metadata } from "next";
+import { alternates } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Top Tracks",
   description: "최근 한 달간 가장 많이 들은 음악",
-  alternates: { canonical: "/music/top-tracks" },
+  alternates: alternates("/music/top-tracks"),
   openGraph: {
     url: "/music/top-tracks",
     type: "website",

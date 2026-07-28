@@ -3,13 +3,12 @@ import BlurContainer from "@/app/components/blurContainer";
 import { getAllAtelier } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
+import { alternates } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Atelier",
   description: "인터페이스를 탐구하는 공간",
-  alternates: {
-    canonical: "/atelier",
-  },
+  alternates: alternates("/atelier"),
   openGraph: {
     title: "Atelier",
     description: "인터페이스를 탐구하는 공간",

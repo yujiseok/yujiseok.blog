@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import type { Metadata } from "next";
+import { alternates } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Playlists",
   description: "내가 만든 스포티파이 플레이리스트 모음",
-  alternates: { canonical: "/music/playlists" },
+  alternates: alternates("/music/playlists"),
   openGraph: {
     url: "/music/playlists",
     type: "website",
