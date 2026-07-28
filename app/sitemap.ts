@@ -24,34 +24,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // 렌더 중 new Date()를 쓰면 cacheComponents가 이 라우트를 dynamic으로 만든다.
+  // 목록 페이지는 최신 콘텐츠 날짜를, 나머지는 lastModified를 생략한다.
+  const latestWriting = allWritings[0]?.metadata.publishedAt;
+  const latestAtelier = allAtelier[0]?.metadata.publishedAt;
+
   const routes = [
     {
       url: baseURL,
-      lastModified: new Date().toISOString().split("T")[0],
+      lastModified: latestWriting,
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
       url: `${baseURL}/writing`,
-      lastModified: new Date().toISOString().split("T")[0],
+      lastModified: latestWriting,
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
     {
       url: `${baseURL}/atelier`,
-      lastModified: new Date().toISOString().split("T")[0],
+      lastModified: latestAtelier,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
       url: `${baseURL}/resume`,
-      lastModified: new Date().toISOString().split("T")[0],
       changeFrequency: "monthly" as const,
       priority: 0.6,
     },
     {
       url: `${baseURL}/music`,
-      lastModified: new Date().toISOString().split("T")[0],
       changeFrequency: "daily" as const,
       priority: 0.5,
     },

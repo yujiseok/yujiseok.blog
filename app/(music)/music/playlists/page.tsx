@@ -1,4 +1,3 @@
-import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { cn } from "@/lib/cn";
 import { getPlaylists } from "@/lib/spotify/api";
 import { TypeSpotifyPlaylist } from "@/types/spotify";
@@ -53,7 +52,7 @@ const PlaylistCard = ({
             height={cover.height ?? 640}
             className="pointer-events-none size-full object-cover"
             placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
+            blurDataURL={playlist.blurDataURL}
           />
         )}
       </Link>

@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Suspense } from "react";
 import Footer from "@/app/components/footer";
 import Lenis from "./components/lenis";
 import { SITE_URL } from "@/lib/constants";
@@ -67,9 +66,7 @@ export default function RootLayout({
         <div className="pointer-events-none fixed inset-0 z-10 h-10 w-full mask-[linear-gradient(to_bottom,black,transparent)] backdrop-blur-2xl select-none" />
 
         {children}
-        <Suspense>
-          <Footer />
-        </Suspense>
+        <Footer />
 
         <Analytics />
         <SpeedInsights />

@@ -1,5 +1,4 @@
 import Track from "@/app/components/music/track";
-import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import {
   getPlaylistById,
   getPlaylists,
@@ -54,7 +53,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
             height={playlist.images[0].height ?? 640}
             className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
             placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
+            blurDataURL={playlist.blurDataURL}
           />
         )}
       </ViewTransition>

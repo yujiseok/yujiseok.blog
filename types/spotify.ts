@@ -56,4 +56,5 @@ export interface TypeSpotifyPlaylist {
   name: string;
   description: string;
   id: string;
+  blurDataURL: string;
 }

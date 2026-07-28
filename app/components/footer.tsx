@@ -1,13 +1,14 @@
-import { connection } from "next/server";
 import Link from "next/link";
 
-async function Footer() {
-  await connection();
+// 렌더가 아닌 모듈 평가 시점(=빌드 시점)에 한 번만 읽는다.
+// 렌더 중 new Date()를 호출하면 cacheComponents가 전 페이지를 dynamic으로 만든다.
+const year = new Date().getFullYear();
 
+function Footer() {
   return (
     <footer className="mx-auto mt-40 flex w-full max-w-2xl items-center text-neutral-600 md:text-sm dark:text-neutral-400">
       <div className="mt-10 flex w-full justify-between gap-4 py-6">
-        <Link href="/">© {new Date().getFullYear()} 유지석</Link>
+        <Link href="/">© {year} 유지석</Link>
         <div className="flex items-center gap-3">
           <a
             href="https://github.com/yujiseok"

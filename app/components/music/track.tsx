@@ -1,4 +1,3 @@
-import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import { TypeRecentlyPlayedTrack, TypeTopTrack } from "@/types/spotify";
 import Image from "next/image";
 
@@ -19,9 +18,9 @@ const Track = ({
         alt={track.trackName}
         width={track.albumCover.width}
         height={track.albumCover.height}
-        className="pointer-events-none aspect-square size-14 rounded-lg shadow-xs border border-neutral-200 dark:border-neutral-800"
+        className="pointer-events-none aspect-square size-14 rounded-lg border border-neutral-200 shadow-xs dark:border-neutral-800"
         placeholder="blur"
-        blurDataURL={BLUR_DATA_URL}
+        blurDataURL={track.blurDataURL}
       />
       <div className="flex flex-col">
         <h2>{track.trackName}</h2>
