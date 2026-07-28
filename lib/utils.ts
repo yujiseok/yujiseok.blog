@@ -28,6 +28,8 @@ export const importMdx = (
     : import(`@/content/atelier/${slug}.mdx`);
 
 const getAllContent = async (contentType: ContentType) => {
+  "use cache";
+
   const files = await fs.readdir(path.join(ROOT_DIR, contentType));
 
   const contents = await Promise.all(
