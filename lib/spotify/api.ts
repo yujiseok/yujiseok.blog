@@ -51,9 +51,7 @@ const spotifyFetch = async <T>(endpoint: string): Promise<T> => {
   return res.json();
 };
 
-export const getRecentlyPlayed = async (): Promise<
-  TypeRecentlyPlayedTrack[]
-> => {
+export const getRecentlyPlayed = async () => {
   "use cache";
   cacheLife({ revalidate: 180 });
 
@@ -64,15 +62,12 @@ export const getRecentlyPlayed = async (): Promise<
   return items.map(extractTrack);
 };
 
-export const getPlaylists = async (
-  limit = 20,
-  offset = 0,
-): Promise<TypeSpotifyPlaylist[]> => {
+export const getPlaylists = async () => {
   "use cache";
   cacheLife("days");
 
   const { items } = await spotifyFetch<{ items: TypeSpotifyPlaylist[] }>(
-    `/me/playlists?fields=items(id,name,images,external_urls.spotify)&limit=${limit}&offset=${offset}`,
+    `/me/playlists?fields=items(id,name,images,external_urls.spotify)&limit=20&offset=0`,
   );
 
   return items;
@@ -81,7 +76,7 @@ export const getPlaylists = async (
 export const getPlaylistById = async (id: string) =>
   (await getPlaylists()).find((playlist) => playlist.id === id);
 
-export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
+export const getTopTracks = async () => {
   "use cache";
   cacheLife("days");
 
@@ -92,16 +87,12 @@ export const getTopTracks = async (): Promise<TypeTopTrack[]> => {
   return items.map(extractTopTrack);
 };
 
-export const getPlaylistTrack = async (
-  playlistId: string,
-  limit = 10,
-  offset = 0,
-): Promise<TypeRecentlyPlayedTrack[]> => {
+export const getPlaylistTrack = async (playlistId: string) => {
   "use cache";
   cacheLife("days");
 
   const { items } = await spotifyFetch<{ items: RawSpotifyTrack[] }>(
-    `/playlists/${playlistId}/tracks?fields=items(track(name,external_urls.spotify,album(name,images),artists(name)))&limit=${limit}&offset=${offset}`,
+    `/playlists/${playlistId}/tracks?fields=items(track(name,external_urls.spotify,album(name,images),artists(name)))&limit=20&offset=0`,
   );
 
   return items.map(extractTrack);

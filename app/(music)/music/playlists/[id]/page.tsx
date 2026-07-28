@@ -55,7 +55,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     notFound();
   }
 
-  const playlistTracks = await getPlaylistTrack(playlistId, 10, 0);
+  const playlistTracks = await getPlaylistTrack(playlistId);
 
   return (
     <div>

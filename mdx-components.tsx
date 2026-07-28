@@ -28,39 +28,16 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <ExternalLink {...props} />;
 }
 
-interface CustomImageProps extends Omit<
-  React.ComponentProps<typeof Image>,
-  "width" | "height"
-> {
-  width?: string | number;
-  height?: string | number;
-}
-
-function CustomImage({ width, height, ...props }: CustomImageProps) {
-  const w = Number(width) || 768;
-  const h = Number(height) || 400;
-
-  return (
-    <Image width={w} height={h} {...props} className="mx-auto rounded-md" />
-  );
-}
-
-// content/atelier/typewriter.mdx는 text를 넘기고, content/writing/2024-gencon.mdx는 넘기지 않는다.
-// 두 글이 같은 <Typewriter> 이름을 쓰므로 prop 유무로 분기한다.
-function Typewriter({
-  text,
-  ...props
-}: Partial<React.ComponentProps<typeof AtelierTypewriter>>) {
-  if (!text) return <GenconTypewriter />;
-
-  return <AtelierTypewriter text={text} {...props} />;
+function CustomImage(props: React.ComponentProps<typeof Image>) {
+  return <Image {...props} className="mx-auto rounded-md" />;
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     a: CustomLink,
     Image: CustomImage as MDXComponents["img"],
-    Typewriter,
+    Typewriter: AtelierTypewriter,
+    GenconTypewriter,
     GridMasonry,
     Callout,
     ShowCase,

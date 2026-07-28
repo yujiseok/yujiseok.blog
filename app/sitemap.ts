@@ -2,8 +2,6 @@ import { getAllWritings, getAllAtelier } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 
-const baseURL = SITE_URL;
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [allWritings, allAtelier] = await Promise.all([
     getAllWritings(),
@@ -11,14 +9,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const writings = allWritings.map((writing) => ({
-    url: `${baseURL}/writing/${writing.slug}`,
+    url: `${SITE_URL}/writing/${writing.slug}`,
     lastModified: writing.metadata.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));
 
   const ateliers = allAtelier.map((item) => ({
-    url: `${baseURL}/atelier/${item.slug}`,
+    url: `${SITE_URL}/atelier/${item.slug}`,
     lastModified: item.metadata.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.7,
@@ -31,30 +29,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const routes = [
     {
-      url: baseURL,
+      url: SITE_URL,
       lastModified: latestWriting,
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
-      url: `${baseURL}/writing`,
+      url: `${SITE_URL}/writing`,
       lastModified: latestWriting,
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
     {
-      url: `${baseURL}/atelier`,
+      url: `${SITE_URL}/atelier`,
       lastModified: latestAtelier,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
-      url: `${baseURL}/resume`,
+      url: `${SITE_URL}/resume`,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     },
     {
-      url: `${baseURL}/music`,
+      url: `${SITE_URL}/music`,
       changeFrequency: "daily" as const,
       priority: 0.5,
     },
