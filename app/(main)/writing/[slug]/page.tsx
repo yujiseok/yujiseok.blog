@@ -41,11 +41,8 @@ export async function generateMetadata(props: {
       type: "article",
       publishedTime,
       url: `${SITE_URL}/writing/${writing.slug}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
+      siteName: "유지석",
+      locale: "ko_KR",
     },
   };
 }

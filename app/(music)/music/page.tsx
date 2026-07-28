@@ -6,6 +6,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Recently Played",
   description: "최근에 들은 음악 목록",
+  alternates: { canonical: "/music" },
+  openGraph: {
+    url: "/music",
+    type: "website",
+    siteName: "유지석",
+    locale: "ko_KR",
+  },
 };
 
 const page = async () => {

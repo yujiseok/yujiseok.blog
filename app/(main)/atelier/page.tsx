@@ -15,11 +15,8 @@ export const metadata: Metadata = {
     description: "인터페이스를 탐구하는 공간",
     url: `${SITE_URL}/atelier`,
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Atelier",
-    description: "인터페이스를 탐구하는 공간",
+    siteName: "유지석",
+    locale: "ko_KR",
   },
 };
 

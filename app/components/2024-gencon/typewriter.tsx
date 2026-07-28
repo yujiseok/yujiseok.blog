@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/cn";
 import { HTMLMotionProps, motion, Variants, useInView } from "motion/react";
 import { useRef } from "react";
 
@@ -8,7 +9,6 @@ interface TypewriterProps extends HTMLMotionProps<"p"> {
   as?: TypewriterTags;
   text: string;
   className?: string;
-  ref?: React.MutableRefObject<null>;
   isVisible?: boolean;
 }
 
@@ -74,7 +74,7 @@ const Typewriter = ({
       ref={ref}
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}
-      className={`whitespace-pre-line break-keep will-change-auto ${className}`}
+      className={cn("whitespace-pre-line break-keep will-change-auto", className)}
       {...props}
     >
       {renderCharacters(text)}

@@ -3,24 +3,15 @@ import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
-  serverExternalPackages: ["shiki", "shiki/wasm", "rehype-pretty-code"],
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "i.scdn.co",
+        hostname: "*.scdn.co",
       },
       {
         protocol: "https",
-        hostname: "image-cdn-fa.spotifycdn.com",
-      },
-      {
-        protocol: "https",
-        hostname: "mosaic.scdn.co",
-      },
-      {
-        protocol: "https",
-        hostname: "image-cdn-ak.spotifycdn.com",
+        hostname: "*.spotifycdn.com",
       },
     ],
   },

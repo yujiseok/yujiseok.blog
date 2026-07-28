@@ -16,6 +16,7 @@ const Navbar = () => {
         <Link
           href={href}
           className="cursor-pointer text-neutral-600 dark:text-neutral-400"
+          aria-label="뒤로 가기"
         >
           <ChevronLeft />
         </Link>
@@ -74,6 +75,7 @@ const ChevronLeft = () => (
     strokeWidth={2}
     stroke="currentColor"
     className="size-6"
+    aria-hidden="true"
   >
     <path
       strokeLinecap="round"

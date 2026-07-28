@@ -29,11 +29,8 @@ export const generateMetadata = async (props: {
       description: atelier.metadata.summary,
       type: "article",
       url: `${SITE_URL}/atelier/${slug}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: atelier.metadata.title,
-      description: atelier.metadata.summary,
+      siteName: "유지석",
+      locale: "ko_KR",
     },
   };
 };

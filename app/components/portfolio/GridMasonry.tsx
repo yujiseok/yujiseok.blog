@@ -18,9 +18,9 @@ const GridMasonry = ({
   item2,
   text = "grid-row를 사용한 레이아웃",
 }: {
-  item1: number;
-  item2: number;
-  text: string;
+  item1?: number;
+  item2?: number;
+  text?: string;
 }) => {
   return (
     <div className="text-center">
@@ -30,8 +30,10 @@ const GridMasonry = ({
           return (
             <div
               key={index}
-              className={`row-span-${rowSpan} flex flex-col items-center justify-center rounded-md font-semibold shadow-sm`}
+              className="flex flex-col items-center justify-center rounded-md font-semibold shadow-sm"
               style={{
+                // 동적 클래스(row-span-${n})는 Tailwind가 생성하지 않는다. 인라인 style로 지정한다.
+                gridRow: `span ${rowSpan} / span ${rowSpan}`,
                 backgroundColor,
                 height:
                   index === item1 ? 476 : index === item2 ? 274 : undefined,

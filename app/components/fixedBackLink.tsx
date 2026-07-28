@@ -18,7 +18,6 @@ const FixedBackLink = () => {
         <Link
           href={href}
           className="group pointer-events-auto flex w-fit items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400"
-          aria-label={`back to ${href}`}
         >
           <ArrowUTurnLeft aria-hidden="true" role="presentation" />
           <span>뒤로 가기</span>

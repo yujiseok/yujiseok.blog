@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { BLUR_DATA_URL } from "@/lib/blurUrl";
-import Typewriter from "@/app/components/2024-gencon/typewriter";
+import GenconTypewriter from "@/app/components/2024-gencon/typewriter";
+import AtelierTypewriter from "@/app/components/atelier/typewriter";
 import GridMasonry from "@/app/components/portfolio/GridMasonry";
 import { Callout } from "@/app/components/callout";
 import ShowCase from "@/app/components/atelier/showCase";
@@ -47,6 +48,17 @@ function CustomImage({ width, height, ...props }: CustomImageProps) {
       className="mx-auto rounded-md"
     />
   );
+}
+
+// content/atelier/typewriter.mdx는 text를 넘기고, content/writing/2024-gencon.mdx는 넘기지 않는다.
+// 두 글이 같은 <Typewriter> 이름을 쓰므로 prop 유무로 분기한다.
+function Typewriter({
+  text,
+  ...props
+}: Partial<React.ComponentProps<typeof AtelierTypewriter>>) {
+  if (!text) return <GenconTypewriter />;
+
+  return <AtelierTypewriter text={text} {...props} />;
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {

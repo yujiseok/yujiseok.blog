@@ -15,11 +15,8 @@ export const metadata: Metadata = {
     description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
     url: `${SITE_URL}/writing`,
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Writing",
-    description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
+    siteName: "유지석",
+    locale: "ko_KR",
   },
 };
 

@@ -36,10 +36,9 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "유지석",
   },
+  // title/description는 postProcessMetadata가 openGraph → title 순으로 자동 채운다.
   twitter: {
     card: "summary_large_image",
-    title: "유지석",
-    description: "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그",
   },
   robots: {
     index: true,

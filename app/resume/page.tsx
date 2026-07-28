@@ -27,7 +27,6 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/resume",
   },
@@ -35,7 +34,7 @@ export const metadata = {
     title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
     description: resumeData.profile.introduction[0],
     url: `${SITE_URL}/resume`,
-    siteName: "유지석 블로그",
+    siteName: "유지석",
     locale: "ko_KR",
     type: "profile",
     images: [
@@ -49,9 +48,6 @@ export const metadata = {
   },
   twitter: {
     card: "summary",
-    title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
-    description: resumeData.profile.introduction[0],
-    images: ["/images/avatar.jpg"],
   },
   robots: {
     index: true,

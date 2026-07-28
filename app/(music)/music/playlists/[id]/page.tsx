@@ -9,26 +9,40 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
+import type { Metadata } from "next";
 
 export const generateStaticParams = async () => {
-  const playlists = await getPlaylists();
-  return playlists.map((playlist) => ({
-    id: playlist.id,
-  }));
+  try {
+    const playlists = await getPlaylists();
+    return playlists.map((playlist) => ({
+      id: playlist.id,
+    }));
+  } catch {
+    // Spotify가 죽어도 빌드는 통과시킨다. 빈 배열이면 요청 시 렌더된다.
+    return [];
+  }
 };
 
 export const generateMetadata = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) => {
-  const playlist = await getPlaylistById((await params).id);
+}): Promise<Metadata | undefined> => {
+  const { id } = await params;
+  const playlist = await getPlaylistById(id);
 
   if (!playlist) return;
 
   return {
     title: playlist.name,
     description: `${playlist.name} 플레이리스트의 트랙 목록`,
+    alternates: { canonical: `/music/playlists/${id}` },
+    openGraph: {
+      url: `/music/playlists/${id}`,
+      type: "website",
+      siteName: "유지석",
+      locale: "ko_KR",
+    },
   };
 };
 

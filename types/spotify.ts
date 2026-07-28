@@ -1,4 +1,4 @@
-import { extractTrack, extractTopTrack } from "@/lib/spotify/extract";
+import type { extractTrack, extractTopTrack } from "@/lib/spotify/extract";
 
 // 공통으로 사용되는 기본 타입들
 interface SpotifyImage {

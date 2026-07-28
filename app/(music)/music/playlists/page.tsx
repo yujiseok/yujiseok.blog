@@ -9,6 +9,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Playlists",
   description: "내가 만든 스포티파이 플레이리스트 모음",
+  alternates: { canonical: "/music/playlists" },
+  openGraph: {
+    url: "/music/playlists",
+    type: "website",
+    siteName: "유지석",
+    locale: "ko_KR",
+  },
 };
 
 const page = async () => {

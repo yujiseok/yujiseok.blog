@@ -1,27 +1,13 @@
 import { Metadata } from "next";
 import NavBar from "../components/music/navBar";
-import { SITE_URL } from "@/lib/constants";
 
+// alternates/openGraph.url은 라우트별 값이라 레이아웃에 두면 하위 페이지가 통째로 상속한다.
 export const metadata: Metadata = {
   title: {
     default: "Music",
     template: "%s | Music | Yujiseok",
   },
   description: "음악적 취향을 나누는 공간",
-  alternates: {
-    canonical: "/music",
-  },
-  openGraph: {
-    title: "Music",
-    description: "음악적 취향을 나누는 공간",
-    url: `${SITE_URL}/music`,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Music",
-    description: "음악적 취향을 나누는 공간",
-  },
 };
 
 const Layout = ({ children }: { children: React.ReactNode }) => {

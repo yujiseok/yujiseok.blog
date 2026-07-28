@@ -67,32 +67,9 @@ body {
     sans-serif;
 }
 
-.prose .anchor {
-  @apply invisible absolute no-underline;
-
-  margin-left: -0.8em;
-  padding-right: 0.5em;
-  width: 80%;
-  max-width: 700px;
-  cursor: pointer;
-}
-
-.anchor:hover {
-  @apply visible;
-}
-
 .prose a {
   text-decoration-color: #374151;
   @apply decoration-[0.1em] underline-offset-2 dark:decoration-gray-300;
-}
-
-.prose .anchor:after {
-  @apply text-neutral-300;
-  content: "#";
-}
-
-.prose *:hover > .anchor {
-  @apply visible;
 }
 
 pre {
@@ -134,31 +111,31 @@ pre code {
   content: "";
 }
 
-[data-rehype-pretty-code-fragment] code {
-  @apply grid min-w-full rounded-none border-0 bg-transparent p-0 text-sm break-words text-black dark:text-white;
-  counter-reset: line;
-  box-decoration-break: clone;
-}
-[data-rehype-pretty-code-fragment] .line {
-  @apply py-1;
+/* rehype-pretty-code emits <figure data-rehype-pretty-code-figure> > <pre> >
+   <code> > <span data-line>. The grid is what makes a highlighted line paint
+   the full line width instead of stopping at the last token. */
+[data-rehype-pretty-code-figure] code {
+  @apply grid min-w-full rounded-none border-0 bg-transparent p-0 text-sm break-words;
 }
 
-[data-rehype-pretty-code-fragment] [data-line-numbers] > .line::before {
-  counter-increment: line;
-  content: counter(line);
-  display: inline-block;
-  width: 1rem;
-  margin-right: 1rem;
-  text-align: right;
-  color: gray;
+/* Shiki puts the inline padding on <pre>; move it onto each line so the
+   highlight band bleeds to the code block's edges instead of leaving gutters. */
+[data-rehype-pretty-code-figure] pre {
+  padding-inline: 0;
 }
 
+[data-rehype-pretty-code-figure] [data-line] {
+  padding-inline: 1.14286em;
+}
+
+/* Code blocks are always poimandres (#1b1e28), light mode included, so a
+   light overlay reads in both themes; black/30 was invisible on it. */
 span[data-highlighted-line] {
-  @apply bg-black/30;
+  @apply bg-white/10;
 }
 
 mark[data-highlighted-chars] {
-  @apply rounded-md bg-black/30 p-1;
+  @apply rounded-md bg-white/20 p-1;
 }
 
 details {
