@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
-import { getAllWritings, getWritingBySlug } from "@/lib/utils";
+import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
 import { SITE_URL } from "@/lib/constants";
 
-export function generateStaticParams() {
-  const writings = getAllWritings();
+export async function generateStaticParams() {
+  const writings = await getAllWritings();
 
   return writings.map((writing) => ({
     slug: writing.slug,
@@ -17,7 +17,7 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata | undefined> {
   const { slug } = await props.params;
-  const writing = getWritingBySlug(slug);
+  const writing = await getWritingBySlug(slug);
 
   if (!writing) {
     return;
@@ -50,27 +50,14 @@ export async function generateMetadata(props: {
   };
 }
 
-async function importMdx(slug: string) {
-  try {
-    return await import(`@/content/writing/${slug}.mdx`);
-  } catch {
-    return null;
-  }
-}
-
 const Post = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
-  const writing = getWritingBySlug(params.slug);
+  const writing = await getWritingBySlug(params.slug);
   if (!writing) {
     notFound();
   }
 
-  const mdxModule = await importMdx(params.slug);
-  if (!mdxModule) {
-    notFound();
-  }
-
-  const Content = mdxModule.default;
+  const { default: Content } = await importMdx("writing", params.slug);
 
   const jsonLd = {
     "@context": "https://schema.org",

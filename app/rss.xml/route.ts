@@ -1,4 +1,4 @@
-import { baseURL } from "../sitemap";
+import { SITE_URL as baseURL } from "@/lib/constants";
 import { getAllWritings } from "@/lib/utils";
 
 const escapeXml = (str: string): string => {
@@ -11,7 +11,7 @@ const escapeXml = (str: string): string => {
 };
 
 export async function GET() {
-  const posts = getAllWritings();
+  const posts = await getAllWritings();
 
   const XML = posts
     .map(

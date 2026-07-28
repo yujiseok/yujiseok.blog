@@ -2,8 +2,10 @@ import { getAllWritings, getAllAtelier } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 
 export async function GET() {
-  const writings = getAllWritings();
-  const ateliers = getAllAtelier();
+  const [writings, ateliers] = await Promise.all([
+    getAllWritings(),
+    getAllAtelier(),
+  ]);
 
   const writingList = writings
     .map(

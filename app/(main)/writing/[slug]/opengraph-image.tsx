@@ -15,7 +15,7 @@ export default async function Image({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const writing = getWritingBySlug(slug);
+  const writing = await getWritingBySlug(slug);
 
   if (!writing) {
     return new ImageResponse(

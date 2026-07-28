@@ -2,6 +2,7 @@ import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
 
+import { BLUR_DATA_URL } from "@/lib/blurUrl";
 import Typewriter from "@/app/components/2024-gencon/typewriter";
 import GridMasonry from "@/app/components/portfolio/GridMasonry";
 import { Callout } from "@/app/components/callout";
@@ -40,9 +41,10 @@ function CustomImage({ width, height, ...props }: CustomImageProps) {
     <Image
       width={w}
       height={h}
+      placeholder="blur"
+      blurDataURL={BLUR_DATA_URL}
       {...props}
       className="mx-auto rounded-md"
-      priority
     />
   );
 }

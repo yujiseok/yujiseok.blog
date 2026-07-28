@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
+import type { ComponentType } from "react";
 
 type ContentType = "writing" | "atelier";
 
@@ -10,61 +11,49 @@ export interface Metadata {
   image?: string;
 }
 
-const MDX_CONTENT_DIR = "content";
-const ROOT_DIR = path.join(process.cwd(), MDX_CONTENT_DIR);
+interface MdxModule {
+  default: ComponentType;
+  metadata: Metadata;
+}
 
-const parseMetadataExport = (mdxContent: string) => {
-  const metadataRegEx =
-    /export\s+const\s+metadata\s*=\s*(\{[\s\S]*?\n\})/;
-  const match = metadataRegEx.exec(mdxContent);
+const ROOT_DIR = path.join(process.cwd(), "content");
 
-  if (!match) {
-    return { metadata: {} as Metadata };
-  }
+// 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있어 분기한다
+export const importMdx = (
+  contentType: ContentType,
+  slug: string,
+): Promise<MdxModule> =>
+  contentType === "writing"
+    ? import(`@/content/writing/${slug}.mdx`)
+    : import(`@/content/atelier/${slug}.mdx`);
 
-  const obj = match[1]
-    .replace(/,\s*\}/, "}")
-    .replace(/(\w+)\s*:/g, '"$1":')
-    .replace(/'/g, '"');
-  const metadata = JSON.parse(obj) as Metadata;
-  return { metadata };
-};
+const getAllContent = async (contentType: ContentType) => {
+  const files = await fs.readdir(path.join(ROOT_DIR, contentType));
 
-const getMdxFiles = (contentType: ContentType) => {
-  const contentPath = path.join(ROOT_DIR, contentType);
-  return fs
-    .readdirSync(contentPath)
-    .filter((file) => path.extname(file) === ".mdx");
-};
+  const contents = await Promise.all(
+    files
+      .filter((file) => path.extname(file) === ".mdx")
+      .map(async (file) => {
+        const slug = path.basename(file, ".mdx");
+        const { metadata } = await importMdx(contentType, slug);
 
-const readMdxFile = (contentType: ContentType, fileName: string) => {
-  const filePath = path.join(ROOT_DIR, contentType, fileName);
-  const mdxContent = fs.readFileSync(filePath, "utf8");
+        return { metadata, slug };
+      }),
+  );
 
-  return parseMetadataExport(mdxContent);
-};
-
-const getAllContent = (contentType: ContentType) => {
-  const mdxFiles = getMdxFiles(contentType);
-
-  return mdxFiles
-    .map((file) => {
-      const { metadata } = readMdxFile(contentType, file);
-      const slug = path.basename(file, ".mdx");
-      return { metadata, slug };
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.metadata.publishedAt).getTime() -
-        new Date(a.metadata.publishedAt).getTime(),
-    );
+  return contents.sort(
+    (a, b) =>
+      new Date(b.metadata.publishedAt).getTime() -
+      new Date(a.metadata.publishedAt).getTime(),
+  );
 };
 
 export const getAllWritings = () => getAllContent("writing");
 
-export const getWritingBySlug = (slug: string) => {
-  const writings = getAllWritings();
-  return writings.find((writing) => writing.slug === slug);
-};
+export const getWritingBySlug = async (slug: string) =>
+  (await getAllWritings()).find((writing) => writing.slug === slug);
 
 export const getAllAtelier = () => getAllContent("atelier");
+
+export const getAtelierBySlug = async (slug: string) =>
+  (await getAllAtelier()).find((atelier) => atelier.slug === slug);

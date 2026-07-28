@@ -33,6 +33,8 @@ const PlaylistCard = ({
   playlist: TypeSpotifyPlaylist;
   index: number;
 }) => {
+  const [cover] = playlist.images;
+
   return (
     <ViewTransition name={`playlist-${playlist.id}`}>
       <Link
@@ -43,15 +45,17 @@ const PlaylistCard = ({
         )}
         style={{ animationDelay: `${index * 80}ms` }}
       >
-        <Image
-          src={playlist.images[0].url}
-          alt={playlist.name}
-          width={playlist.images[0].width ?? 640}
-          height={playlist.images[0].height ?? 640}
-          className="pointer-events-none size-full object-cover"
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
-        />
+        {cover && (
+          <Image
+            src={cover.url}
+            alt={playlist.name}
+            width={cover.width ?? 640}
+            height={cover.height ?? 640}
+            className="pointer-events-none size-full object-cover"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+          />
+        )}
       </Link>
     </ViewTransition>
   );

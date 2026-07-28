@@ -1,9 +1,13 @@
 import Track from "@/app/components/music/track";
 import { BLUR_DATA_URL } from "@/lib/blurUrl";
-import { getPlaylists, getPlaylistTrack } from "@/lib/spotify/api";
-import { TypeSpotifyPlaylist } from "@/types/spotify";
-import { ViewTransition } from 'react'
+import {
+  getPlaylistById,
+  getPlaylists,
+  getPlaylistTrack,
+} from "@/lib/spotify/api";
+import { ViewTransition } from "react";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
 
@@ -19,11 +23,9 @@ export const generateMetadata = async ({
 }: {
   params: Promise<{ id: string }>;
 }) => {
-  const playlistId = (await params).id;
-  const playlists = await getPlaylists();
-  const playlist = playlists.find(
-    (playlist) => playlist.id === playlistId,
-  ) as TypeSpotifyPlaylist;
+  const playlist = await getPlaylistById((await params).id);
+
+  if (!playlist) return;
 
   return {
     title: playlist.name,
@@ -33,25 +35,28 @@ export const generateMetadata = async ({
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const playlistId = (await params).id;
-  const playlistTracks = await getPlaylistTrack(playlistId, 10, 0);
+  const playlist = await getPlaylistById(playlistId);
 
-  const playlists = await getPlaylists();
-  const playlist = playlists.find(
-    (playlist) => playlist.id === playlistId,
-  ) as TypeSpotifyPlaylist;
+  if (!playlist) {
+    notFound();
+  }
+
+  const playlistTracks = await getPlaylistTrack(playlistId, 10, 0);
 
   return (
     <div>
       <ViewTransition name={`playlist-${playlist.id}`}>
-        <Image
-          src={playlist.images[0].url}
-          alt={playlist.name}
-          width={playlist.images[0].width ?? 640}
-          height={playlist.images[0].height ?? 640}
-          className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
-        />
+        {playlist.images[0] && (
+          <Image
+            src={playlist.images[0].url}
+            alt={playlist.name}
+            width={playlist.images[0].width ?? 640}
+            height={playlist.images[0].height ?? 640}
+            className="pointer-events-none mb-3 size-56 rounded-lg object-cover"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+          />
+        )}
       </ViewTransition>
       <BlurContainer className="gap-0">
         <p className="group flex items-center gap-1.5">

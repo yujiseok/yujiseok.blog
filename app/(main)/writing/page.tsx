@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
 };
 
-const writings = getAllWritings();
+async function PostPage() {
+  const writings = await getAllWritings();
 
-function PostPage() {
   return (
     <BlurContainer className="gap-8">
       {writings.map(({ metadata, slug }) => (

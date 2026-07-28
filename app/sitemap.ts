@@ -2,17 +2,22 @@ import { getAllWritings, getAllAtelier } from "@/lib/utils";
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 
-export const baseURL = SITE_URL;
+const baseURL = SITE_URL;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const writings = getAllWritings().map((writing) => ({
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [allWritings, allAtelier] = await Promise.all([
+    getAllWritings(),
+    getAllAtelier(),
+  ]);
+
+  const writings = allWritings.map((writing) => ({
     url: `${baseURL}/writing/${writing.slug}`,
     lastModified: writing.metadata.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));
 
-  const ateliers = getAllAtelier().map((item) => ({
+  const ateliers = allAtelier.map((item) => ({
     url: `${baseURL}/atelier/${item.slug}`,
     lastModified: item.metadata.publishedAt,
     changeFrequency: "monthly" as const,

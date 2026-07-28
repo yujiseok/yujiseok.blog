@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
-const page = () => {
-  const atelier = getAllAtelier();
+const page = async () => {
+  const atelier = await getAllAtelier();
 
   return (
     <BlurContainer className="grid-cols-2 gap-2 md:gap-4">

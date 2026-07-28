@@ -73,7 +73,9 @@ export default function RootLayout({
 
         <Analytics />
         <SpeedInsights />
-        <GoogleAnalytics gaId={isProd ? process.env.GA_ID! : ""} />
+        {isProd && process.env.GA_ID && (
+          <GoogleAnalytics gaId={process.env.GA_ID} />
+        )}
         <Lenis />
       </body>
     </html>

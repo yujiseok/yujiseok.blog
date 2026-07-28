@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { getAllAtelier } from "@/lib/utils";
+import { getAllAtelier, getAtelierBySlug, importMdx } from "@/lib/utils";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
 
 export const generateStaticParams = async () => {
-  const atelier = getAllAtelier();
+  const atelier = await getAllAtelier();
   return atelier.map(({ slug }) => ({ slug }));
 };
 
@@ -12,7 +12,7 @@ export const generateMetadata = async (props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata | undefined> => {
   const { slug } = await props.params;
-  const atelier = getAllAtelier().find((atelier) => atelier.slug === slug);
+  const atelier = await getAtelierBySlug(slug);
 
   if (!atelier) {
     return;
@@ -38,29 +38,14 @@ export const generateMetadata = async (props: {
   };
 };
 
-async function importMdx(slug: string) {
-  try {
-    return await import(`@/content/atelier/${slug}.mdx`);
-  } catch {
-    return null;
-  }
-}
-
 const page = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
-  const atelier = getAllAtelier().find(
-    (atelier) => atelier.slug === params.slug,
-  );
+  const atelier = await getAtelierBySlug(params.slug);
   if (!atelier) {
     notFound();
   }
 
-  const mdxModule = await importMdx(params.slug);
-  if (!mdxModule) {
-    notFound();
-  }
-
-  const Content = mdxModule.default;
+  const { default: Content } = await importMdx("atelier", params.slug);
 
   return (
     <section>
