@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ExternalLink from "@/app/components/externalLink";
 
 // 렌더가 아닌 모듈 평가 시점(=빌드 시점)에 한 번만 읽는다.
 // 렌더 중 new Date()를 호출하면 cacheComponents가 전 페이지를 dynamic으로 만든다.
@@ -10,14 +11,12 @@ function Footer() {
       <div className="mt-10 flex w-full justify-between gap-4 py-6">
         <Link href="/">© {year} 유지석</Link>
         <div className="flex items-center gap-3">
-          <a
+          <ExternalLink
             href="https://github.com/yujiseok"
-            target="_blank"
-            rel="noopener noreferrer"
             className="underline underline-offset-2"
           >
             GitHub
-          </a>
+          </ExternalLink>
           <Link href="/music" className="underline underline-offset-2">
             Music
           </Link>

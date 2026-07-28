@@ -11,6 +11,7 @@ import BlurContainer from "@/app/components/blurContainer";
 import ArrowUpRight from "@/app/components/arrowUpRight";
 import type { Metadata } from "next";
 import { alternates, SITE_OG } from "@/lib/metadata";
+import ExternalLink from "@/app/components/externalLink";
 
 export const generateStaticParams = async () => {
   try {
@@ -73,14 +74,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <p className="group flex items-center gap-1.5">
           <span className="text-lg">{playlist.name}</span>
           <small>◦</small>
-          <a
+          <ExternalLink
             href={playlist.external_urls.spotify}
-            target="_blank"
             className="flex items-center gap-0.5 text-sm text-neutral-600 underline dark:text-neutral-400"
           >
             스포티파이에서 보기
             <ArrowUpRight />
-          </a>
+          </ExternalLink>
         </p>
 
         <div className="-mx-3 mt-4">

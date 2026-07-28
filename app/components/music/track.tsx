@@ -1,5 +1,6 @@
 import { TypeRecentlyPlayedTrack, TypeTopTrack } from "@/types/spotify";
 import Image from "next/image";
+import ExternalLink from "@/app/components/externalLink";
 
 const Track = ({
   track,
@@ -7,10 +8,8 @@ const Track = ({
   track: TypeRecentlyPlayedTrack | TypeTopTrack;
 }) => {
   return (
-    <a
+    <ExternalLink
       href={track.spotifyUrl}
-      target="_blank"
-      rel="noreferrer"
       className="flex items-center gap-4 rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-200/10"
     >
       {track.albumCover && (
@@ -28,7 +27,7 @@ const Track = ({
           {track.artistName}
         </small>
       </div>
-    </a>
+    </ExternalLink>
   );
 };
 

@@ -6,6 +6,7 @@ import ResumeProfile from "./components/ResumeProfile";
 import ResumeContent from "./components/ResumeContent";
 import ContentContainer from "./components/ContentContainer";
 import { alternates, SITE_OG } from "@/lib/metadata";
+import ExternalLink from "@/app/components/externalLink";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -80,14 +81,12 @@ const page = () => {
                     <div>
                       <h4 className="mb-1 flex gap-0.5 text-[15px] font-bold">
                         {career.company.split(" ").slice(0, -1).join(" ")}
-                        <a
+                        <ExternalLink
                           href={career.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="hover:underline"
                         >
                           {career.company.split(" ").pop()}
-                        </a>
+                        </ExternalLink>
                         <div
                           className="mb-1.5 size-[3px] self-end rounded-full"
                           style={{ backgroundColor: career.color }}
@@ -106,14 +105,12 @@ const page = () => {
                             )}
                             {project.link && (
                               <li>
-                                <a
+                                <ExternalLink
                                   href={project.link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
                                   className="underline underline-offset-2"
                                 >
                                   {project.linkText}
-                                </a>
+                                </ExternalLink>
                               </li>
                             )}
                           </ul>
@@ -141,26 +138,22 @@ const page = () => {
                   <div>
                     <h4 className="mb-1">
                       {contribution.title}{" "}
-                      <a
+                      <ExternalLink
                         href={contribution.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="underline underline-offset-2"
                       >
                         기여
-                      </a>
+                      </ExternalLink>
                     </h4>
                     <p>{contribution.description}</p>
                     {"blogLink" in contribution && contribution.blogLink && (
                       <p>
-                        <a
+                        <ExternalLink
                           href={contribution.blogLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="underline underline-offset-2"
                         >
                           {contribution.blogLinkText}
-                        </a>
+                        </ExternalLink>
                       </p>
                     )}
                   </div>
@@ -202,57 +195,49 @@ const page = () => {
           <ResumeContent
             leftContent="Email"
             rightContent={
-              <a
+              <ExternalLink
                 href={`mailto:${resumeData.contact.email}`}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group inline-flex hover:underline"
               >
                 {resumeData.contact.email}
                 <ArrowUpRight className="mb-1 scale-75" />
-              </a>
+              </ExternalLink>
             }
           />
           <ResumeContent
             leftContent="GitHub"
             rightContent={
-              <a
+              <ExternalLink
                 href={resumeData.contact.github}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group inline-flex hover:underline"
               >
                 yujiseok
                 <ArrowUpRight className="mb-1 scale-75" />
-              </a>
+              </ExternalLink>
             }
           />
           <ResumeContent
             leftContent="Blog"
             rightContent={
-              <a
+              <ExternalLink
                 href={resumeData.contact.blog}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group inline-flex hover:underline"
               >
                 yujiseok.blog
                 <ArrowUpRight className="mb-1 scale-75" />
-              </a>
+              </ExternalLink>
             }
           />
           <ResumeContent
             leftContent="Phone"
             rightContent={
-              <a
+              <ExternalLink
                 href={`tel:+82${resumeData.contact.phone.replace(/-/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group inline-flex hover:underline"
               >
                 {resumeData.contact.phone}
                 <ArrowUpRight className="mb-1 scale-75" />
-              </a>
+              </ExternalLink>
             }
           />
         </ContentContainer>

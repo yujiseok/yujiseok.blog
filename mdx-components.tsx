@@ -2,6 +2,7 @@ import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
 
+import ExternalLink from "@/app/components/externalLink";
 import GenconTypewriter from "@/app/components/2024-gencon/typewriter";
 import AtelierTypewriter from "@/app/components/atelier/typewriter";
 import GridMasonry from "@/app/components/portfolio/GridMasonry";
@@ -24,7 +25,7 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
     return <a {...props} />;
   }
 
-  return <a target="_blank" rel="noreferrer" {...props} />;
+  return <ExternalLink {...props} />;
 }
 
 interface CustomImageProps extends Omit<
