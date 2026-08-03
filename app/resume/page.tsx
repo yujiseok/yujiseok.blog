@@ -1,12 +1,18 @@
-import ArrowUpRight from "@/app/components/arrowUpRight";
-import BlurContainer from "@/app/components/blurContainer";
+import { Archivo } from "next/font/google";
 import { resumeData } from "./resume";
+import { RESUME_SECTIONS } from "./sections";
 import { SITE_URL } from "@/lib/constants";
-import ResumeProfile from "./components/ResumeProfile";
-import ResumeContent from "./components/ResumeContent";
-import ContentContainer from "./components/ContentContainer";
+import ResumeContacts from "./components/ResumeContacts";
+import ResumeExperience from "./components/ResumeExperience";
+import ResumeSection from "./components/ResumeSection";
 import { alternates, SITE_OG } from "@/lib/metadata";
 import ExternalLink from "@/app/components/externalLink";
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  variable: "--font-resume-display",
+  display: "swap",
+});
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,
@@ -61,201 +67,124 @@ export const metadata = {
   },
 };
 
+const [
+  experienceSection,
+  openSourceSection,
+  otherExperienceSection,
+  educationSection,
+] = RESUME_SECTIONS;
+
 const page = () => {
   return (
     <main
       data-resume-page="true"
-      className="py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12"
+      className={`${archivo.variable} resume-sheet min-h-dvh break-keep text-neutral-900`}
     >
-      <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
-        <ResumeProfile profile={resumeData.profile} />
+      <div className="resume-sheet-inner mx-auto max-w-[860px] px-6 py-12 sm:px-10 sm:py-16 lg:py-20">
+        <div className="grid gap-14 sm:gap-16">
+          <header className="grid gap-6">
+            <div className="grid gap-4">
+              <h1 className="font-resume max-w-[14ch] text-[clamp(2.5rem,6vw,3.5rem)] leading-[0.92] font-bold tracking-[-0.035em] text-neutral-950">
+                {resumeData.profile.name}
+                <span className="text-neutral-400">,</span>{" "}
+                <span className="whitespace-nowrap">
+                  {resumeData.profile.title}
+                </span>
+              </h1>
+              <ResumeContacts contact={resumeData.contact} />
+            </div>
+            <div className="h-px w-full bg-neutral-950/85" />
+            <div className="grid max-w-2xl gap-2 text-[14px] leading-[1.65] text-neutral-600">
+              {resumeData.profile.introduction.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </header>
 
-        <ContentContainer title="Work Experience">
-          <div className="grid gap-4">
-            {resumeData.workExperience.map((career) => (
-              <ResumeContent
-                key={career.company}
-                leftContent={<time>{career.period}</time>}
-                rightContent={
-                  <div className="grid gap-2">
-                    <div>
-                      <h4 className="mb-1 flex gap-0.5 text-[15px] font-bold">
-                        {career.company.split(" ").slice(0, -1).join(" ")}
-                        <ExternalLink
-                          href={career.url}
-                          className="hover:underline"
-                        >
-                          {career.company.split(" ").pop()}
-                        </ExternalLink>
-                        <div
-                          className="mb-1.5 size-[3px] self-end rounded-full"
-                          style={{ backgroundColor: career.color }}
-                        />
-                      </h4>
-                    </div>
-                    <ul className="flex flex-col gap-4">
-                      {career.projects.map((project, projectIndex) => (
-                        <li key={projectIndex}>
-                          <strong>{project.title}</strong>
-                          <ul className="mt-1 list-disc space-y-1 pl-8">
-                            {project.achievements.map(
-                              (achievement, achievementIndex) => (
-                                <li key={achievementIndex}>{achievement}</li>
-                              ),
-                            )}
-                            {project.link && (
-                              <li>
-                                <ExternalLink
-                                  href={project.link}
-                                  className="underline underline-offset-2"
-                                >
-                                  {project.linkText}
-                                </ExternalLink>
-                              </li>
-                            )}
-                          </ul>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                }
-              />
-            ))}
-          </div>
-        </ContentContainer>
+          <ResumeExperience
+            workExperience={resumeData.workExperience}
+            section={experienceSection}
+          />
 
-        <ContentContainer title="Open Source Contribution">
-          {resumeData.openSource.map((contribution) => (
-            <ResumeContent
-              key={contribution.title}
-              leftContent={
-                <time dateTime={contribution.period}>
-                  {contribution.period}
-                </time>
-              }
-              rightContent={
-                <div className="grid gap-2">
-                  <div>
-                    <h4 className="mb-1">
-                      {contribution.title}{" "}
+          <ResumeSection {...openSourceSection}>
+            <ul className="grid gap-6">
+              {resumeData.openSource.map((contribution) => (
+                <li key={contribution.title} className="grid gap-1">
+                  <time className="text-[12px] text-neutral-500 tabular-nums">
+                    {contribution.period}
+                  </time>
+                  <h3 className="text-[14.5px] font-semibold text-neutral-950">
+                    {contribution.title}{" "}
+                    <ExternalLink
+                      href={contribution.link}
+                      className="font-normal underline underline-offset-2"
+                    >
+                      기여
+                    </ExternalLink>
+                  </h3>
+                  <p className="text-[14px] leading-[1.65] text-neutral-700">
+                    {contribution.description}
+                  </p>
+                  {"blogLink" in contribution && contribution.blogLink ? (
+                    <p className="text-[14px]">
                       <ExternalLink
-                        href={contribution.link}
+                        href={contribution.blogLink}
                         className="underline underline-offset-2"
                       >
-                        기여
+                        {contribution.blogLinkText}
                       </ExternalLink>
-                    </h4>
-                    <p>{contribution.description}</p>
-                    {"blogLink" in contribution && contribution.blogLink && (
-                      <p>
-                        <ExternalLink
-                          href={contribution.blogLink}
-                          className="underline underline-offset-2"
-                        >
-                          {contribution.blogLinkText}
-                        </ExternalLink>
-                      </p>
-                    )}
-                  </div>
-                </div>
-              }
-            />
-          ))}
-        </ContentContainer>
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </ResumeSection>
 
-        <ContentContainer title="Other Experience">
-          {resumeData.otherExperience.map((item) => (
-            <ResumeContent
-              key={item.title}
-              leftContent={<time dateTime={item.period}>{item.period}</time>}
-              rightContent={
-                <div className="grid gap-2">
-                  <div>
-                    <h4 className="mb-1 flex gap-0.5">
-                      {item.title}
-                      <div
-                        className="mb-1.5 size-[3px] self-end rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                    </h4>
-                    <p>{item.description}</p>
-                  </div>
-                  <ul>
-                    {item.details.map((detail, detailIndex) => (
-                      <li key={detailIndex}>{detail}</li>
+          <ResumeSection {...otherExperienceSection}>
+            <ul className="grid gap-6">
+              {resumeData.otherExperience.map((item) => (
+                <li key={item.title} className="grid gap-1.5">
+                  <time className="text-[12px] text-neutral-500 tabular-nums">
+                    {item.period}
+                  </time>
+                  <h3 className="text-[14.5px] font-semibold text-neutral-950">
+                    {item.title}
+                  </h3>
+                  <p className="text-[14px] leading-[1.65] text-neutral-700">
+                    {item.description}
+                  </p>
+                  <ul className="grid gap-1 text-[14px] leading-[1.65] text-neutral-700">
+                    {item.details.map((detail) => (
+                      <li key={detail} className="relative pl-3.5">
+                        <span
+                          className="absolute top-[0.6em] left-0 size-1 rounded-full bg-neutral-400"
+                          aria-hidden
+                        />
+                        {detail}
+                      </li>
                     ))}
                   </ul>
-                </div>
-              }
-            />
-          ))}
-        </ContentContainer>
+                </li>
+              ))}
+            </ul>
+          </ResumeSection>
 
-        <ContentContainer title="Contact">
-          <ResumeContent
-            leftContent="Email"
-            rightContent={
-              <ExternalLink
-                href={`mailto:${resumeData.contact.email}`}
-                className="group inline-flex hover:underline"
-              >
-                {resumeData.contact.email}
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-          <ResumeContent
-            leftContent="GitHub"
-            rightContent={
-              <ExternalLink
-                href={resumeData.contact.github}
-                className="group inline-flex hover:underline"
-              >
-                yujiseok
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-          <ResumeContent
-            leftContent="Blog"
-            rightContent={
-              <ExternalLink
-                href={resumeData.contact.blog}
-                className="group inline-flex hover:underline"
-              >
-                yujiseok.blog
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-          <ResumeContent
-            leftContent="Phone"
-            rightContent={
-              <ExternalLink
-                href={`tel:+82${resumeData.contact.phone.replace(/-/g, "")}`}
-                className="group inline-flex hover:underline"
-              >
-                {resumeData.contact.phone}
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-        </ContentContainer>
-
-        <ContentContainer title="Education">
-          {resumeData.education.map((edu) => (
-            <ResumeContent
-              key={edu.school}
-              leftContent={<time dateTime={edu.period}>{edu.period}</time>}
-              rightContent={
-                <div className="grid gap-2">
-                  <div className="mb-1">{edu.school}</div>
-                </div>
-              }
-            />
-          ))}
-        </ContentContainer>
-      </BlurContainer>
+          <ResumeSection {...educationSection}>
+            <ul className="grid gap-4">
+              {resumeData.education.map((edu) => (
+                <li key={edu.school} className="grid gap-1">
+                  <time className="text-[12px] text-neutral-500 tabular-nums">
+                    {edu.period}
+                  </time>
+                  <div className="text-[14.5px] font-semibold text-neutral-950">
+                    {edu.school}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </ResumeSection>
+        </div>
+      </div>
     </main>
   );
 };
