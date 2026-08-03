@@ -60,7 +60,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${geistSans.variable} antialiased`}>
-      <body className="mx-2 flex flex-col bg-white px-4 text-black dark:bg-black dark:text-white">
+      <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-neutral-200">
         <div className="pointer-events-none fixed inset-0 z-10 h-10 w-full mask-[linear-gradient(to_bottom,black,transparent)] backdrop-blur-2xl select-none" />
 
         {children}

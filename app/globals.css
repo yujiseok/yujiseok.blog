@@ -9,6 +9,27 @@
 
 :root {
   interpolate-size: allow-keywords;
+  --site-bg: #faf8f4;
+  --site-wash-mint: rgb(210 232 214 / 0.28);
+  --site-wash-sky: rgb(196 220 242 / 0.22);
+  --site-wash-peach: rgb(245 210 190 / 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 순흑은 대비가 과해 눈이 피로하다. 한 단계 띄운 뉴트럴을 쓴다. */
+    --site-bg: #0d0d10;
+  }
+
+  /*
+   * 라이트의 wash는 '따뜻한 종이에 잉크가 번진다'는 은유라 다크에서는
+   * 성립하지 않는다. 보일 만큼 진하게 깔면 은은함을 잃고, 은은하게 두면
+   * 어두운 영역의 낮은 휘도 해상도 탓에 아예 보이지 않는다.
+   * 다크에서는 색조 대신 표면 명도 차로 깊이를 낸다.
+   */
+  body {
+    background-image: none;
+  }
 }
 
 html {
@@ -62,6 +83,24 @@ body {
     "Open Sans",
     "Helvetica Neue",
     sans-serif;
+  background-color: var(--site-bg);
+  background-image:
+    radial-gradient(
+      ellipse 90% 70% at 22% 8%,
+      var(--site-wash-mint),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 88% 4%,
+      var(--site-wash-sky),
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 60% 45% at 60% 35%,
+      var(--site-wash-peach),
+      transparent 55%
+    );
+  background-attachment: fixed;
 }
 
 .prose a {
