@@ -51,11 +51,11 @@ const useBackHref = () => {
   const pathname = usePathname();
 
   const getBackHref = () => {
-    if (pathname === "/") return "";
-
     const segments = pathname.split("/").filter(Boolean);
 
-    if (segments.length === 0) return "/";
+    // 루트는 돌아갈 곳이 없다. 프리렌더 시 pathname이 ""로 들어와도 "/"와
+    // 같은 결론이어야 서버/클라이언트 렌더가 어긋나지 않는다.
+    if (segments.length === 0) return "";
 
     return segments.length === 1 ? "/" : `/${segments.slice(0, -1).join("/")}`;
   };
