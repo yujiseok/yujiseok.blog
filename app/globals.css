@@ -19,7 +19,6 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* 순흑은 대비가 과해 눈이 피로하다. 한 단계 띄운 뉴트럴을 쓴다. */
     --site-bg: #0d0d10;
   }
 }
@@ -51,7 +50,6 @@ html:has([data-resume-page="true"]) {
 
 .resume-sheet {
   --resume-ink: #111111;
-  /* 사이트 배경(--site-bg)과 별개로, 이력서는 종이에 가까운 톤을 쓴다 */
   --resume-paper: #f4efe6;
   position: relative;
   min-height: 100dvh;
