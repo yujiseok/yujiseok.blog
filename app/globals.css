@@ -22,7 +22,14 @@
   }
 }
 
+/*
+ * 바탕색은 body가 아니라 html이 쥔다. body에 두면 레이아웃의 bg-transparent
+ * 유틸이 더 높은 상세도로 이겨서 --site-bg가 아예 칠해지지 않고, 캔버스가
+ * 브라우저 기본 흰색으로 떨어진다.
+ */
 html {
+  background-color: var(--site-bg);
+  color-scheme: light dark;
   scrollbar-width: thin;
   scrollbar-color: #e8e8e8 transparent;
 }
@@ -73,7 +80,20 @@ body {
     "Open Sans",
     "Helvetica Neue",
     sans-serif;
-  background-color: var(--site-bg);
+}
+
+/*
+ * wash는 body 배경이 아니라 뒤에 깔린 fixed 레이어로 그린다.
+ * background-attachment: fixed를 쓰면 컴포지터 스크롤이 꺼져서 스크롤마다
+ * 뷰포트 전체를 다시 그려야 하고, 위에 얹힌 backdrop-filter가 그걸 매
+ * 프레임 텍스처로 읽어간다. 별도 레이어로 빼면 결과는 같고 한 번만 그린다.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(
       ellipse 90% 70% at 22% 8%,
@@ -90,7 +110,6 @@ body {
       var(--site-wash-peach),
       transparent 55%
     );
-  background-attachment: fixed;
 }
 
 /*
@@ -102,7 +121,7 @@ body {
  * 위 body 규칙과 같은 상세도라 반드시 뒤에 와야 덮인다.
  */
 @media (prefers-color-scheme: dark) {
-  body {
+  body::before {
     background-image: none;
   }
 }
@@ -209,9 +228,14 @@ summary {
   }
 }
 
+/*
+ * fill-mode는 backwards다. to가 전부 초기값(opacity 1 / blur 0 / translate 0)이라
+ * forwards로 붙잡아 둘 이유가 없는데, both로 두면 filter가 끝나고도 남아
+ * 대상이 영구 필터 레이어가 된다. 등장 연출 하나로 페이지 전체를 계속
+ * 재래스터하게 만들 일은 아니다. 같은 이유로 will-change도 걸지 않는다.
+ */
 .fadeDown {
-  animation: fadeDown 0.6s ease-in-out both;
-  will-change: opacity, transform;
+  animation: fadeDown 0.6s ease-in-out backwards;
 }
 
 /*
@@ -233,8 +257,7 @@ summary {
 }
 
 .blurIn {
-  animation: blurIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) both;
-  will-change: opacity, transform;
+  animation: blurIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
 }
 
 @keyframes fadeIn {
@@ -247,8 +270,7 @@ summary {
 }
 
 .fadeIn {
-  animation: fadeIn 0.6s ease-in-out both;
-  will-change: opacity;
+  animation: fadeIn 0.6s ease-in-out backwards;
 }
 
 @keyframes twinkle {
