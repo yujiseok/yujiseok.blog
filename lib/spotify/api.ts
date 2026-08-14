@@ -3,12 +3,17 @@ import { extractTrack, extractTopTrack } from "./extract";
 import {
   RawSpotifyTrack,
   SpotifyTopTrack,
-  TypeRecentlyPlayedTrack,
   TypeSpotifyPlaylist,
-  TypeTopTrack,
 } from "@/types/spotify";
 
+/*
+ * 액세스 토큰은 1시간 유효하다. 캐시하지 않으면 데이터 요청 한 건마다
+ * 토큰 발급 POST가 한 건씩 따라붙는다. 만료보다 넉넉히 앞서 갱신한다.
+ */
 const getAccessToken = async () => {
+  "use cache";
+  cacheLife({ revalidate: 1800, expire: 3000 });
+
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } =
     process.env;
 
@@ -51,6 +56,37 @@ const spotifyFetch = async <T>(endpoint: string): Promise<T> => {
   return res.json();
 };
 
+// Spotify가 한 번에 주는 최대치. 이보다 크게 요청해도 잘려서 온다.
+const PAGE_LIMIT = 50;
+
+// 어떤 목록도 조용히 잘리지 않게 total에 닿을 때까지 offset을 민다.
+// limit 하나로 끊어두면 그 뒤 항목은 존재하지 않는 것처럼 보인다.
+const fetchAllPages = async <T>(
+  path: string,
+  params: Record<string, string> = {},
+): Promise<T[]> => {
+  const items: T[] = [];
+
+  for (let offset = 0; ; offset += PAGE_LIMIT) {
+    const query = new URLSearchParams({
+      ...params,
+      limit: String(PAGE_LIMIT),
+      offset: String(offset),
+    });
+
+    const page = await spotifyFetch<{ items: (T | null)[]; total: number }>(
+      `${path}?${query}`,
+    );
+
+    // 삭제되거나 지역 제한에 걸린 트랙은 null로 온다.
+    items.push(...page.items.filter((item): item is T => item !== null));
+
+    if (page.items.length === 0 || offset + page.items.length >= page.total) {
+      return items;
+    }
+  }
+};
+
 export const getRecentlyPlayed = async () => {
   "use cache";
   cacheLife({ revalidate: 180 });
@@ -66,11 +102,7 @@ export const getPlaylists = async () => {
   "use cache";
   cacheLife("days");
 
-  const { items } = await spotifyFetch<{ items: TypeSpotifyPlaylist[] }>(
-    `/me/playlists?fields=items(id,name,images,external_urls.spotify)&limit=20&offset=0`,
-  );
-
-  return items;
+  return fetchAllPages<TypeSpotifyPlaylist>("/me/playlists");
 };
 
 export const getPlaylistById = async (id: string) =>
@@ -81,7 +113,7 @@ export const getTopTracks = async () => {
   cacheLife("days");
 
   const { items } = await spotifyFetch<{ items: SpotifyTopTrack[] }>(
-    "/me/top/tracks?limit=20&time_range=short_term",
+    `/me/top/tracks?limit=${PAGE_LIMIT}&time_range=short_term`,
   );
 
   return items.map(extractTopTrack);
@@ -91,9 +123,15 @@ export const getPlaylistTrack = async (playlistId: string) => {
   "use cache";
   cacheLife("days");
 
-  const { items } = await spotifyFetch<{ items: RawSpotifyTrack[] }>(
-    `/playlists/${playlistId}/tracks?fields=items(track(name,external_urls.spotify,album(name,images),artists(name)))&limit=20&offset=0`,
+  // fields를 쓰면 응답이 그 목록으로 잘리므로 total도 함께 요청해야 한다.
+  const items = await fetchAllPages<RawSpotifyTrack>(
+    `/playlists/${playlistId}/tracks`,
+    {
+      fields:
+        "total,items(track(id,name,external_urls.spotify,album(name,images),artists(name)))",
+    },
   );
 
-  return items.map(extractTrack);
+  // 삭제된 트랙은 항목이 아니라 그 안의 track이 null로 온다.
+  return items.filter((item) => item.track != null).map(extractTrack);
 };
