@@ -85,7 +85,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
         <div className="-mx-3 mt-4">
           {playlistTracks.map((track) => (
-            <Track key={track.trackName} track={track} />
+            <Track key={track.id} track={track} />
           ))}
         </div>
       </BlurContainer>

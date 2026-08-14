@@ -21,7 +21,7 @@ const page = async () => {
   return (
     <BlurContainer className="gap-0">
       {topTracks.map((track) => (
-        <Track key={track.trackName} track={track} />
+        <Track key={track.id} track={track} />
       ))}
     </BlurContainer>
   );

@@ -21,7 +21,11 @@ const page = async () => {
   return (
     <BlurContainer className="gap-0">
       {recentlyPlayedTracks.map((track) => (
-        <Track key={track.playedAt.toString()} track={track} />
+        // 같은 곡을 여러 번 들으면 id가 겹치므로 재생 시각까지 묶는다.
+        <Track
+          key={`${track.id}-${track.playedAt?.toISOString()}`}
+          track={track}
+        />
       ))}
     </BlurContainer>
   );

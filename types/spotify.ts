@@ -22,6 +22,7 @@ interface SpotifyAlbum {
 
 // Top Track 관련 타입
 export interface SpotifyTopTrack {
+  id: string;
   album: SpotifyAlbum;
   artists: SpotifyArtist[];
   external_urls: SpotifyExternalUrls;
@@ -31,12 +32,14 @@ export interface SpotifyTopTrack {
 // Recently Played Track 관련 타입
 export interface RawSpotifyTrack {
   track: {
+    id: string;
     album: SpotifyAlbum;
     artists: SpotifyArtist[];
     external_urls: SpotifyExternalUrls;
     name: string;
   };
-  played_at: string;
+  // 플레이리스트 트랙 응답에는 없다.
+  played_at?: string;
 }
 
 export type TypeTopTrack = ReturnType<typeof extractTopTrack>;
