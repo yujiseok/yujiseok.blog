@@ -1,4 +1,5 @@
 import BlurContainer from "@/app/components/blurContainer";
+import FixedBackLink from "@/app/components/fixedBackLink";
 import Writing from "@/app/components/writing";
 import { getAllWritings } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
@@ -22,11 +23,14 @@ async function PostPage() {
   const writings = await getAllWritings();
 
   return (
-    <BlurContainer className="gap-8">
-      {writings.map(({ metadata, slug }) => (
-        <Writing key={slug} metadata={metadata} slug={slug} />
-      ))}
-    </BlurContainer>
+    <>
+      <FixedBackLink href="/" />
+      <BlurContainer className="gap-8">
+        {writings.map(({ metadata, slug }) => (
+          <Writing key={slug} metadata={metadata} slug={slug} />
+        ))}
+      </BlurContainer>
+    </>
   );
 }
 export default PostPage;

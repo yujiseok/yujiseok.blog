@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
+import FixedBackLink from "@/app/components/fixedBackLink";
 import { SITE_URL } from "@/lib/constants";
 import { alternates, SITE_OG } from "@/lib/metadata";
 
@@ -69,28 +70,31 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   };
 
   return (
-    <BlurContainer className="block gap-0">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          // 제목에 </script>가 들어가면 스크립트가 조기 종료된다
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      <div className="mb-6">
-        <h1 className="mb-1 text-3xl font-semibold">
-          {writing.metadata.title}
-        </h1>
-        <h4 className="text-gray-700 dark:text-gray-400">
-          {writing.metadata.summary}
-        </h4>
-        <small>{writing.metadata.publishedAt}</small>
-      </div>
+    <>
+      <FixedBackLink href="/writing" />
+      <BlurContainer className="block gap-0">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            // 제목에 </script>가 들어가면 스크립트가 조기 종료된다
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+        <div className="mb-6">
+          <h1 className="mb-1 text-3xl font-semibold">
+            {writing.metadata.title}
+          </h1>
+          <h4 className="text-gray-700 dark:text-gray-400">
+            {writing.metadata.summary}
+          </h4>
+          <small>{writing.metadata.publishedAt}</small>
+        </div>
 
-      <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
-        <Content />
-      </article>
-    </BlurContainer>
+        <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
+          <Content />
+        </article>
+      </BlurContainer>
+    </>
   );
 };
 export default Post;

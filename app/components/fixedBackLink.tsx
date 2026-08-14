@@ -1,14 +1,14 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { SVGProps } from "react";
 
-const FixedBackLink = () => {
-  const { href } = useBackHref();
-
-  if (!href) return null;
-
+/*
+ * 돌아갈 곳은 라우트마다 이미 정해져 있다. 이걸 usePathname()으로 유추하면
+ * 프리렌더 시점의 pathname과 브라우저의 pathname이 어긋나는 순간 서버는
+ * 링크를 그리고 클라이언트는 null을 반환해 hydration이 깨진다. 실제로 홈이
+ * 그랬다. 부르는 쪽이 href를 명시하면 서버 컴포넌트로 충분하고, 어긋날
+ * 여지 자체가 없다.
+ */
+const FixedBackLink = ({ href }: { href: string }) => {
   return (
     <nav
       className="fadeIn pointer-events-none inset-x-0 top-24 z-50 lg:fixed lg:top-28"
@@ -46,21 +46,3 @@ const ArrowUTurnLeft = (props: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
-const useBackHref = () => {
-  const pathname = usePathname();
-
-  const getBackHref = () => {
-    const segments = pathname.split("/").filter(Boolean);
-
-    // 루트는 돌아갈 곳이 없다. 프리렌더 시 pathname이 ""로 들어와도 "/"와
-    // 같은 결론이어야 서버/클라이언트 렌더가 어긋나지 않는다.
-    if (segments.length === 0) return "";
-
-    return segments.length === 1 ? "/" : `/${segments.slice(0, -1).join("/")}`;
-  };
-
-  const href = getBackHref();
-
-  return { href };
-};

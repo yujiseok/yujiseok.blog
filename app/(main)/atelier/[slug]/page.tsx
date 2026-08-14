@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import FixedBackLink from "@/app/components/fixedBackLink";
 import { getAllAtelier, getAtelierBySlug, importMdx } from "@/lib/utils";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
@@ -44,6 +45,7 @@ const page = async (props: { params: Promise<{ slug: string }> }) => {
 
   return (
     <section>
+      <FixedBackLink href="/atelier" />
       <div className="mb-6">
         <h1 className="mb-2 text-3xl font-semibold">
           {atelier.metadata.title}
