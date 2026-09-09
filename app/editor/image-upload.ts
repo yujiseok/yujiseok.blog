@@ -46,6 +46,37 @@ const readString = (payload: unknown, key: string): string | null => {
   return typeof value === "string" ? value : null;
 };
 
+interface ImageSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * next/image가 width/height를 요구하는데, 그 값을 얻자고 서버에 이미지 디코더를
+ * 들일 이유는 없다. 브라우저는 어차피 이 파일을 화면에 그릴 참이라 원본 크기를
+ * 공짜로 알려 준다. createImageBitmap은 objectURL을 만들지 않아 되돌릴 것도
+ * 없고, 대신 비트맵을 직접 닫아 메모리를 돌려준다.
+ *
+ * 내재 크기가 없는 SVG나 손상된 파일은 여기서 null이 된다 — 크기를 모르는 건
+ * 업로드를 막을 이유가 아니다. 호출부가 width/height 없이 그대로 삽입한다.
+ */
+const readImageSize = async (file: File): Promise<ImageSize | null> => {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const { width, height } = bitmap;
+    bitmap.close();
+    return width > 0 && height > 0 ? { width, height } : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * 파일명은 사용자가 이 이미지에 붙인 유일한 설명이다. alt를 비워 두면 저장된
+ * MDX가 ![](...)로 남아 나중에 채울 자리조차 눈에 띄지 않는다.
+ */
+const altFromFileName = (name: string) => name.replace(/\.[^.]+$/, "").trim();
+
 const uploadImage = async (file: File, slug: string): Promise<string> => {
   const body = new FormData();
   body.append("slug", slug);
@@ -87,8 +118,19 @@ export async function insertImageByUpload(editor: Editor): Promise<void> {
   if (!file) return; // 취소
 
   try {
-    const src = await uploadImage(file, slug);
-    editor.chain().focus().setImage({ src }).run();
+    // 크기 읽기와 업로드는 서로를 기다릴 이유가 없다. 둘 다 같은 파일만 본다.
+    const [size, src] = await Promise.all([
+      readImageSize(file),
+      uploadImage(file, slug),
+    ]);
+    const alt = altFromFileName(file.name);
+    // 모르는 값은 attr에 넣지 않는다 — width/height의 기본값이 이미 null이고,
+    // 없는 크기를 0이나 문자열로 채우면 저장 쪽이 그걸 진짜 크기로 읽는다.
+    editor
+      .chain()
+      .focus()
+      .setImage({ src, ...(alt ? { alt } : {}), ...(size ?? {}) })
+      .run();
   } catch (error) {
     reportFailure(
       error instanceof Error ? error.message : "이미지를 올리지 못했습니다.",

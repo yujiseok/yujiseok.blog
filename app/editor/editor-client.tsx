@@ -5,7 +5,6 @@ import { Combobox } from "@base-ui/react/combobox";
 import { Toast } from "@base-ui/react/toast";
 import { format } from "date-fns";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
-import Image from "@tiptap/extension-image";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -16,6 +15,7 @@ import { cn } from "@/lib/cn";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
+import { ResizableImage } from "./image-node";
 import {
   canSave,
   createDraft,
@@ -118,7 +118,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         tabSize: 2,
       }),
       Underline,
-      Image,
+      ResizableImage,
       MdxBlock,
       SlashCommand,
     ],
