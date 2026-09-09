@@ -37,7 +37,7 @@ export const POPUP =
 
 /** 목록형 팝업 안의 한 줄 */
 export const MENU_ITEM =
-  "flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-700 outline-none select-none data-highlighted:bg-black/5 dark:text-neutral-300 dark:data-highlighted:bg-neutral-200/10";
+  "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-700 outline-none select-none data-highlighted:bg-black/5 dark:text-neutral-300 dark:data-highlighted:bg-neutral-200/10";
 
 /** floating-ui Positioner. 에디터 툴바(z-10) 위로 올라와야 한다 */
 export const POSITIONER = "z-20 outline-none";

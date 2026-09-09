@@ -41,6 +41,22 @@ html {
   }
 }
 
+/*
+ * Tailwind v4의 Preflight가 button의 커서를 default로 바꿨다(v3까지는
+ * pointer였다). 클릭 가능한 요소마다 cursor-pointer를 붙이는 대신 여기서
+ * 한 번에 되돌린다. Base UI의 메뉴 항목은 button이 아니라 role로 오므로
+ * 같이 잡고, 비활성 요소는 제외해 못 누른다는 게 커서로도 드러나게 한다.
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+}
+
 html:has([data-resume-page="true"]) {
   & body {
     padding-inline: 0;

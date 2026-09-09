@@ -604,7 +604,7 @@ function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
                 <Select.Item
                   key={option.value}
                   value={option.value}
-                  className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-700 outline-none select-none data-highlighted:bg-black/5 dark:text-neutral-300 dark:data-highlighted:bg-neutral-200/10"
+                  className={MENU_ITEM}
                 >
                   <Select.ItemIndicator className="flex w-3.5 shrink-0 items-center text-neutral-900 dark:text-white">
                     <CheckIcon />
