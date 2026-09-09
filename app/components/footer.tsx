@@ -23,6 +23,15 @@ function Footer() {
           <Link href="/resume" className="underline underline-offset-2">
             Resume
           </Link>
+          {/* 로컬 글쓰기 도구. 프로덕션에선 /editor 자체가 404라 링크도 감춘다 */}
+          {process.env.NODE_ENV === "development" && (
+            <Link
+              href="/editor"
+              className="underline decoration-dashed underline-offset-2"
+            >
+              Editor
+            </Link>
+          )}
         </div>
       </div>
     </footer>

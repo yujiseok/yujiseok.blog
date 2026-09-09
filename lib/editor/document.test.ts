@@ -33,7 +33,12 @@ describe("serializePost", () => {
     expect(without).not.toContain("image");
 
     const withImage = serializePost({
-      metadata: { title: "t", publishedAt: "2026-01-01", summary: "s", image: "/a.png" },
+      metadata: {
+        title: "t",
+        publishedAt: "2026-01-01",
+        summary: "s",
+        image: "/a.png",
+      },
       body: "본문",
     });
     expect(withImage).toContain('"image": "/a.png"');
@@ -94,12 +99,18 @@ describe("isValidSlug", () => {
     expect(isValidSlug(slug)).toBe(true);
   });
 
-  it.each(["", "../secret", "a/b", "Uppercase", "공백 있음", "trailing-", ".hidden", "a".repeat(101)])(
-    "거부: %s",
-    (slug) => {
-      expect(isValidSlug(slug)).toBe(false);
-    },
-  );
+  it.each([
+    "",
+    "../secret",
+    "a/b",
+    "Uppercase",
+    "공백 있음",
+    "trailing-",
+    ".hidden",
+    "a".repeat(101),
+  ])("거부: %s", (slug) => {
+    expect(isValidSlug(slug)).toBe(false);
+  });
 });
 
 describe("toSlug", () => {

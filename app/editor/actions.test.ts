@@ -49,7 +49,10 @@ describe("savePost", () => {
 
     await savePost({ slug: "my-post", metadata: METADATA, doc: DOC });
 
-    const written = fs.readFileSync(path.join(writingDir, "my-post.mdx"), "utf8");
+    const written = fs.readFileSync(
+      path.join(writingDir, "my-post.mdx"),
+      "utf8",
+    );
     expect(written).toContain('"title": "제목"');
     expect(written).toContain("본문");
   });
@@ -83,14 +86,19 @@ describe("savePost", () => {
     ).rejects.toThrow();
 
     expect(fs.readdirSync(writingDir)).toEqual([]);
-    expect(fs.existsSync(path.join(tmpDir, "content", "escaped.mdx"))).toBe(false);
+    expect(fs.existsSync(path.join(tmpDir, "content", "escaped.mdx"))).toBe(
+      false,
+    );
   });
 
   it("overwrite 를 켜지 않으면 기존 글을 덮어쓰지 않는다", async () => {
     const { savePost } = await loadActions();
 
     await savePost({ slug: "keep-me", metadata: METADATA, doc: DOC });
-    const original = fs.readFileSync(path.join(writingDir, "keep-me.mdx"), "utf8");
+    const original = fs.readFileSync(
+      path.join(writingDir, "keep-me.mdx"),
+      "utf8",
+    );
 
     await expect(
       savePost({
@@ -116,9 +124,9 @@ describe("savePost", () => {
       overwrite: true,
     });
 
-    expect(fs.readFileSync(path.join(writingDir, "edit-me.mdx"), "utf8")).toContain(
-      '"title": "고친 제목"',
-    );
+    expect(
+      fs.readFileSync(path.join(writingDir, "edit-me.mdx"), "utf8"),
+    ).toContain('"title": "고친 제목"');
   });
 
   it.each([
@@ -195,23 +203,23 @@ describe("readPost 무손실 판정", () => {
     expect((await readPost("plain")).lossless).toBe(true);
   });
 
-  it("코드펜스 meta 가 있으면 손실로 판정한다", async () => {
+  it("코드펜스 meta 를 보존하므로 무손실이다", async () => {
     const { readPost } = await loadActions();
     fs.writeFileSync(
       path.join(writingDir, "fence-meta.mdx"),
       withBody('```bash title="cli"\necho hi\n```'),
     );
 
-    expect((await readPost("fence-meta")).lossless).toBe(false);
+    expect((await readPost("fence-meta")).lossless).toBe(true);
   });
 
-  it("인라인 JSX 가 있으면 손실로 판정한다", async () => {
+  it("문장 중간의 인라인 JSX 를 보존하므로 무손실이다", async () => {
     const { readPost } = await loadActions();
     fs.writeFileSync(
       path.join(writingDir, "inline-jsx.mdx"),
       withBody('문장 <span className="line-through">취소선</span> 이어짐.'),
     );
 
-    expect((await readPost("inline-jsx")).lossless).toBe(false);
+    expect((await readPost("inline-jsx")).lossless).toBe(true);
   });
 });

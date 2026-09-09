@@ -13,7 +13,7 @@ import {
   type PostDocument,
   type PostMetadata,
 } from "@/lib/editor/document";
-import { docToMarkdown, markdownToDoc } from "@/lib/editor/markdown";
+import { docToMarkdown, openForEditing } from "@/lib/editor/markdown";
 
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
 
@@ -109,12 +109,9 @@ export async function readPost(slug: string): Promise<ReadPostResult> {
   const filePath = resolvePostPath(slug);
   const source = await fs.readFile(filePath, "utf8");
   const { metadata, body } = parsePost(source);
-  const doc = markdownToDoc(body);
 
-  // 코드펜스 meta(```bash title="...")나 문장 중간의 인라인 JSX처럼 에디터가
-  // 표현하지 못하는 구문이 있으면 저장하는 순간 원문이 깎인다. 미지원 구문을
-  // 하나씩 쫓는 대신, 왕복이 실제로 일치하는지로 판정해 저장을 막는다.
-  return { metadata, doc, lossless: docToMarkdown(doc).trim() === body.trim() };
+  // 왕복 안전 판정은 markdown 모듈이 자기 계약으로 들고 있다
+  return { metadata, ...openForEditing(body) };
 }
 
 export interface SavePostInput {

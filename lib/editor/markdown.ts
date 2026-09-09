@@ -4,6 +4,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import remarkStringify from "remark-stringify";
+import { toString as mdastToString } from "mdast-util-to-string";
 import type {
   Literal as MdastLiteral,
   Root as MdastRoot,
@@ -41,9 +42,12 @@ function stringifier() {
       strong: "*",
       rule: "-",
       fence: "`",
-      // mdxRaw: 원문 그대로 보존해야 하는 노드. 이스케이프 없이 그대로 출력한다.
       handlers: {
+        // mdxRaw: 원문 그대로 보존해야 하는 노드. 이스케이프 없이 출력한다.
         mdxRaw: (node: MdxRaw) => node.value,
+        // 기본값은 줄 끝 백슬래시지만 이 저장소의 기존 글은 전부 공백 두 칸을
+        // 쓴다. 의미는 같아도 표기가 달라지면 왕복이 깨진다.
+        break: () => "  \n",
       },
     })
     .use(remarkGfm)
@@ -74,6 +78,33 @@ const WRAP_ORDER_INNER_TO_OUTER: Exclude<MarkType, "code">[] = [
 // markdown -> Tiptap JSON
 // ----------------------------------------------------------------------------
 
+export interface OpenedDocument {
+  doc: JSONContent;
+  /**
+   * 편집 후 저장해도 본문 "내용"이 보존되는지. 빈 줄·이스케이프·목록 마커
+   * 간격 같은 표기 차이는 허용한다 — remark-stringify가 항상 정규화하므로
+   * 바이트 동일성을 요구하면 기존 글 전부가 편집 불가가 된다.
+   */
+  lossless: boolean;
+}
+
+/**
+ * 이 모듈의 진짜 계약은 markdownToDoc 도 docToMarkdown 도 아니고 둘의 합성이다:
+ * "열었다가 저장하면 내용이 그대로여야 한다." 그 판정을 호출자가 조립하게
+ * 두면 판정 규칙이 모듈 밖으로 새므로 여기서 함께 내놓는다.
+ */
+export function openForEditing(markdown: string): OpenedDocument {
+  const doc = markdownToDoc(markdown);
+
+  return {
+    doc,
+    lossless: contentOf(docToMarkdown(doc)) === contentOf(markdown),
+  };
+}
+
+const contentOf = (markdown: string): string =>
+  mdastToString(parser().parse(markdown)).replace(/\s+/g, " ").trim();
+
 export function markdownToDoc(markdown: string): JSONContent {
   const tree = parser().parse(markdown) as MdastRoot;
 
@@ -86,13 +117,20 @@ export function markdownToDoc(markdown: string): JSONContent {
 
 function rawSlice(node: MdastNode, source: string): string {
   const position = node.position;
-  if (!position || position.start.offset == null || position.end.offset == null) {
+  if (
+    !position ||
+    position.start.offset == null ||
+    position.end.offset == null
+  ) {
     throw new Error(`${node.type} 노드에 position 정보가 없습니다.`);
   }
   return source.slice(position.start.offset, position.end.offset);
 }
 
-function convertBlockToTiptap(node: MdastNode, source: string): JSONContent | null {
+function convertBlockToTiptap(
+  node: MdastNode,
+  source: string,
+): JSONContent | null {
   switch (node.type) {
     case "paragraph": {
       if (node.children.length === 1 && node.children[0].type === "image") {
@@ -108,10 +146,15 @@ function convertBlockToTiptap(node: MdastNode, source: string): JSONContent | nu
       ) {
         return { type: "mdxBlock", attrs: { value: rawSlice(node, source) } };
       }
-      return { type: "paragraph", content: convertInlineChildren(node.children, source) };
+      return {
+        type: "paragraph",
+        content: convertInlineChildren(node.children, source),
+      };
     }
     case "heading": {
-      const level = Math.min(3, Math.max(1, node.depth)) as 1 | 2 | 3;
+      // 상한을 3으로 깎으면 기존 글의 ####가 조용히 ###로 강등된다.
+      // 마크다운이 허용하는 6까지 그대로 받는다.
+      const level = Math.min(6, Math.max(1, node.depth));
       return {
         type: "heading",
         attrs: { level },
@@ -122,18 +165,36 @@ function convertBlockToTiptap(node: MdastNode, source: string): JSONContent | nu
       const items = node.children
         .map((child) => convertBlockToTiptap(child, source))
         .filter((n): n is JSONContent => n !== null);
+      const attrs: Record<string, unknown> = {};
+      // 느슨한 목록(항목 사이 빈 줄)을 tight로 눌러버리면 렌더된 간격이 바뀐다
+      if (node.spread) attrs.spread = true;
       if (node.ordered) {
-        const attrs: Record<string, unknown> = {};
         if (node.start != null && node.start !== 1) attrs.start = node.start;
-        return { type: "orderedList", ...(Object.keys(attrs).length ? { attrs } : {}), content: items };
+        return {
+          type: "orderedList",
+          ...(Object.keys(attrs).length ? { attrs } : {}),
+          content: items,
+        };
       }
-      return { type: "bulletList", content: items };
+      return {
+        type: "bulletList",
+        ...(Object.keys(attrs).length ? { attrs } : {}),
+        content: items,
+      };
     }
     case "listItem": {
       const content = node.children
         .map((child) => convertBlockToTiptap(child, source))
         .filter((n): n is JSONContent => n !== null);
-      return { type: "listItem", content };
+      const attrs: Record<string, unknown> = {};
+      if (node.spread) attrs.spread = true;
+      // GFM 체크박스. 버리면 - [x]가 그냥 -로 바뀐다
+      if (node.checked != null) attrs.checked = node.checked;
+      return {
+        type: "listItem",
+        ...(Object.keys(attrs).length ? { attrs } : {}),
+        content,
+      };
     }
     case "blockquote": {
       const content = node.children
@@ -142,7 +203,11 @@ function convertBlockToTiptap(node: MdastNode, source: string): JSONContent | nu
       return { type: "blockquote", content };
     }
     case "code": {
-      const attrs = { language: node.lang ?? null };
+      const attrs: Record<string, unknown> = { language: node.lang ?? null };
+      // ```ts title="layout.tsx" 나 ```tsx {4-6} 의 meta. next.config.ts의
+      // rehype-pretty-code가 이걸 읽어 코드블록 제목과 라인 하이라이트를
+      // 그리므로, 버리면 발행된 글의 겉모습이 바뀐다.
+      if (node.meta) attrs.meta = node.meta;
       const result: JSONContent = { type: "codeBlock", attrs };
       if (node.value) {
         result.content = [{ type: "text", text: node.value }];
@@ -162,13 +227,21 @@ function convertBlockToTiptap(node: MdastNode, source: string): JSONContent | nu
   }
 }
 
-function convertImageToTiptap(node: MdastNode & { type: "image" }): JSONContent {
-  const attrs: Record<string, unknown> = { src: node.url, alt: node.alt ?? null };
+function convertImageToTiptap(
+  node: MdastNode & { type: "image" },
+): JSONContent {
+  const attrs: Record<string, unknown> = {
+    src: node.url,
+    alt: node.alt ?? null,
+  };
   if (node.title) attrs.title = node.title;
   return { type: "image", attrs };
 }
 
-function convertInlineChildren(children: MdastNode[], source: string): JSONContent[] {
+function convertInlineChildren(
+  children: MdastNode[],
+  source: string,
+): JSONContent[] {
   const result: JSONContent[] = [];
   for (const child of children) {
     result.push(...convertInline(child, [], source));
@@ -176,22 +249,47 @@ function convertInlineChildren(children: MdastNode[], source: string): JSONConte
   return result;
 }
 
-function convertInline(node: MdastNode, marks: TiptapMark[], source: string): JSONContent[] {
+function convertInline(
+  node: MdastNode,
+  marks: TiptapMark[],
+  source: string,
+): JSONContent[] {
   switch (node.type) {
     case "text":
       return [textNode(node.value, marks)];
     case "strong":
-      return flattenChildren(node.children, [...marks, { type: "bold" }], source);
+      return flattenChildren(
+        node.children,
+        [...marks, { type: "bold" }],
+        source,
+      );
     case "emphasis":
-      return flattenChildren(node.children, [...marks, { type: "italic" }], source);
+      return flattenChildren(
+        node.children,
+        [...marks, { type: "italic" }],
+        source,
+      );
     case "delete":
-      return flattenChildren(node.children, [...marks, { type: "strike" }], source);
+      return flattenChildren(
+        node.children,
+        [...marks, { type: "strike" }],
+        source,
+      );
     case "inlineCode":
       return [textNode(node.value, [...marks, { type: "code" }])];
     case "link": {
+      // GFM 자동 링크(맨 URL)와 <url> 표기. 대괄호 표기로 바꿔 쓰면 원문이
+      // 달라지고, URL 속 _ 가 이스케이프까지 된다. 글자 그대로 보존한다.
+      if (!rawSlice(node, source).startsWith("[")) {
+        return [rawInline(node, source)];
+      }
       const attrs: Record<string, unknown> = { href: node.url };
       if (node.title) attrs.title = node.title;
-      return flattenChildren(node.children, [...marks, { type: "link", attrs }], source);
+      return flattenChildren(
+        node.children,
+        [...marks, { type: "link", attrs }],
+        source,
+      );
     }
     case "break":
       return [{ type: "hardBreak" }];
@@ -199,16 +297,31 @@ function convertInline(node: MdastNode, marks: TiptapMark[], source: string): JS
       return [convertImageToTiptap(node)];
     case "mdxJsxTextElement":
       if (node.name === "u") {
-        return flattenChildren(node.children, [...marks, { type: "underline" }], source);
+        return flattenChildren(
+          node.children,
+          [...marks, { type: "underline" }],
+          source,
+        );
       }
-      // 지원하지 않는 인라인 JSX: 원문 텍스트로라도 보존한다.
-      return [textNode(rawSlice(node, source), marks)];
+      // 지원하지 않는 인라인 JSX(<strong>, <span> 등): 원문 그대로 보존한다.
+      // 텍스트로 넘기면 직렬화 때 < 가 이스케이프돼 원문이 훼손된다.
+      return [rawInline(node, source)];
     default:
-      return [];
+      // 각주 참조처럼 아직 모르는 인라인 노드도 버리지 않고 원문을 남긴다.
+      return [rawInline(node, source)];
   }
 }
 
-function flattenChildren(children: MdastNode[], marks: TiptapMark[], source: string): JSONContent[] {
+// 블록의 mdxBlock에 대응하는 인라인판. 편집은 못 하지만 저장해도 깎이지 않는다.
+function rawInline(node: MdastNode, source: string): JSONContent {
+  return { type: "mdxInline", attrs: { value: rawSlice(node, source) } };
+}
+
+function flattenChildren(
+  children: MdastNode[],
+  marks: TiptapMark[],
+  source: string,
+): JSONContent[] {
   const result: JSONContent[] = [];
   for (const child of children) {
     result.push(...convertInline(child, marks, source));
@@ -218,7 +331,13 @@ function flattenChildren(children: MdastNode[], marks: TiptapMark[], source: str
 
 function textNode(text: string, marks: TiptapMark[]): JSONContent {
   if (marks.length === 0) return { type: "text", text };
-  return { type: "text", text, marks: marks.map((m) => (m.attrs ? { type: m.type, attrs: m.attrs } : { type: m.type })) };
+  return {
+    type: "text",
+    text,
+    marks: marks.map((m) =>
+      m.attrs ? { type: m.type, attrs: m.attrs } : { type: m.type },
+    ),
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -227,7 +346,10 @@ function textNode(text: string, marks: TiptapMark[]): JSONContent {
 
 export function docToMarkdown(doc: JSONContent): string {
   const children = (doc.content ?? []).map(convertBlockToMdast);
-  const tree: MdastRoot = { type: "root", children: children as MdastRoot["children"] };
+  const tree: MdastRoot = {
+    type: "root",
+    children: children as MdastRoot["children"],
+  };
   return String(stringifier().stringify(tree));
 }
 
@@ -241,14 +363,14 @@ function convertBlockToMdast(node: JSONContent): MdastNode {
     case "heading":
       return {
         type: "heading",
-        depth: (node.attrs?.level as 1 | 2 | 3) ?? 1,
+        depth: (node.attrs?.level as 1 | 2 | 3 | 4 | 5 | 6) ?? 1,
         children: convertInlineToMdast(node.content ?? []),
       } as MdastNode;
     case "bulletList":
       return {
         type: "list",
         ordered: false,
-        spread: false,
+        spread: (node.attrs?.spread as boolean) ?? false,
         children: (node.content ?? []).map(convertBlockToMdast),
       } as unknown as MdastNode;
     case "orderedList":
@@ -256,13 +378,14 @@ function convertBlockToMdast(node: JSONContent): MdastNode {
         type: "list",
         ordered: true,
         start: (node.attrs?.start as number) ?? 1,
-        spread: false,
+        spread: (node.attrs?.spread as boolean) ?? false,
         children: (node.content ?? []).map(convertBlockToMdast),
       } as unknown as MdastNode;
     case "listItem":
       return {
         type: "listItem",
-        spread: false,
+        spread: (node.attrs?.spread as boolean) ?? false,
+        checked: (node.attrs?.checked as boolean | null) ?? null,
         children: (node.content ?? []).map(convertBlockToMdast),
       } as unknown as MdastNode;
     case "blockquote":
@@ -275,6 +398,7 @@ function convertBlockToMdast(node: JSONContent): MdastNode {
       return {
         type: "code",
         lang: (node.attrs?.language as string | null) ?? null,
+        meta: (node.attrs?.meta as string | null) ?? null,
         value,
       } as MdastNode;
     }
@@ -302,56 +426,99 @@ function imageAttrsToMdast(node: JSONContent): MdastNode {
   } as MdastNode;
 }
 
-function convertInlineToMdast(content: JSONContent[]): MdastNode[] {
-  const result: MdastNode[] = [];
-  for (const node of content) {
-    result.push(inlineNodeToMdast(node));
-  }
-  return result;
-}
+const marksOf = (node: JSONContent): TiptapMark[] =>
+  (node.marks ?? []) as TiptapMark[];
 
-function inlineNodeToMdast(node: JSONContent): MdastNode {
+// code 는 inlineCode 리프로 내려가므로 감싸기 대상이 아니다
+const wrappingMarksOf = (node: JSONContent): TiptapMark[] =>
+  node.type === "text" ? marksOf(node).filter((m) => m.type !== "code") : [];
+
+const markKey = (node: JSONContent): string =>
+  node.type !== "text"
+    ? ` ${node.type}`
+    : JSON.stringify(
+        wrappingMarksOf(node).map((m) => [m.type, m.attrs ?? null]),
+      );
+
+// 인접한 같은 키의 항목을 한 덩어리로 묶는다
+const groupAdjacent = <T>(items: T[], keyOf: (item: T) => string): T[][] =>
+  items.reduce<T[][]>((groups, item) => {
+    const last = groups.at(-1);
+
+    return last && keyOf(last[0]) === keyOf(item)
+      ? [...groups.slice(0, -1), [...last, item]]
+      : [...groups, [item]];
+  }, []);
+
+// 덩어리 하나를 바깥 마크로 한 번만 감싼다. 노드마다 따로 감싸면 **굵게** 가
+// 인접할 때 `**a****b**` 가 되어 원문에 없던 ** 가 본문에 새어든다.
+const runToMdast = (run: JSONContent[]): MdastNode[] => {
+  const wrapping = wrappingMarksOf(run[0]);
+  const children = run.map(inlineNodeToMdast);
+
+  if (wrapping.length === 0) return children;
+
+  return [
+    WRAP_ORDER_INNER_TO_OUTER.filter((markType) =>
+      wrapping.some((m) => m.type === markType),
+    ).reduce<MdastNode | MdastNode[]>(
+      (inner, markType) =>
+        wrapWithMark(
+          markType,
+          inner,
+          wrapping.find((m) => m.type === markType),
+        ),
+      children,
+    ) as MdastNode,
+  ];
+};
+
+const convertInlineToMdast = (content: JSONContent[]): MdastNode[] =>
+  groupAdjacent(content, markKey).flatMap(runToMdast);
+
+const inlineNodeToMdast = (node: JSONContent): MdastNode => {
   if (node.type === "hardBreak") return { type: "break" } as MdastNode;
   if (node.type === "image") return imageAttrsToMdast(node);
+  if (node.type === "mdxInline") {
+    return { type: "mdxRaw", value: node.attrs?.value as string };
+  }
   if (node.type !== "text") {
     throw new Error(`지원하지 않는 인라인 노드 타입: ${node.type}`);
   }
 
-  const marks = (node.marks ?? []) as TiptapMark[];
-  const markTypes = new Set(marks.map((m) => m.type));
   const text = node.text ?? "";
 
-  let current: MdastNode = markTypes.has("code")
+  // 감싸는 마크는 runToMdast 가 덩어리 단위로 처리한다. 여기서는 리프만 본다.
+  return marksOf(node).some((m) => m.type === "code")
     ? ({ type: "inlineCode", value: text } as MdastNode)
     : ({ type: "text", value: text } as MdastNode);
+};
 
-  for (const markType of WRAP_ORDER_INNER_TO_OUTER) {
-    if (!markTypes.has(markType)) continue;
-    current = wrapWithMark(markType, current, marks.find((m) => m.type === markType));
-  }
+function wrapWithMark(
+  markType: Exclude<MarkType, "code">,
+  child: MdastNode | MdastNode[],
+  mark?: TiptapMark,
+): MdastNode {
+  const children = Array.isArray(child) ? child : [child];
 
-  return current;
-}
-
-function wrapWithMark(markType: Exclude<MarkType, "code">, child: MdastNode, mark?: TiptapMark): MdastNode {
   switch (markType) {
     case "bold":
-      return { type: "strong", children: [child] } as MdastNode;
+      return { type: "strong", children } as MdastNode;
     case "italic":
-      return { type: "emphasis", children: [child] } as MdastNode;
+      return { type: "emphasis", children } as MdastNode;
     case "strike":
-      return { type: "delete", children: [child] } as MdastNode;
+      return { type: "delete", children } as MdastNode;
     case "underline":
       return {
         type: "mdxJsxTextElement",
         name: "u",
         attributes: [],
-        children: [child],
+        children,
       } as unknown as MdastNode;
     case "link": {
       const href = (mark?.attrs?.href as string) ?? "";
       const title = (mark?.attrs?.title as string | undefined) ?? null;
-      return { type: "link", url: href, title, children: [child] } as MdastNode;
+      return { type: "link", url: href, title, children } as MdastNode;
     }
   }
 }
