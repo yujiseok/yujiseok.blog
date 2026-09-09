@@ -65,6 +65,15 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} antialiased`}>
       <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-white">
+        {/* 스크린리더·키보드 사용자가 내비게이션을 매번 다 훑지 않고 본문으로
+            바로 뛸 수 있게 한다. 평소엔 화면에서 숨겨두고 포커스를 받을 때만
+            보인다. */}
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-black focus:px-4 focus:py-2 focus:text-white dark:focus:bg-white dark:focus:text-black"
+        >
+          본문으로 건너뛰기
+        </a>
         {/* Lenis가 children을 감싸야 하위의 useLenis()가 인스턴스를 받는다.
             형제로 두면 컨텍스트가 비어 목차 클릭 스크롤이 동작하지 않는다.
             상단에 있던 backdrop-blur 스트립은 배경이 평면이 되면서 할 일이

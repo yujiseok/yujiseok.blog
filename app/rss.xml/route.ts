@@ -45,7 +45,12 @@ export async function GET() {
       </channel>
     </rss>`;
 
-  const headers = new Headers({ "content-type": "application/xml" });
+  // cacheComponents 아래에서 라우트 핸들러는 동적이라 매 요청 재생성된다.
+  // 피드 리더는 자주 폴링하므로 CDN 캐시로 그 빈도를 흡수한다.
+  const headers = new Headers({
+    "content-type": "application/xml",
+    "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+  });
 
   return new Response(RSS, { headers });
 }

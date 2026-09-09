@@ -181,6 +181,24 @@ html:has([data-resume-page="true"]) {
   overflow-wrap: anywhere;
 }
 
+/*
+ * rehype-autolink-headings가 제목 끝에 붙이는 섹션 링크. 목차가 있으니 평소엔
+ * 숨기고, 제목에 마우스를 올리거나 키보드로 닿았을 때만 드러낸다 — 공유용
+ * 딥링크가 필요한 순간에만 보이면 된다. .prose a의 밑줄은 본문 링크용이라 끈다.
+ */
+.prose .heading-anchor {
+  margin-left: 0.35em;
+  color: var(--tw-prose-captions);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.prose :is(h1, h2, h3, h4):hover .heading-anchor,
+.prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
 pre {
   margin-top: 0 !important;
 }
@@ -190,8 +208,19 @@ figcaption[data-rehype-pretty-code-title] {
   color: #fff;
   padding: 0.5em 1.14286em;
   border-radius: 0.375rem 0.375rem 0 0;
-  transform: translateY(10px);
   font-size: 0.875rem;
+}
+
+/*
+ * translateY(10px)로 캡션을 밀어 pre가 아래 10px을 덮게 했던 방식은 페인트
+ * 순서에 기댄다 — pre가 그다음 형제가 아니거나 순서가 바뀌면 캡션 아래가
+ * 그대로 드러난다. 위 pre { margin-top: 0 !important } 로 둘 사이 간격은
+ * 이미 없앴으니, 남은 건 모서리뿐이다. 캡션 바로 아래 오는 pre의 위쪽
+ * 모서리를 깎아 캡션의 둥근 모서리와 실제로 이어지게 한다.
+ */
+figcaption[data-rehype-pretty-code-title] + pre {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
 }
 
 .prose :where(code):not(:where([class~="not-prose"] *))::before,
@@ -255,21 +284,60 @@ mark[data-highlighted-chars] {
   @apply rounded-md bg-white/20 p-1;
 }
 
+/*
+ * 고정 h-10은 summary가 두 줄로 접히면 잘려나갔다. 높이는 내용이 정한다.
+ * 열고 닫는 연출은 details 자체가 아니라 ::details-content에 건다 —
+ * details의 block-size는 닫혀도 열려도 auto라 값이 안 바뀌어 transition이
+ * 걸릴 계기가 없다. 내용 상자는 0 → auto로 바뀌므로 :root의
+ * interpolate-size: allow-keywords와 함께 실제로 움직인다(Chrome).
+ * 미지원 브라우저는 즉시 전환될 뿐 열고 닫는 동작은 그대로 된다.
+ */
 details {
-  @apply my-4 h-10 rounded-md bg-neutral-100 px-4 py-2 dark:bg-neutral-900;
-  transition: height 0.5s ease;
+  @apply my-4 rounded-md bg-neutral-100 px-4 py-2 dark:bg-neutral-900;
+  overflow: clip;
 
-  &[open] {
-    height: auto;
+  &::details-content {
+    block-size: 0;
     overflow: clip;
+    transition:
+      block-size 0.3s ease,
+      content-visibility 0.3s allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
   }
 }
 
 summary {
-  @apply flex cursor-pointer items-center;
+  @apply flex cursor-pointer items-center justify-between gap-2;
 
   &::marker {
     content: "";
+  }
+
+  /* 열림/닫힘을 색이나 텍스트 변화 없이도 알 수 있게 쉐브론을 더한다.
+     오른쪽 화살표(border-top+right, 45deg)가 열리면 아래로 눕는다. */
+  &::after {
+    content: "";
+    flex-shrink: 0;
+    inline-size: 0.4em;
+    block-size: 0.4em;
+    border-top: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+  }
+}
+
+details[open] summary::after {
+  transform: rotate(135deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details::details-content,
+  summary::after {
+    transition: none;
   }
 }
 
@@ -300,10 +368,15 @@ summary {
  * 본문 컨테이너의 등장 연출. JS로 하면 hydration이 실패했을 때 시작 상태
  * (opacity: 0)에 갇혀 글이 영영 안 보인다. CSS는 스크립트와 무관하게
  * 돌아가므로 최악의 경우에도 읽을 수는 있다.
+ *
+ * opacity는 애니메이션에서 뺐다. 글 h1이 이 클래스를 쓰는데, LCP는 요소가
+ * opacity > 0으로 처음 페인트된 시점을 기준으로 잡는다. 0에서 시작하면
+ * 애니메이션 0.6s가 그대로 LCP 지연이 된다. blur·이동만으로도 등장 연출은
+ * 충분하다.
  */
 @keyframes blurIn {
   from {
-    opacity: 0;
+    opacity: 1;
     filter: blur(1px);
     transform: translate3d(-4px, 0, 0);
   }
