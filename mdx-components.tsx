@@ -2,6 +2,8 @@ import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
 
+import { cn } from "@/lib/cn";
+
 import ExternalLink from "@/app/components/externalLink";
 import GenconTypewriter from "@/app/components/2024-gencon/typewriter";
 import AtelierTypewriter from "@/app/components/atelier/typewriter";
@@ -28,8 +30,27 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <ExternalLink {...props} />;
 }
 
-function CustomImage(props: React.ComponentProps<typeof Image>) {
-  return <Image {...props} className="mx-auto rounded-md" />;
+// 에디터가 붙이는 align prop. 없으면 가운데 — 이미 발행된 74곳의 이미지가
+// 지금과 똑같이(mx-auto rounded-md) 그려져야 한다.
+const IMAGE_ALIGN_CLASS = {
+  left: "mr-auto",
+  center: "mx-auto",
+  right: "ml-auto",
+} as const;
+
+type ImageAlign = keyof typeof IMAGE_ALIGN_CLASS;
+
+interface CustomImageProps extends React.ComponentProps<typeof Image> {
+  align?: ImageAlign;
+}
+
+function CustomImage({ align, ...props }: CustomImageProps) {
+  return (
+    <Image
+      {...props}
+      className={cn(IMAGE_ALIGN_CLASS[align ?? "center"], "rounded-md")}
+    />
+  );
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {

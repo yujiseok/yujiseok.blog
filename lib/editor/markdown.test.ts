@@ -443,10 +443,22 @@ describe("markdownToDoc - 블록", () => {
   });
 
   it("마크다운 이미지를 image 노드로 파싱한다", () => {
+    // 마크다운 표기에는 크기·정렬이 없으므로 셋 다 null 로 채운다. 이 값이
+    // 그대로 남아 있어야 저장할 때 다시 마크다운 표기로 돌아간다.
     expect(markdownToDoc('![설명](/a.png "제목")\n')).toEqual({
       type: "doc",
       content: [
-        { type: "image", attrs: { src: "/a.png", alt: "설명", title: "제목" } },
+        {
+          type: "image",
+          attrs: {
+            src: "/a.png",
+            alt: "설명",
+            title: "제목",
+            width: null,
+            height: null,
+            align: null,
+          },
+        },
       ],
     });
   });
@@ -589,6 +601,121 @@ describe("미지의 JSX 블록 보존", () => {
   it("여러 줄에 걸친 JSX 블록도 바이트 단위로 보존한다", () => {
     const md =
       "문단.\n\n<Callout>\n  여러 줄에 걸친\n  내용입니다.\n</Callout>\n\n다음 문단.\n";
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+});
+
+describe("이미지 - JSX <Image>", () => {
+  const jsxImage = (attrs: Record<string, unknown>): JSONContent => ({
+    type: "doc",
+    content: [{ type: "image", attrs }],
+  });
+
+  it("속성을 전부 정적으로 읽을 수 있는 <Image> 를 image 노드로 파싱한다", () => {
+    const md = '<Image src="/a.png" width={768} height={400} alt="잡콕" />\n';
+
+    expect(markdownToDoc(md)).toEqual(
+      jsxImage({
+        src: "/a.png",
+        alt: "잡콕",
+        width: 768,
+        height: 400,
+        align: null,
+      }),
+    );
+  });
+
+  it("align 속성을 읽는다", () => {
+    const md =
+      '<Image src="/a.png" width={10} height={20} alt="" align="left" />\n';
+
+    expect(markdownToDoc(md)).toEqual(
+      jsxImage({
+        src: "/a.png",
+        alt: "",
+        width: 10,
+        height: 20,
+        align: "left",
+      }),
+    );
+  });
+
+  it("width/height 가 있으면 <Image> JSX 로 직렬화한다", () => {
+    expect(
+      docToMarkdown(
+        jsxImage({
+          src: "/a.png",
+          alt: "잡콕",
+          width: 768,
+          height: 400,
+          align: null,
+        }),
+      ),
+    ).toBe('<Image src="/a.png" alt="잡콕" width={768} height={400} />\n');
+  });
+
+  it("align 이 있으면 문자열 prop 으로 덧붙인다", () => {
+    expect(
+      docToMarkdown(
+        jsxImage({
+          src: "/a.png",
+          alt: "잡콕",
+          width: 768,
+          height: 400,
+          align: "right",
+        }),
+      ),
+    ).toBe(
+      '<Image src="/a.png" alt="잡콕" width={768} height={400} align="right" />\n',
+    );
+  });
+
+  it("크기가 없으면 마크다운 이미지로 되돌린다", () => {
+    expect(
+      docToMarkdown(
+        jsxImage({
+          src: "/a.png",
+          alt: "잡콕",
+          width: null,
+          height: null,
+          align: null,
+        }),
+      ),
+    ).toBe("![잡콕](/a.png)\n");
+  });
+
+  it("<Image> 가 왕복해도 JSX 로 남는다", () => {
+    const md = '<Image src="/a.png" alt="잡콕" width={768} height={400} />\n';
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+
+  it("목록 안의 <Image> 도 편집 가능한 노드가 된다", () => {
+    const md =
+      '- 항목\n\n  <Image src="/a.png" alt="a" width={7} height={8} />\n';
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+
+  it.each([
+    [
+      "해석 못 하는 표현식 속성",
+      '<Image src="/a.png" style={{ margin: 0 }} />',
+    ],
+    ["변수 참조", "<Image src={src} width={768} height={400} />"],
+    ["스프레드", '<Image {...props} src="/a.png" />'],
+    ["모르는 속성", '<Image src="/a.png" priority className="w-full" />'],
+    ["숫자가 아닌 크기", '<Image src="/a.png" width={w * 2} height={400} />'],
+  ])("%s 가 섞이면 mdxBlock 으로 남긴다", (_, md) => {
+    expect(markdownToDoc(`${md}\n`)).toEqual({
+      type: "doc",
+      content: [{ type: "mdxBlock", attrs: { value: md } }],
+    });
+  });
+
+  it("Image 가 아닌 JSX 는 건드리지 않는다", () => {
+    const md = '<Callout type="info">내용</Callout>\n';
+
     expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 });
