@@ -1,9 +1,10 @@
 "use client";
 
 import { Select } from "@base-ui/react/select";
+import { useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { ICON_BUTTON, MENU_ITEM, POPUP, POSITIONER } from "./ui";
+import { FIELD, ICON_BUTTON, MENU_ITEM, POPUP, POSITIONER } from "./ui";
 import { findChildren } from "@tiptap/core";
 import { CodeBlock } from "@tiptap/extension-code-block";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
@@ -137,6 +138,45 @@ const tokenStyle = ({
 const readLanguage = (attrs: Record<string, unknown>): string | null =>
   typeof attrs.language === "string" ? attrs.language : null;
 
+const readMeta = (attrs: Record<string, unknown>): string | null =>
+  typeof attrs.meta === "string" ? attrs.meta : null;
+
+/*
+ * meta는 코드펜스 뒤에 붙는 조각들의 나열이라 title 말고도 {8}, {2, 5} 같은 줄
+ * 하이라이트가 함께 온다. 제목만 갈아끼우고 나머지는 원문 그대로 둬야 발행 결과가
+ * 안 바뀌므로, 읽기와 쓰기를 이 두 순수 함수에만 가둔다.
+ *
+ * | meta                | title      | writeTitle 결과       |
+ * | ------------------- | ---------- | --------------------- |
+ * | `title="a.ts" {8}`  | `b.ts`     | `title="b.ts" {8}`    |
+ * | `title="a.ts" {8}`  | `` (빈값) | `{8}`                 |
+ * | `null`              | `a.ts`     | `title="a.ts"`        |
+ * | `{8}`               | `a.ts`     | `title="a.ts" {8}`    |
+ * | `title="a.ts"`      | `` (빈값) | `null`                |
+ * | `{8}`               | `` (빈값) | `{8}`                 |
+ * | `null`              | `a"b.ts`   | `title="ab.ts"`       |
+ */
+const TITLE_PATTERN = /title="([^"]*)"/;
+
+const readTitle = (meta: string | null): string =>
+  meta?.match(TITLE_PATTERN)?.[1] ?? "";
+
+const writeTitle = (meta: string | null, title: string): string | null => {
+  // rehype-pretty-code의 meta 파서에 이스케이프가 없어서, 값 안의 큰따옴표는
+  // 닫는 따옴표로 읽혀 meta 전체를 깨뜨린다. 저장 전에 떨어뜨린다.
+  const safe = title.replaceAll('"', "").trim();
+  const fragment = safe ? `title="${safe}"` : "";
+  const current = meta ?? "";
+  const next = TITLE_PATTERN.test(current)
+    ? // 치환값을 함수로 넘겨 제목 속 $&, $1이 치환 패턴으로 해석되지 않게 한다.
+      current.replace(TITLE_PATTERN, () => fragment)
+    : [fragment, current].filter(Boolean).join(" ");
+  // 조각을 빼고 남은 공백을 정리한다. 남는 게 없으면 attr은 null이어야 한다.
+  const normalized = next.replace(/\s+/g, " ").trim();
+
+  return normalized === "" ? null : normalized;
+};
+
 const decorateCodeBlock = (
   node: ProseMirrorNode,
   pos: number,
@@ -183,8 +223,8 @@ export const CodeBlockShiki = CodeBlock.extend({
       /*
        * ```ts title="next.config.ts" {8} 의 meta. lib/editor/markdown.ts가
        * 이 attr로 읽고 쓰는데 스키마에 없으면 setContent 단계에서 조용히
-       * 사라져, 열었다 저장하기만 해도 코드블록 제목이 날아간다. 이번 범위에서
-       * UI로 노출하지는 않고 보존만 한다.
+       * 사라져, 열었다 저장하기만 해도 코드블록 제목이 날아간다. 노드뷰의 제목
+       * 입력칸이 이 중 title="..." 조각만 편집하고 나머지는 원문대로 보존한다.
        */
       meta: {
         default: null,
@@ -250,10 +290,29 @@ const triggerClass = cn(
 );
 const popupClass = cn(POPUP, "min-w-[var(--anchor-width)] overflow-hidden p-1");
 const itemClass = cn(MENU_ITEM, "font-mono text-xs");
+// FIELD를 코드블록 리듬(h-6)과 어두운 배경에 맞춰 덮어쓴다.
+const titleInputClass = cn(
+  FIELD,
+  "h-6 w-40 rounded-md border-white/15 bg-transparent px-2 font-mono text-[11px] text-neutral-300 placeholder:text-neutral-500 focus:border-white/35 dark:border-white/15",
+);
 
 function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
   const language = readLanguage(node.attrs);
   const value = language ?? NO_LANGUAGE;
+
+  const meta = readMeta(node.attrs);
+  const title = readTitle(meta);
+  // 타이핑마다 트랜잭션을 날리면 undo가 글자 단위로 쪼개진다. 초안은 로컬에 두고
+  // blur/Enter에서 한 번만 커밋한다.
+  const [draft, setDraft] = useState(title);
+  const [committed, setCommitted] = useState(title);
+
+  // undo나 다른 곳의 편집으로 meta가 바뀌면 입력칸도 따라가야 한다. 렌더 중
+  // 조정이라 effect 한 번 더 도는 일이 없다.
+  if (committed !== title) {
+    setCommitted(title);
+    setDraft(title);
+  }
 
   const handleValueChange = (next: string | null) => {
     // null은 base-ui의 선택 해제 신호다. 값이 아니므로 무시한다.
@@ -262,9 +321,49 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
     updateAttributes({ language: next === NO_LANGUAGE ? null : next });
   };
 
+  const commitTitle = () => {
+    const nextMeta = writeTitle(meta, draft);
+    // 저장된 값과 보이는 값이 어긋나면 안 된다. 따옴표 제거·trim 결과를 되돌린다.
+    const stored = readTitle(nextMeta);
+    setDraft(stored);
+    setCommitted(stored);
+    if (nextMeta !== meta) updateAttributes({ meta: nextMeta });
+  };
+
+  const handleTitleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // 입력칸의 Backspace·화살표가 ProseMirror까지 올라가면 코드블록이 지워진다.
+    event.stopPropagation();
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitTitle();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setDraft(title);
+      event.currentTarget.blur();
+    }
+  };
+
   return (
     <NodeViewWrapper className="relative">
-      <div className="absolute top-2 right-2 z-10" contentEditable={false}>
+      <div
+        className="absolute top-2 right-2 z-10 flex items-center gap-1"
+        contentEditable={false}
+      >
+        <input
+          aria-label="코드블록 제목"
+          placeholder="파일명 (선택)"
+          className={titleInputClass}
+          value={draft}
+          spellCheck={false}
+          autoComplete="off"
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={handleTitleKeyDown}
+          onBlur={commitTitle}
+        />
+
         <Select.Root value={value} onValueChange={handleValueChange}>
           <Select.Trigger aria-label="코드 언어" className={triggerClass}>
             <Select.Value className="truncate">
