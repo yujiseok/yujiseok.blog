@@ -5,9 +5,10 @@ import { useLenis } from "lenis/react";
 import { cn } from "@/lib/cn";
 import type { TocEntry } from "@/lib/toc";
 
-// 고정 헤더는 없다. 제목이 뷰포트 맨 위에 딱 붙지 않을 만큼만 띄운다.
-// article의 scroll-mt와 같은 값이어야 클릭 이동과 해시 이동이 같은 자리에 선다.
-const SCROLL_OFFSET = -32;
+// Lenis의 scrollTo는 요소의 scroll-margin-top을 이미 반영한다. 여기에 또
+// 여백을 더하면 해시로 진입했을 때(32px)와 클릭했을 때(64px)의 착지가
+// 어긋난다. 여백은 article의 prose-headings:scroll-mt 한 곳이 정한다.
+const SCROLL_OFFSET = 0;
 
 // 이 비율 위로 올라간 제목을 "지나갔다"고 본다
 const SPY_LINE = 0.3;
@@ -49,10 +50,17 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
     update();
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
+    // 스크롤이 멈춘 뒤에 본문 높이가 바뀌면(늦게 뜨는 이미지·폰트 교체 등)
+    // 제목 위치가 밀리는데 scroll 이벤트는 오지 않는다. 본문 크기 변화도
+    // 위치 재평가의 계기로 삼는다.
+    const article = document.querySelector("article");
+    const resizeObserver = new ResizeObserver(update);
+    if (article) resizeObserver.observe(article);
 
     return () => {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
+      resizeObserver.disconnect();
     };
   }, [entries]);
 
@@ -73,7 +81,16 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
     if (!lenis || !target) return;
 
     event.preventDefault();
-    lenis.scrollTo(target, { offset: SCROLL_OFFSET });
+    lenis.scrollTo(target, {
+      offset: SCROLL_OFFSET,
+      // 이동 중에 본문 높이가 바뀌면 목적지가 밀린 채 멈춘다. 끝난 뒤 한 번만
+      // 다시 재서 어긋났으면 즉시 맞춘다 — 두 번째는 애니메이션 없이.
+      onComplete: () => {
+        const drift = Math.abs(target.getBoundingClientRect().top - 32);
+        if (drift > 8)
+          lenis.scrollTo(target, { offset: SCROLL_OFFSET, immediate: true });
+      },
+    });
     // preventDefault로 사라진 해시를 되돌려 준다. push하면 뒤로 가기가 목차
     // 클릭 횟수만큼 쌓인다.
     history.replaceState(null, "", `#${id}`);

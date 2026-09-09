@@ -235,6 +235,13 @@ pre code {
 
 /* Code blocks are always poimandres (#1b1e28), light mode included, so a
    light overlay reads in both themes; black/30 was invisible on it. */
+/* poimandres의 주석색 #767C9D는 배경 #1b1e28 위에서 4.07:1이라 AA(4.5)에
+   못 미친다(axe color-contrast). rehype-pretty-code가 인라인 style로 색을
+   박으므로 그 값만 골라 한 단계 밝힌다 — 다른 토큰은 전부 7:1 이상이다. */
+[data-rehype-pretty-code-figure] span[style="color:#767C9D"] {
+  color: #8b91b0;
+}
+
 span[data-highlighted-line] {
   @apply bg-white/10;
 }
