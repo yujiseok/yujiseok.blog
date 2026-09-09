@@ -6,7 +6,7 @@ import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
 import { TableOfContents } from "@/app/components/tableOfContents";
 import { getToc } from "@/lib/toc";
-import { formatPostDate } from "@/app/components/postRow";
+import { formatPostDate } from "@/lib/date";
 import { SITE_URL } from "@/lib/constants";
 import { alternates, SITE_OG } from "@/lib/metadata";
 
