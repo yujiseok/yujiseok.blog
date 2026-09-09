@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
 import { TableOfContents } from "@/app/components/tableOfContents";
+import PostNav from "@/app/components/postNav";
 import { getToc } from "@/lib/toc";
 import { formatPostDate } from "@/lib/date";
+import { getNeighbours } from "@/lib/neighbours";
 import { SITE_URL } from "@/lib/constants";
 import { alternates, SITE_OG } from "@/lib/metadata";
 
@@ -58,10 +60,13 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
 
   // 목차는 원문을 다시 파싱해 만든다(lib/toc.ts). 본문은 모듈로 컴파일돼
   // 컴포넌트로 오므로 거기서 heading을 긁을 수 없다.
-  const [{ default: Content }, toc] = await Promise.all([
+  const [{ default: Content }, toc, writings] = await Promise.all([
     importMdx("writing", params.slug),
     getToc("writing", params.slug),
+    getAllWritings(),
   ]);
+
+  const { older, newer } = getNeighbours(writings, params.slug);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -122,6 +127,8 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
         <article className="prose dark:prose-invert prose-headings:scroll-mt-8 mx-auto mt-10 max-w-2xl">
           <Content />
         </article>
+
+        <PostNav older={older} newer={newer} />
       </BlurContainer>
     </>
   );

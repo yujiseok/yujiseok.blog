@@ -44,6 +44,20 @@ const withMDX = createMDX({
     // rehype-pretty-code는 코드블록만 만지므로 순서 충돌이 없다.
     rehypePlugins: [
       ["rehype-slug"],
+      // rehype-slug 다음, rehype-pretty-code 이전 — 코드블록엔 heading이 없어
+      // 순서 충돌은 없고, id가 이미 박힌 heading에만 앵커를 붙이면 된다.
+      // Turbopack이 옵션을 문자열로 직렬화하므로 함수(behavior 콜백 등)는 못 쓴다.
+      [
+        "rehype-autolink-headings",
+        {
+          behavior: "append",
+          properties: {
+            className: ["heading-anchor"],
+            ariaLabel: "이 섹션 링크",
+          },
+          content: { type: "text", value: "#" },
+        },
+      ],
       ["rehype-pretty-code", { theme: "poimandres" }],
     ],
   },
