@@ -6,9 +6,11 @@ import "lenis/dist/lenis.css";
 import { ReactLenis } from "lenis/react";
 import type { LenisRef } from "lenis/react";
 import { cancelFrame, frame } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
-const Lenis = () => {
+// children을 감싸는 이유는 app/layout.tsx 참고 — 컨텍스트 프로바이더라
+// 형제로 두면 useLenis()가 null을 돌려준다.
+const Lenis = ({ children }: { children: ReactNode }) => {
   const lenisRef = useRef<LenisRef>(null);
 
   useEffect(() => {
@@ -22,7 +24,11 @@ const Lenis = () => {
     return () => cancelFrame(update);
   }, []);
 
-  return <ReactLenis root options={{ autoRaf: false }} ref={lenisRef} />;
+  return (
+    <ReactLenis root options={{ autoRaf: false }} ref={lenisRef}>
+      {children}
+    </ReactLenis>
+  );
 };
 
 export default Lenis;

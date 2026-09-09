@@ -1,4 +1,8 @@
 import "./globals.css";
+// 본문의 34%가 한글인데 Geist는 라틴만 있다. Pretendard의 dynamic subset은
+// 유니코드 범위별로 92개 청크로 쪼개져 있어 실제로 쓰인 글자 범위만 받는다 —
+// 변수 폰트 통파일(2MB)을 next/font/local로 싣는 것보다 훨씬 가볍다.
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 import { Geist } from "next/font/google";
 import type { Metadata } from "next";
@@ -60,17 +64,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${geistSans.variable} antialiased`}>
-      <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-neutral-200">
-        <div className="pointer-events-none fixed inset-0 z-10 h-10 w-full mask-[linear-gradient(to_bottom,black,transparent)] backdrop-blur-2xl select-none" />
-
-        {children}
+      <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-white">
+        {/* Lenis가 children을 감싸야 하위의 useLenis()가 인스턴스를 받는다.
+            형제로 두면 컨텍스트가 비어 목차 클릭 스크롤이 동작하지 않는다.
+            상단 blur 스트립은 헤더가 대신하므로 뺐다. */}
+        <Lenis>{children}</Lenis>
 
         <Analytics />
         <SpeedInsights />
         {isProd && process.env.GA_ID && (
           <GoogleAnalytics gaId={process.env.GA_ID} />
         )}
-        <Lenis />
       </body>
     </html>
   );

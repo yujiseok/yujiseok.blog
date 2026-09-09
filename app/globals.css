@@ -4,21 +4,21 @@
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme {
-  --font-sans: var(--font-geist-sans);
+  /* 라틴은 Geist, Geist에 없는 한글은 Pretendard로 떨어진다.
+     @font-face 등록은 root layout의 pretendard dynamic-subset import가 한다. */
+  --font-sans:
+    var(--font-geist-sans), "Pretendard Variable", system-ui, sans-serif;
 }
 
 :root {
   interpolate-size: allow-keywords;
-  --site-bg: #faf8f4;
-  --site-wash-mint: rgb(210 232 214 / 0.28);
-  --site-wash-sky: rgb(196 220 242 / 0.22);
-  --site-wash-peach: rgb(245 210 190 / 0.2);
+  /* 글에 색을 섞지 않는다. 배경은 순백/순흑, 위계는 무채색 명도로만 낸다. */
+  --site-bg: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* 순흑은 대비가 과해 눈이 피로하다. 한 단계 띄운 뉴트럴을 쓴다. */
-    --site-bg: #0d0d10;
+    --site-bg: #000000;
   }
 }
 
@@ -31,13 +31,13 @@ html {
   background-color: var(--site-bg);
   color-scheme: light dark;
   scrollbar-width: thin;
-  scrollbar-color: #e8e8e8 transparent;
+  scrollbar-color: #d4d4d4 transparent;
 }
 
 @media (prefers-color-scheme: dark) {
   html {
     scrollbar-width: thin;
-    scrollbar-color: #404040 transparent;
+    scrollbar-color: #333333 transparent;
   }
 }
 
@@ -73,78 +73,107 @@ html:has([data-resume-page="true"]) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #e8e8e8;
+  background-color: #d4d4d4;
   border-radius: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar-thumb {
-    background-color: #404040;
+    background-color: #333333;
   }
 }
 
-body {
-  font-family:
-    var(--font-sans) system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+/* ── 본문 조판 ────────────────────────────────────────────────────────────
+ * prose-* 유틸을 페이지마다 늘어놓으면 글 상세·atelier·에디터 프리뷰가
+ * 조금씩 어긋난다. 조판 값은 여기 한 곳에서만 정한다.
+ * Tailwind v4에서 아래 규칙은 레이어 밖이라 utilities 레이어의 prose보다 뒤에
+ * 온다 — 상세도를 올리지 않아도 이긴다.
+ */
+.prose {
+  /* 본문·제목·강조는 body가 정한 먹색을 그대로 쓴다. prose 기본값(gray-700)은
+     순백 배경에서 대비를 스스로 깎는다. */
+  --tw-prose-body: inherit;
+  --tw-prose-headings: inherit;
+  --tw-prose-bold: inherit;
+  --tw-prose-quotes: inherit;
+  --tw-prose-code: inherit;
+  --tw-prose-captions: #525252;
+  --tw-prose-counters: #525252;
+  --tw-prose-bullets: #a3a3a3;
+  --tw-prose-hr: #e5e5e5;
+  --tw-prose-quote-borders: #e5e5e5;
+
+  font-size: 17px;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
 }
 
-/*
- * wash는 body 배경이 아니라 뒤에 깔린 fixed 레이어로 그린다.
- * background-attachment: fixed를 쓰면 컴포지터 스크롤이 꺼져서 스크롤마다
- * 뷰포트 전체를 다시 그려야 하고, 위에 얹힌 backdrop-filter가 그걸 매
- * 프레임 텍스처로 읽어간다. 별도 레이어로 빼면 결과는 같고 한 번만 그린다.
- */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    radial-gradient(
-      ellipse 90% 70% at 22% 8%,
-      var(--site-wash-mint),
-      transparent 58%
-    ),
-    radial-gradient(
-      ellipse 70% 50% at 88% 4%,
-      var(--site-wash-sky),
-      transparent 52%
-    ),
-    radial-gradient(
-      ellipse 60% 45% at 60% 35%,
-      var(--site-wash-peach),
-      transparent 55%
-    );
-}
-
-/*
- * 라이트의 wash는 '따뜻한 종이에 잉크가 번진다'는 은유라 다크에서는
- * 성립하지 않는다. 보일 만큼 진하게 깔면 은은함을 잃고, 은은하게 두면
- * 어두운 영역의 낮은 휘도 해상도 탓에 아예 보이지 않는다.
- * 다크에서는 색조 대신 표면 명도 차로 깊이를 낸다.
- *
- * 위 body 규칙과 같은 상세도라 반드시 뒤에 와야 덮인다.
- */
 @media (prefers-color-scheme: dark) {
-  body::before {
-    background-image: none;
+  .prose {
+    --tw-prose-captions: #a3a3a3;
+    --tw-prose-counters: #a3a3a3;
+    --tw-prose-bullets: #525252;
+    --tw-prose-hr: #262626;
+    --tw-prose-quote-borders: #262626;
   }
 }
 
+.prose :is(p, ul, ol, blockquote) {
+  margin-block: 24px;
+}
+
+/* 글 제목은 히어로가 따로 그린다. 본문 안의 h1은 h2와 같은 단으로 취급한다. */
+.prose :is(h1, h2) {
+  font-size: 30px;
+  line-height: 39.6px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-block: 64px 24px;
+}
+
+.prose h3 {
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-block: 40px 16px;
+}
+
+.prose h4 {
+  font-size: 17px;
+  line-height: 28px;
+  font-weight: 600;
+  margin-block: 32px 12px;
+}
+
+/* 코드블록도 figure로 오지만 그건 pre가 리듬을 쥔다. */
+.prose figure:not([data-rehype-pretty-code-figure]) {
+  margin-block: 64px 24px;
+}
+
+.prose figcaption:not([data-rehype-pretty-code-title]) {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 23px;
+  color: var(--tw-prose-captions);
+}
+
+/* 첫 요소의 위쪽 리듬은 히어로가 이미 잡았다. 여기서 또 밀면 이중 여백이 된다.
+   (typography 플러그인에도 같은 규칙이 있지만 레이어 안이라 위 규칙에 진다) */
+.prose > :first-child {
+  margin-top: 0;
+}
+
+/* 링크는 색이 아니라 밑줄로만 구분한다 — 본문색 그대로. */
 .prose a {
-  text-decoration-color: #374151;
-  @apply decoration-[0.1em] underline-offset-2 dark:decoration-gray-300;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  /* 긴 URL이 칼럼을 넘지 않게. break-all과 달리 넘칠 때만 끊는다. */
+  overflow-wrap: anywhere;
 }
 
 pre {
@@ -165,8 +194,9 @@ figcaption[data-rehype-pretty-code-title] {
   content: "";
 }
 
+/* 배경이 순백/순흑이라 흰/검정 칩은 배경에 녹아 사라진다. 한 단계 띄운다. */
 code {
-  @apply bg-white dark:bg-black;
+  @apply bg-neutral-100 dark:bg-neutral-900;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
 }
@@ -214,7 +244,7 @@ mark[data-highlighted-chars] {
 }
 
 details {
-  @apply my-4 h-10 rounded-md bg-white px-4 py-2 dark:bg-black;
+  @apply my-4 h-10 rounded-md bg-neutral-100 px-4 py-2 dark:bg-neutral-900;
   transition: height 0.5s ease;
 
   &[open] {
@@ -328,4 +358,17 @@ summary {
   --duration: 8s;
   animation: shooting var(--duration) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   will-change: transform, opacity;
+}
+
+/*
+ * 등장 연출은 장식이다. 모션을 줄여 달라고 한 사용자에게는 최종 상태만
+ * 보여준다. 애니메이션을 끄기만 하면 backwards fill이 시작 프레임에
+ * 붙잡아 두므로(opacity 0) animation-name 자체를 없앤다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .fadeDown,
+  .blurIn,
+  .fadeIn {
+    animation: none;
+  }
 }
