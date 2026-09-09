@@ -30,6 +30,7 @@ import {
 } from "./draft";
 import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
+import { TableNodes } from "./table-node";
 import { EditorToastViewport, useSaveToast } from "./toast";
 import { EditorToolbar } from "./toolbar";
 import {
@@ -124,6 +125,8 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       BlockAlign,
       ResizableImage,
       MdxBlock,
+      // GFM 파이프 표. 표·행·셀 네 노드가 한 벌이라 배열째 펼친다.
+      ...TableNodes,
       SlashCommand,
     ],
     content: draft.doc,

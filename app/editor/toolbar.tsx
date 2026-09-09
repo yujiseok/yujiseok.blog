@@ -208,6 +208,20 @@ const INSERT_BUTTONS: ToolbarButton[] = [
     content: <ImageIcon />,
     run: insertImageByUpload,
   },
+  {
+    kind: "command",
+    id: "table",
+    label: "표",
+    content: <TableIcon />,
+    // 행·열 조작은 표 위 우클릭 메뉴에 있다. 표 안에서만 쓸 수 있는 명령을
+    // 툴바에 늘어놓으면 나머지 시간 내내 잠긴 버튼이 자리를 차지한다.
+    run: (editor) =>
+      editor
+        .chain()
+        .focus()
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
+  },
   { kind: "link", id: "link" },
 ];
 
@@ -800,6 +814,26 @@ function LinkIcon() {
       <path d="M15 7h3a5 5 0 0 1 0 10h-3" />
       <path d="M9 17H6a5 5 0 0 1 0-10h3" />
       <line x1="8" y1="12" x2="16" y2="12" />
+    </svg>
+  );
+}
+
+function TableIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="9" y1="9" x2="9" y2="20" />
     </svg>
   );
 }

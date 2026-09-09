@@ -91,6 +91,18 @@ const SLASH_ITEMS: SlashCommandItem[] = [
       editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
   {
+    title: "표",
+    keywords: ["table", "표", "grid"],
+    // 첫 행이 헤더인 3×3. GFM 표는 헤더 행이 없으면 문법 자체가 성립하지 않는다.
+    run: (editor, range) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
+  },
+  {
     title: "이미지",
     keywords: ["image", "img", "이미지"],
     run: (editor, range) => {

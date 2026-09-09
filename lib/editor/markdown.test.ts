@@ -961,3 +961,161 @@ describe("문단 정렬 - <div style={{ textAlign }}>", () => {
     expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 });
+
+describe("표 - GFM 파이프 표", () => {
+  // 셀은 어디서나 같은 모양이라(정렬 attr + 문단 하나) 기대값을 한 곳에서 짓는다
+  const cell = (
+    type: "tableHeader" | "tableCell",
+    align: "left" | "center" | "right" | null,
+    text: string,
+  ) =>
+    ({
+      type,
+      attrs: { align },
+      ...(text === ""
+        ? {}
+        : {
+            content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+          }),
+    }) as JSONContent;
+
+  it("헤더 한 줄과 본문 두 줄을 읽는다", () => {
+    const md = [
+      "| 이름 | 값 |",
+      "| - | - |",
+      "| a | 1 |",
+      "| b | 2 |",
+      "",
+    ].join("\n");
+
+    expect(markdownToDoc(md)).toEqual({
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                cell("tableHeader", null, "이름"),
+                cell("tableHeader", null, "값"),
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                cell("tableCell", null, "a"),
+                cell("tableCell", null, "1"),
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                cell("tableCell", null, "b"),
+                cell("tableCell", null, "2"),
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("표를 파이프 표기로 직렬화한다", () => {
+    const doc: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                cell("tableHeader", null, "이름"),
+                cell("tableHeader", null, "값"),
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                cell("tableCell", null, "a"),
+                cell("tableCell", null, "1"),
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(docToMarkdown(doc)).toBe("| 이름 | 값 |\n| - | - |\n| a | 1 |\n");
+  });
+
+  it("열 정렬을 셀 attr 로 읽고 구분선으로 되돌려 쓴다", () => {
+    const md = [
+      "| 왼 | 가운데 | 오른 |",
+      "| :- | :-: | -: |",
+      "| a | b | c |",
+      "",
+    ].join("\n");
+    const doc = markdownToDoc(md);
+
+    // 정렬은 mdast 에서 열 단위지만 Tiptap 에는 열 노드가 없다 — 셀마다 실린다.
+    expect(doc.content?.[0].content?.[1].content).toEqual([
+      cell("tableCell", "left", "a"),
+      cell("tableCell", "center", "b"),
+      cell("tableCell", "right", "c"),
+    ]);
+    expect(docToMarkdown(doc)).toBe(md);
+  });
+
+  it("셀 안의 굵게·링크·인라인 코드를 보존한다", () => {
+    const md = [
+      "| 서식 | 값 |",
+      "| - | - |",
+      "| **굵게** | `코드` |",
+      "| [링크](/a) | 보통 |",
+      "",
+    ].join("\n");
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+
+  it("셀 안의 파이프 문자를 이스케이프해 왕복시킨다", () => {
+    const md = ["| 표기 | 뜻 |", "| - | - |", "| a \\| b | 또는 |", ""].join(
+      "\n",
+    );
+    const doc = markdownToDoc(md);
+
+    // 읽을 때는 이스케이프가 풀린 글자 그대로여야 한다. 그대로 두면 편집 중
+    // 백슬래시가 본문에 보이고, 저장 때 한 번 더 이스케이프된다.
+    expect(doc.content?.[0].content?.[1].content?.[0]).toEqual(
+      cell("tableCell", null, "a | b"),
+    );
+    expect(docToMarkdown(doc)).toBe(md);
+  });
+
+  it("빈 셀은 내용 없는 문단 하나로 읽고 빈 칸으로 되돌려 쓴다", () => {
+    const md = ["| 이름 | 값 |", "| - | - |", "| a | |", ""].join("\n");
+    const doc = markdownToDoc(md);
+
+    expect(doc.content?.[0].content?.[1].content?.[1]).toEqual({
+      type: "tableCell",
+      attrs: { align: null },
+      content: [{ type: "paragraph" }],
+    });
+    expect(docToMarkdown(doc)).toBe(md);
+  });
+
+  it("JSX <table> 은 승격하지 않고 mdxBlock 으로 남긴다", () => {
+    // 파이프 표만 편집 대상이다. JSX 표는 속성·중첩 컴포넌트를 담을 수 있어
+    // 파이프 표기로 옮기면 원문이 깎인다.
+    const md =
+      "<table>\n  <tbody>\n    <tr>\n      <td>a</td>\n    </tr>\n  </tbody>\n</table>";
+
+    expect(markdownToDoc(`${md}\n`)).toEqual({
+      type: "doc",
+      content: [{ type: "mdxBlock", attrs: { value: md } }],
+    });
+    expect(docToMarkdown(markdownToDoc(`${md}\n`))).toBe(`${md}\n`);
+  });
+});
