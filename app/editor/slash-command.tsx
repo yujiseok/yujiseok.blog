@@ -22,19 +22,34 @@ const SLASH_ITEMS: SlashCommandItem[] = [
     title: "제목 1",
     keywords: ["heading1", "h1", "제목"],
     run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run(),
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 1 })
+        .run(),
   },
   {
     title: "제목 2",
     keywords: ["heading2", "h2", "제목"],
     run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run(),
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 2 })
+        .run(),
   },
   {
     title: "제목 3",
     keywords: ["heading3", "h3", "제목"],
     run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run(),
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setNode("heading", { level: 3 })
+        .run(),
   },
   {
     title: "본문",
@@ -163,7 +178,10 @@ function SlashMenu({ items, command, ref }: SlashMenuProps) {
 }
 
 type SlashCommandOptions = {
-  suggestion: Omit<SuggestionOptions<SlashCommandItem, SlashCommandItem>, "editor">;
+  suggestion: Omit<
+    SuggestionOptions<SlashCommandItem, SlashCommandItem>,
+    "editor"
+  >;
 };
 
 // "/" 입력 시 뜨는 노션 스타일 블록 메뉴. 목록·포지셔닝은 @tiptap/suggestion의

@@ -2,13 +2,34 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import EditorClient from "./editor-client";
-import { listPosts } from "./actions";
+import { listPosts, readPost } from "./actions";
+import type { LoadedPostInput } from "./draft";
 
 // 로컬 도구라 스트리밍 껍데기를 먼저 보낼 이유가 없다. Suspense로 감싸는 대신
 // 블로킹 렌더를 허용해 목록을 갖춘 완성된 화면을 한 번에 준다.
 export const instant = false;
 
-export default async function EditorPage() {
+/**
+ * 글 페이지의 "수정" 버튼이 /editor?post=<slug>로 보낸다. 클라이언트에서 다시
+ * 왕복하지 않도록 여기서 미리 읽어 넘긴다. 없거나 못 읽는 슬러그면 조용히
+ * 빈 화면으로 연다 — 주소를 손으로 고쳤을 뿐인데 도구가 막히면 곤란하다.
+ */
+async function loadRequestedPost(
+  slug: string | undefined,
+): Promise<LoadedPostInput | null> {
+  if (!slug) return null;
+
+  try {
+    const { metadata, doc, lossless } = await readPost(slug);
+    return { slug, metadata, doc, lossless };
+  } catch {
+    return null;
+  }
+}
+
+export default async function EditorPage(props: {
+  searchParams: Promise<{ post?: string }>;
+}) {
   // 로컬 dev 전용 글쓰기 도구다. 프로덕션 빌드에는 아예 없는 라우트로 취급한다
   // — Server Action 쪽 가드는 actions.ts에서 별도로 다시 건다.
   // cacheComponents가 켜져 있어 세그먼트 설정(dynamic = "force-dynamic")은 쓸 수
@@ -20,11 +41,15 @@ export default async function EditorPage() {
     notFound();
   }
 
-  const posts = await listPosts();
+  const { post } = await props.searchParams;
+  const [posts, initialPost] = await Promise.all([
+    listPosts(),
+    loadRequestedPost(post),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-2 py-10 sm:px-4">
-      <EditorClient initialPosts={posts} />
+      <EditorClient initialPosts={posts} initialPost={initialPost} />
     </main>
   );
 }

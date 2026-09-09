@@ -27,7 +27,6 @@
   },
   "devDependencies": {
     "@base-ui/react": "^1.8.0",
-    "@date-fns/tz": "^1.5.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tiptap/core": "3.31.3",
@@ -46,6 +45,7 @@
     "mdast-util-to-string": "^4.0.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.7.4",
+    "react-day-picker": "^10.0.1",
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
     "remark-parse": "^11.0.0",

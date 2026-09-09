@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
@@ -87,7 +88,19 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
           <h4 className="text-gray-700 dark:text-gray-400">
             {writing.metadata.summary}
           </h4>
-          <small>{writing.metadata.publishedAt}</small>
+          <div className="flex items-center gap-3">
+            <small>{writing.metadata.publishedAt}</small>
+            {/* 로컬 글쓰기 도구로 가는 지름길. 프로덕션 빌드에선 NODE_ENV가
+                상수로 인라인돼 이 분기째로 사라진다. */}
+            {process.env.NODE_ENV === "development" && (
+              <Link
+                href={`/editor?post=${params.slug}`}
+                className="text-xs underline decoration-dashed underline-offset-2"
+              >
+                수정
+              </Link>
+            )}
+          </div>
         </div>
 
         <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all max-w-2xl break-keep">
