@@ -13,10 +13,11 @@ const METADATA: PostMetadata = {
   summary: "요약",
 };
 
-const DOC = {
+// savePost는 doc을 JSON 문자열로 받는다 — 이유는 actions.ts의 parseDocument 참고
+const DOC = JSON.stringify({
   type: "doc",
   content: [{ type: "paragraph", content: [{ type: "text", text: "본문" }] }],
-};
+});
 
 let tmpDir: string;
 let writingDir: string;
@@ -64,7 +65,8 @@ describe("savePost", () => {
     const reopened = await readPost("round-trip");
 
     expect(reopened.metadata).toEqual(METADATA);
-    expect(reopened.doc).toEqual(DOC);
+    // readPost는 문자열이 아니라 문서 객체를 돌려준다 — 저장 방향만 문자열이다
+    expect(reopened.doc).toEqual(JSON.parse(DOC));
   });
 
   it.each(["../evil", "a/b", "/etc/passwd", "..", ".hidden", "", "Upper"])(
@@ -148,7 +150,7 @@ describe("savePost", () => {
       savePost({
         slug: "bad-doc",
         metadata: METADATA,
-        doc: { type: "paragraph" } as never,
+        doc: JSON.stringify({ type: "paragraph" }),
       }),
     ).rejects.toThrow();
   });

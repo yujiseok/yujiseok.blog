@@ -58,9 +58,27 @@ function assertValidMetadata(metadata: PostMetadata) {
   }
 }
 
-// 클라이언트에서 넘어오는 doc은 신뢰 경계 밖의 입력이다. 최소한 Tiptap
-// 문서의 형태는 갖췄는지 확인하고 아니면 즉시 던진다.
-function assertDocument(doc: unknown): asserts doc is JSONContent {
+/**
+ * doc은 객체가 아니라 JSON 문자열로 받는다. ProseMirror의 node.attrs는
+ * Object.create(null)로 만들어지고 toJSON()이 그 객체를 참조 그대로
+ * 내보내는데, React Flight는 프로토타입이 Object.prototype이 아닌 객체를
+ * "단순 객체"로 보지 않아 Server Action 인자로 넘길 때 임시 참조로 바꾼다.
+ * 그러면 서버에서 attrs.language를 읽는 순간
+ * "Cannot access language on the server"로 죽는다. 문자열로 받으면 그 경계를
+ * 아예 만들지 않고, 타입이 string이라 호출부가 실수로 되돌릴 수도 없다.
+ *
+ * 클라이언트에서 넘어오는 값은 신뢰 경계 밖의 입력이기도 하다. 최소한 Tiptap
+ * 문서의 형태는 갖췄는지 확인하고 아니면 즉시 던진다.
+ */
+function parseDocument(json: string): JSONContent {
+  const doc: unknown = (() => {
+    try {
+      return JSON.parse(json);
+    } catch {
+      throw new Error("문서 형식이 올바르지 않습니다.");
+    }
+  })();
+
   if (
     !doc ||
     typeof doc !== "object" ||
@@ -68,6 +86,8 @@ function assertDocument(doc: unknown): asserts doc is JSONContent {
   ) {
     throw new Error("문서 형식이 올바르지 않습니다.");
   }
+
+  return doc as JSONContent;
 }
 
 export interface PostListItem {
@@ -117,7 +137,8 @@ export async function readPost(slug: string): Promise<ReadPostResult> {
 export interface SavePostInput {
   slug: string;
   metadata: PostMetadata;
-  doc: JSONContent;
+  /** Tiptap 문서를 JSON.stringify한 것. 문자열인 이유는 parseDocument 참고 */
+  doc: string;
   /**
    * 이미 있는 글을 고쳐 쓸 때만 켠다. 기본값이 "덮어쓰지 않음"인 게 핵심이다 —
    * 호출부가 이 값을 빠뜨리면 글이 조용히 사라지는 대신 저장이 눈에 띄게 실패한다.
@@ -136,7 +157,7 @@ export async function savePost(input: SavePostInput): Promise<{ ok: true }> {
 
   const filePath = resolvePostPath(input.slug);
   assertValidMetadata(input.metadata);
-  assertDocument(input.doc);
+  const doc = parseDocument(input.doc);
 
   if (!input.overwrite && (await exists(filePath))) {
     throw new Error(`이미 있는 슬러그입니다: ${input.slug}`);
@@ -144,7 +165,7 @@ export async function savePost(input: SavePostInput): Promise<{ ok: true }> {
 
   const document: PostDocument = {
     metadata: input.metadata,
-    body: docToMarkdown(input.doc),
+    body: docToMarkdown(doc),
   };
 
   await fs.writeFile(filePath, serializePost(document), "utf8");

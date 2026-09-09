@@ -146,7 +146,9 @@ export default function EditorClient({
         await savePost({
           slug: draft.slug,
           metadata,
-          doc: editor.getJSON(),
+          // 객체 그대로 넘기면 ProseMirror의 attrs가 임시 참조로 바뀐다.
+          // 자세한 이유는 actions.ts의 parseDocument 주석에 있다.
+          doc: JSON.stringify(editor.getJSON()),
           overwrite: isOverwrite(draft),
         });
         dispatch({ type: "saved", slug: draft.slug, metadata });
