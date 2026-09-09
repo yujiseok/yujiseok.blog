@@ -6,7 +6,7 @@ import { isValidSlug, toSlug, type PostMetadata } from "@/lib/editor/document";
  * 파일로 존재하는 글의 원본. null이면 아직 파일이 없는 새 글이다.
  * 편집 중인 값(title 등)과 따로 들고 있는 이유는 아래 draftMetadata 참고.
  */
-export interface LoadedPost {
+interface LoadedPost {
   slug: string;
   metadata: PostMetadata;
   /** 에디터를 거쳐도 본문이 복원되는지. false면 저장이 원문을 훼손한다 */

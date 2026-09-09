@@ -21,7 +21,7 @@ const useInViewAnimation = (amount = 1) => {
   return { ref, isVisible };
 };
 
-export const sentenceVariants: Variants = {
+const sentenceVariants: Variants = {
   hidden: {
     opacity: 0,
   },
@@ -31,7 +31,7 @@ export const sentenceVariants: Variants = {
   },
 };
 
-export const charVariants: Variants = {
+const charVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { opacity: { duration: 0.1 } } },
 };

@@ -161,5 +161,3 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
     </aside>
   );
 };
-
-export default TableOfContents;

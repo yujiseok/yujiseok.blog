@@ -19,7 +19,7 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
  * 기본값)과 어긋나고, 자체 키맵까지 달아 온다.
  */
 
-export const ALIGNS = ["left", "center", "right"] as const;
+const ALIGNS = ["left", "center", "right"] as const;
 
 export type Align = (typeof ALIGNS)[number];
 
