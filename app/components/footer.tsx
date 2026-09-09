@@ -11,6 +11,10 @@ function Footer() {
       <div className="mt-10 flex w-full justify-between gap-4 py-6">
         <Link href="/">© {year} 유지석</Link>
         <div className="flex items-center gap-3">
+          {/* 글 상세의 뒤로가기를 없앴으므로 목록으로 가는 길은 여기뿐이다 */}
+          <Link href="/posts" className="underline underline-offset-2">
+            Posts
+          </Link>
           <ExternalLink
             href="https://github.com/yujiseok"
             className="underline underline-offset-2"

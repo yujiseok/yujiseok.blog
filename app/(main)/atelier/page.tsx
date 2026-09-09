@@ -1,6 +1,5 @@
 import GridItem from "@/app/components/atelier/gridItem";
 import BlurContainer from "@/app/components/blurContainer";
-import FixedBackLink from "@/app/components/fixedBackLink";
 import { getAllAtelier } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
@@ -24,7 +23,6 @@ const page = async () => {
 
   return (
     <>
-      <FixedBackLink href="/" />
       <BlurContainer className="grid-cols-2 gap-2 md:gap-4">
         {atelier.map(({ metadata, slug }) => (
           <GridItem key={slug} metadata={metadata} slug={slug} />

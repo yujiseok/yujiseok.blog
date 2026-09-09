@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
 import BlurContainer from "@/app/components/blurContainer";
-import FixedBackLink from "@/app/components/fixedBackLink";
 import { TableOfContents } from "@/app/components/tableOfContents";
 import { getToc } from "@/lib/toc";
 import { formatPostDate } from "@/app/components/postRow";
@@ -80,7 +79,6 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
 
   return (
     <>
-      <FixedBackLink href="/posts" />
       {/* 목차는 최상위 제목만 보여준다. 하위까지 펴면 긴 글에서 목차가 본문보다
           길어지고, 훑는 용도로는 큰 단락만 있으면 충분하다. */}
       <TableOfContents entries={toc.filter(({ indent }) => indent === 0)} />

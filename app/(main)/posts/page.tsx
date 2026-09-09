@@ -1,5 +1,4 @@
 import BlurContainer from "@/app/components/blurContainer";
-import FixedBackLink from "@/app/components/fixedBackLink";
 import PostRow from "@/app/components/postRow";
 import { getAllWritings } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
@@ -27,7 +26,6 @@ async function PostPage() {
 
   return (
     <>
-      <FixedBackLink href="/" />
       <BlurContainer className="gap-4">
         {/* 목록 행의 글 제목이 h2다. h1이 없으면 계층이 비므로 크기가 아니라
             존재가 필요하다 — 라벨 크기로만 둔다. */}
