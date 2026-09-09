@@ -102,10 +102,12 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
                   aria-current={active ? "location" : undefined}
                   className={cn(
                     // 목차는 최상위 제목만 받으므로 들여쓰기 단계가 없다
-                    "block border-l py-1.5 pl-4 leading-snug break-keep transition-colors",
+                    "block py-1.5 leading-snug break-keep transition-colors",
+                    // 활성은 색만으로 구분한다. 왼쪽 세로선은 목차를 상자처럼
+                    // 가둬 보여 뺐다.
                     active
-                      ? "border-black text-black dark:border-white dark:text-white"
-                      : "border-neutral-200 text-neutral-500 hover:text-black dark:border-neutral-800 dark:text-neutral-400 dark:hover:text-white",
+                      ? "text-black dark:text-white"
+                      : "text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white",
                   )}
                 >
                   {text}
