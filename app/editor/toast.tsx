@@ -4,6 +4,9 @@ import { Toast } from "@base-ui/react/toast";
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { cn } from "@/lib/cn";
+import { POPUP } from "./ui";
+
 /**
  * 저장 결과를 알리는 토스트. 성공하면 방금 쓴 글로 바로 갈 수 있어야 해서
  * slug를 같이 실어 보낸다.
@@ -93,7 +96,10 @@ function ToastList() {
       <Toast.Root
         key={toast.id}
         toast={toast}
-        className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg data-ending-style:opacity-0 data-starting-style:opacity-0 dark:border-neutral-800 dark:bg-neutral-900"
+        className={cn(
+          POPUP,
+          "p-3 data-ending-style:opacity-0 data-starting-style:opacity-0",
+        )}
       >
         <Toast.Content className="flex items-start gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-1">

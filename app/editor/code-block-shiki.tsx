@@ -1,6 +1,9 @@
 "use client";
 
 import { Select } from "@base-ui/react/select";
+
+import { cn } from "@/lib/cn";
+import { ICON_BUTTON, MENU_ITEM, POPUP, POSITIONER } from "./ui";
 import { findChildren } from "@tiptap/core";
 import { CodeBlock } from "@tiptap/extension-code-block";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
@@ -240,14 +243,13 @@ export const CodeBlockShiki = CodeBlock.extend({
   },
 });
 
-// app/editor/toolbar.tsx의 Select를 그대로 따른다. 트리거만 색이 다른데,
-// 툴바와 달리 어두운 pre 배경 위에 얹히기 때문이다.
-const triggerClass =
-  "flex h-6 min-w-16 shrink-0 items-center justify-between gap-1 rounded-md px-1.5 font-mono text-[11px] text-neutral-300 transition-colors hover:bg-white/10";
-const popupClass =
-  "min-w-[var(--anchor-width)] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-800 dark:bg-neutral-900";
-const itemClass =
-  "flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 font-mono text-xs text-neutral-700 outline-none select-none data-highlighted:bg-black/5 dark:text-neutral-300 dark:data-highlighted:bg-neutral-200/10";
+// 어두운 pre 배경 위에 얹히므로 글자·호버 색만 뒤집어 쓴다.
+const triggerClass = cn(
+  ICON_BUTTON,
+  "h-6 min-w-16 justify-between gap-1 font-mono text-[11px] text-neutral-300 hover:bg-white/10",
+);
+const popupClass = cn(POPUP, "min-w-[var(--anchor-width)] overflow-hidden p-1");
+const itemClass = cn(MENU_ITEM, "font-mono text-xs");
 
 function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
   const language = readLanguage(node.attrs);
@@ -276,7 +278,7 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner sideOffset={4} className="z-20 outline-none">
+            <Select.Positioner sideOffset={4} className={POSITIONER}>
               <Select.Popup className={popupClass}>
                 <Select.List>
                   {LANGUAGE_OPTIONS.map((option) => (

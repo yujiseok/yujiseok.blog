@@ -8,6 +8,7 @@ import Suggestion, {
 import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 
 import { cn } from "@/lib/cn";
+import { MENU_ITEM, POPUP } from "./ui";
 
 import { insertImageByUpload } from "./image-upload";
 
@@ -152,21 +153,24 @@ function SlashMenu({ items, command, ref }: SlashMenuProps) {
 
   if (items.length === 0) {
     return (
-      <div className="w-56 rounded-lg border border-neutral-200 bg-white p-2 text-sm text-neutral-500 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+      <div className={cn(POPUP, "w-56 p-2 text-sm text-neutral-500")}>
         일치하는 블록이 없습니다
       </div>
     );
   }
 
   return (
-    <div className="w-56 overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+    <div className={cn(POPUP, "w-56 overflow-hidden p-1")}>
       {items.map((item, index) => (
         <button
           key={item.title}
           type="button"
           onClick={() => command(item)}
           className={cn(
-            "block w-full rounded-md px-2 py-1.5 text-left text-sm text-neutral-700 dark:text-neutral-300",
+            MENU_ITEM,
+            "w-full",
+            // 슬래시 메뉴는 포인터가 아니라 키보드로 고르는 자리라
+            // data-highlighted 대신 선택 인덱스로 직접 표시한다.
             index === selected && "bg-black/5 dark:bg-neutral-200/10",
           )}
         >

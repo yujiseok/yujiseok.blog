@@ -12,6 +12,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useRouter } from "next/navigation";
 import { useActionState, useReducer, useState, useTransition } from "react";
 
+import { cn } from "@/lib/cn";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
@@ -30,6 +31,16 @@ import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
 import { EditorToastViewport, useSaveToast } from "./toast";
 import { EditorToolbar } from "./toolbar";
+import {
+  ACTION_BUTTON,
+  CONTROL,
+  SURFACE,
+  DIALOG_BUTTON,
+  FIELD,
+  MENU_ITEM,
+  POPUP,
+  POSITIONER,
+} from "./ui";
 
 // toISOString()은 UTC로 변환한다 — KST 자정 근처에 새 글을 쓰면 발행일이
 // 하루 밀리거나 당겨진다. date-fns의 format은 로컬 기준이다.
@@ -181,7 +192,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         <button
           type="button"
           onClick={() => startLoadTransition(() => router.push("/editor"))}
-          className="shrink-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium dark:border-neutral-800"
+          className={cn(CONTROL, "shrink-0 font-medium")}
         >
           + 새 글
         </button>
@@ -208,7 +219,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
               onChange={(event) =>
                 dispatch({ type: "title", value: event.target.value })
               }
-              className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none dark:border-neutral-800"
+              className={FIELD}
             />
           </label>
 
@@ -225,7 +236,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
                   ? "slug-hint"
                   : undefined
               }
-              className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none dark:border-neutral-800"
+              className={FIELD}
             />
             {slugNeedsManualInput(draft) && (
               <span
@@ -258,7 +269,8 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
                 })
               }
               rows={2}
-              className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none dark:border-neutral-800"
+              // 여러 줄이라 높이만 CONTROL에서 떼어내고 나머지는 그대로 쓴다
+              className={cn(FIELD, "h-auto py-2")}
             />
           </label>
 
@@ -276,7 +288,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
           </div>
         </div>
 
-        <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-800">
+        <div className={cn(SURFACE, "relative")}>
           <EditorToolbar editor={editor} slug={draft.slug} />
           {/* DragHandle의 기본 배치는 left-start라 핸들 오른쪽 끝이 블록 왼쪽
               끝에 딱 붙고 위로 정렬된다. 오른쪽 여백으로 본문과 떼어 놓고,
@@ -299,7 +311,10 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
             <button
               type="submit"
               disabled={isSaving || !canSave(draft)}
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-40 dark:bg-white dark:text-black"
+              className={cn(
+                ACTION_BUTTON,
+                "bg-black text-white dark:bg-white dark:text-black",
+              )}
             >
               {isSaving ? "저장 중..." : "저장"}
             </button>
@@ -338,14 +353,22 @@ const DeletePostDialog = ({
       // form 안이 아니지만, 나중에 옮겨도 submit으로 새지 않게 명시한다
       type="button"
       disabled={disabled}
-      className="rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-40 dark:text-red-400"
+      className={cn(
+        ACTION_BUTTON,
+        "text-red-600 hover:bg-red-500/10 dark:text-red-400",
+      )}
     >
       {disabled ? "삭제 중..." : "삭제"}
     </AlertDialog.Trigger>
 
     <AlertDialog.Portal>
       <AlertDialog.Backdrop className="fixed inset-0 z-40 bg-black/40 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-      <AlertDialog.Popup className="fixed top-1/2 left-1/2 z-50 flex w-80 max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
+      <AlertDialog.Popup
+        className={cn(
+          POPUP,
+          "fixed top-1/2 left-1/2 z-50 flex w-80 max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 p-4",
+        )}
+      >
         <AlertDialog.Title className="text-sm font-medium">
           이 글을 지울까요?
         </AlertDialog.Title>
@@ -354,12 +377,20 @@ const DeletePostDialog = ({
           이미지는 남습니다.
         </AlertDialog.Description>
         <div className="flex justify-end gap-2">
-          <AlertDialog.Close className="rounded-lg px-3 py-1.5 text-sm text-neutral-600 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-neutral-200/10">
+          <AlertDialog.Close
+            className={cn(
+              DIALOG_BUTTON,
+              "text-neutral-600 hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-neutral-200/10",
+            )}
+          >
             취소
           </AlertDialog.Close>
           <AlertDialog.Close
             onClick={onConfirm}
-            className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            className={cn(
+              DIALOG_BUTTON,
+              "bg-red-600 text-white hover:bg-red-700",
+            )}
           >
             삭제
           </AlertDialog.Close>
@@ -401,7 +432,7 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
         <Combobox.Input
           placeholder="글 열기..."
           aria-label="글 열기"
-          className="w-full rounded-lg border border-neutral-200 bg-transparent py-2 pr-8 pl-3 text-sm focus:outline-none dark:border-neutral-800"
+          className={cn(FIELD, "w-full pr-8")}
         />
         <Combobox.Trigger
           aria-label="목록 열기"
@@ -412,8 +443,13 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
       </Combobox.InputGroup>
 
       <Combobox.Portal>
-        <Combobox.Positioner sideOffset={4} className="z-20 outline-none">
-          <Combobox.Popup className="w-[var(--anchor-width)] max-w-[var(--available-width)] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+        <Combobox.Positioner sideOffset={4} className={POSITIONER}>
+          <Combobox.Popup
+            className={cn(
+              POPUP,
+              "w-[var(--anchor-width)] max-w-[var(--available-width)] overflow-hidden p-1",
+            )}
+          >
             <Combobox.Empty className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
               해당하는 글이 없습니다.
             </Combobox.Empty>
@@ -422,7 +458,7 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
                 <Combobox.Item
                   key={option.value}
                   value={option}
-                  className="cursor-default truncate rounded-md px-3 py-2 text-sm text-neutral-700 outline-none select-none data-highlighted:bg-black/5 dark:text-neutral-300 dark:data-highlighted:bg-neutral-200/10"
+                  className={cn(MENU_ITEM, "truncate")}
                 >
                   {option.label}
                 </Combobox.Item>

@@ -15,6 +15,16 @@ import {
 } from "react";
 
 import { cn } from "@/lib/cn";
+import {
+  ICON_BUTTON,
+  KBD,
+  MENU_ITEM,
+  POPUP,
+  POSITIONER,
+  PRESSED,
+  TOOLTIP,
+  UNPRESSED,
+} from "./ui";
 
 import { insertImageByUpload, setUploadSlug } from "./image-upload";
 
@@ -349,16 +359,6 @@ export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
   );
 }
 
-const buttonBaseClass =
-  "flex h-7 min-w-7 shrink-0 items-center justify-center rounded-md px-1.5 text-xs text-neutral-700 transition-colors disabled:pointer-events-none disabled:opacity-40 dark:text-neutral-300";
-const buttonActiveClass = "bg-black text-white dark:bg-white dark:text-black";
-const buttonInactiveClass = "hover:bg-black/5 dark:hover:bg-neutral-200/10";
-
-const tooltipPopupClass =
-  "flex items-center gap-1.5 rounded-md bg-neutral-900 px-2 py-1 text-[11px] leading-none font-medium text-white shadow-md dark:bg-neutral-100 dark:text-black";
-const kbdClass =
-  "rounded border border-white/25 px-1 py-0.5 font-mono text-[10px] leading-none dark:border-black/20";
-
 interface ToolbarButtonItemProps {
   button: ButtonConfig;
   editor: Editor | null;
@@ -402,10 +402,7 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
             // blur되어 다음 커맨드가 잘못된(또는 사라진) selection에 적용된다.
             onMouseDown={(event) => event.preventDefault()}
             onClick={handleClick}
-            className={cn(
-              buttonBaseClass,
-              isActive ? buttonActiveClass : buttonInactiveClass,
-            )}
+            className={cn(ICON_BUTTON, isActive ? PRESSED : UNPRESSED)}
           />
         }
       >
@@ -413,11 +410,9 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner sideOffset={8}>
-          <Tooltip.Popup className={tooltipPopupClass}>
+          <Tooltip.Popup className={TOOLTIP}>
             {button.label}
-            {button.shortcut && (
-              <kbd className={kbdClass}>{button.shortcut}</kbd>
-            )}
+            {button.shortcut && <kbd className={KBD}>{button.shortcut}</kbd>}
           </Tooltip.Popup>
         </Tooltip.Positioner>
       </Tooltip.Portal>
@@ -497,10 +492,7 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
                   // 다른 버튼과 같은 이유로 mousedown을 막는다 — 여기서
                   // 에디터가 blur되면 팝오버를 열기도 전에 selection을 잃는다.
                   onMouseDown={(event) => event.preventDefault()}
-                  className={cn(
-                    buttonBaseClass,
-                    state.link ? buttonActiveClass : buttonInactiveClass,
-                  )}
+                  className={cn(ICON_BUTTON, state.link ? PRESSED : UNPRESSED)}
                 />
               }
             />
@@ -510,22 +502,15 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner sideOffset={8}>
-            <Tooltip.Popup className={tooltipPopupClass}>링크</Tooltip.Popup>
+            <Tooltip.Popup className={TOOLTIP}>링크</Tooltip.Popup>
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>
       <Popover.Portal>
-        <Popover.Positioner
-          align="start"
-          sideOffset={8}
-          className="z-20 outline-none"
-        >
+        <Popover.Positioner align="start" sideOffset={8} className={POSITIONER}>
           {/* 닫힐 때 Base UI가 트리거로 포커스를 되돌리면 위에서 건 에디터
               포커스를 도로 뺏는다. 포커스 복귀는 이 컴포넌트가 직접 맡는다. */}
-          <Popover.Popup
-            finalFocus={false}
-            className="rounded-lg border border-neutral-200 bg-white p-2 shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
-          >
+          <Popover.Popup finalFocus={false} className={cn(POPUP, "p-2")}>
             <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
               <input
                 // type="url"로 두면 /posts/foo 같은 내부 경로가 네이티브 검증에
@@ -541,7 +526,7 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
               />
               <button
                 type="submit"
-                className={cn(buttonBaseClass, buttonInactiveClass, "px-2")}
+                className={cn(ICON_BUTTON, UNPRESSED, "px-2")}
               >
                 적용
               </button>
@@ -550,7 +535,7 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
                 <button
                   type="button"
                   onClick={() => applyLink("")}
-                  className={cn(buttonBaseClass, buttonInactiveClass, "px-2")}
+                  className={cn(ICON_BUTTON, UNPRESSED, "px-2")}
                 >
                   해제
                 </button>
@@ -591,8 +576,8 @@ function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
         aria-label="블록 종류"
         disabled={!editor}
         className={cn(
-          buttonBaseClass,
-          buttonInactiveClass,
+          ICON_BUTTON,
+          UNPRESSED,
           "w-24 min-w-24 justify-between gap-1 px-2",
         )}
       >
@@ -607,8 +592,13 @@ function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
         </Select.Icon>
       </Toolbar.Button>
       <Select.Portal>
-        <Select.Positioner sideOffset={4} className="z-20 outline-none">
-          <Select.Popup className="min-w-[var(--anchor-width)] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+        <Select.Positioner sideOffset={4} className={POSITIONER}>
+          <Select.Popup
+            className={cn(
+              POPUP,
+              "min-w-[var(--anchor-width)] overflow-hidden p-1",
+            )}
+          >
             <Select.List>
               {BLOCK_OPTIONS.map((option) => (
                 <Select.Item

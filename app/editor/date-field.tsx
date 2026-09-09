@@ -9,6 +9,7 @@ import { ko } from "react-day-picker/locale";
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
+import { CONTROL, POPUP, POSITIONER } from "./ui";
 
 const ISO_DATE = "yyyy-MM-dd";
 // app/editor/actions.ts의 assertValidMetadata와 같은 형식을 강제한다 — 여기서
@@ -70,7 +71,10 @@ export function DateField({ value, onChange, id }: DateFieldProps) {
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger
         id={id}
-        className="flex w-fit items-center gap-2 rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-900 transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:border-neutral-800 dark:text-white dark:hover:bg-neutral-200/10 dark:focus-visible:outline-white"
+        className={cn(
+          CONTROL,
+          "flex w-fit items-center gap-2 text-neutral-900 transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:text-white dark:hover:bg-neutral-200/10 dark:focus-visible:outline-white",
+        )}
       >
         <CalendarIcon />
         <span
@@ -82,12 +86,8 @@ export function DateField({ value, onChange, id }: DateFieldProps) {
         </span>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Positioner
-          align="start"
-          sideOffset={4}
-          className="z-20 outline-none"
-        >
-          <Popover.Popup className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
+        <Popover.Positioner align="start" sideOffset={4} className={POSITIONER}>
+          <Popover.Popup className={cn(POPUP, "p-3")}>
             <DayPicker
               mode="single"
               // 발행일은 비울 수 없는 값이다. required면 이미 선택된 날을 다시
