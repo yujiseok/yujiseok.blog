@@ -68,12 +68,6 @@ const readImageSize = async (file: File): Promise<ImageSize | null> => {
   }
 };
 
-/**
- * 파일명은 사용자가 이 이미지에 붙인 유일한 설명이다. alt를 비워 두면 저장된
- * MDX가 ![](...)로 남아 나중에 채울 자리조차 눈에 띄지 않는다.
- */
-const altFromFileName = (name: string) => name.replace(/\.[^.]+$/, "").trim();
-
 const uploadImage = async (file: File, slug: string): Promise<string> => {
   const body = new FormData();
   body.append("slug", slug);
@@ -120,13 +114,15 @@ export async function insertImageByUpload(editor: Editor): Promise<void> {
       readImageSize(file),
       uploadImage(file, slug),
     ]);
-    const alt = altFromFileName(file.name);
+    // alt는 여기서 짓지 않는다. "screenshot-2026" 같은 파일명은 이미지 설명이
+    // 아니라 파일 이름이고, 그게 alt로 들어가면 스크린리더가 그대로 읽는다.
+    // 비워 두면 노드뷰(image-node.tsx)가 채우라고 표시한다.
     // 모르는 값은 attr에 넣지 않는다 — width/height의 기본값이 이미 null이고,
     // 없는 크기를 0이나 문자열로 채우면 저장 쪽이 그걸 진짜 크기로 읽는다.
     editor
       .chain()
       .focus()
-      .setImage({ src, ...(alt ? { alt } : {}), ...(size ?? {}) })
+      .setImage({ src, ...(size ?? {}) })
       .run();
   } catch (error) {
     reportEditorError(

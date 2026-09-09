@@ -7,6 +7,7 @@ import {
   type ReactNodeViewProps,
 } from "@tiptap/react";
 import {
+  useId,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -15,6 +16,7 @@ import {
 
 import { cn } from "@/lib/cn";
 import { toAlign, type Align } from "./align";
+import { FIELD } from "./ui";
 
 /*
  * 기본 Image 익스텐션은 src/alt/title만 다루고 크기·정렬은 손댈 수 없다.
@@ -101,11 +103,24 @@ const readAttrs = (attrs: Record<string, unknown>): ImageAttrs => ({
   align: toAlign(attrs.align),
 });
 
+// 래퍼는 이미지와 alt 입력칸을 위아래로 쌓는 세로 흐름이라, 가로 위치는
+// 교차축(items-*)이 정한다 — 한 칸짜리였을 때의 justify-*와 결과는 같다.
 const ALIGN_CLASS: Record<Align, string> = {
-  left: "justify-start",
-  center: "justify-center",
-  right: "justify-end",
+  left: "items-start",
+  center: "items-center",
+  right: "items-end",
 };
+
+const ALT_FIELD = cn(
+  FIELD,
+  // FIELD는 포커스 링을 컨테이너에 맡기는데 여기엔 감싸는 컨테이너가 없다.
+  // 테두리 색으로 포커스를 드러낸다.
+  "w-full focus:border-neutral-900 dark:focus:border-white",
+);
+
+// 빈 alt는 마크다운으로도 유효하다. 그래서 막지 않고, 채우라고 표시만 한다.
+const ALT_FIELD_EMPTY =
+  "border-amber-500 focus:border-amber-600 dark:border-amber-500 dark:focus:border-amber-400";
 
 interface ResizeHandle {
   id: string;
@@ -167,6 +182,21 @@ function ImageNodeView({
   const attrs = readAttrs(node.attrs);
   const dragRef = useRef<DragState | null>(null);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+
+  // 입력칸에는 null이 없다. 비어 있음은 여기서 빈 문자열 하나로만 다룬다.
+  const alt = attrs.alt ?? "";
+  // 리사이즈를 pointerup에서만 커밋하는 것과 같은 이유로, 타이핑은 여기에만
+  // 쌓는다. 글자마다 updateAttributes를 부르면 undo가 한 글자씩 되감긴다.
+  const [altDraft, setAltDraft] = useState(alt);
+  const [committedAlt, setCommittedAlt] = useState(alt);
+  const altHintId = useId();
+
+  // undo나 다른 곳의 편집으로 alt가 바뀌면 입력칸도 따라가야 한다. 렌더 중
+  // 조정이라 effect가 한 번 더 도는 일이 없다.
+  if (committedAlt !== alt) {
+    setCommittedAlt(alt);
+    setAltDraft(alt);
+  }
 
   // 크기 조절은 원본 비율을 아는 이미지에서만 연다. 내재 크기가 없어 width가
   // 비어 들어온 이미지(SVG 등)는 비율을 지킬 근거가 없으니, 없는 값을 지어내는
@@ -246,11 +276,40 @@ function ImageNodeView({
     );
   };
 
+  // 확정은 blur와 Enter 두 곳에서만 부른다. 값이 그대로면 트랜잭션을 만들지
+  // 않아 Enter 뒤에 이어지는 blur가 히스토리에 빈 단계를 남기지 않는다.
+  const commitAlt = () => {
+    const next = altDraft.trim();
+    // 보이는 값과 저장되는 값이 어긋나면 안 되니 trim 결과를 입력칸에도 되돌린다.
+    setAltDraft(next);
+    setCommittedAlt(next);
+    // 빈 값은 attr의 기본값인 null로 되돌린다 — 직렬화가 ![](src)로 쓴다.
+    if (next !== alt) updateAttributes({ alt: next === "" ? null : next });
+  };
+
+  const handleAltKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    // 이 입력칸은 ProseMirror 편집 영역 안에 있다. Tiptap의 NodeView.stopEvent가
+    // 노드뷰 안 input을 향한 키를 에디터에서 걸러 주지만(그래서 Backspace가
+    // 이미지 노드를 지우지 않는다), 그 위에 붙은 다른 핸들러까지 막지는 않는다.
+    // 여기서 친 키는 여기서 끝낸다 — 코드블록 제목 입력과 같은 처리다.
+    event.stopPropagation();
+
+    if (event.key === "Enter") {
+      // 폼이 없어도 Enter는 확정이다. 줄바꿈이 아니라 여기서 끝낸다.
+      event.preventDefault();
+      commitAlt();
+    }
+  };
+
   const displayWidth = previewWidth ?? attrs.width;
   const align = attrs.align ?? "center";
+  const altMissing = altDraft.trim() === "";
 
   return (
-    <NodeViewWrapper ref={ref} className={cn("my-6 flex", ALIGN_CLASS[align])}>
+    <NodeViewWrapper
+      ref={ref}
+      className={cn("my-6 flex flex-col gap-2", ALIGN_CLASS[align])}
+    >
       {/* 이미지 노드에는 편집 가능한 내용이 없다. 툴바·핸들이 ProseMirror의
           편집 영역으로 취급되지 않도록 통째로 닫는다. */}
       <div
@@ -293,6 +352,38 @@ function ImageNodeView({
             />
           ))}
       </div>
+
+      {/* 선택했을 때만 연다. 늘 떠 있으면 글을 읽는 화면이 입력칸으로 덮인다.
+          래퍼 폭을 그대로 쓰므로 작은 이미지에서도 입력칸은 본문 폭이다. */}
+      {selected && (
+        <div
+          className="w-full"
+          contentEditable={false}
+          // 노드뷰 루트는 draggable이라, 안에서 텍스트를 끌면 이미지가 통째로
+          // 끌려갈 수 있다. 이 영역은 드래그 대상이 아니다.
+          draggable={false}
+        >
+          <input
+            value={altDraft}
+            onChange={(event) => setAltDraft(event.target.value)}
+            onKeyDown={handleAltKeyDown}
+            onBlur={commitAlt}
+            aria-label="이미지 대체 텍스트"
+            aria-describedby={altMissing ? altHintId : undefined}
+            placeholder="대체 텍스트 (스크린리더가 읽음)"
+            autoComplete="off"
+            className={cn(ALT_FIELD, altMissing && ALT_FIELD_EMPTY)}
+          />
+          {altMissing && (
+            <p
+              id={altHintId}
+              className="mt-1 text-xs text-amber-600 dark:text-amber-400"
+            >
+              비어 있으면 스크린리더가 이 이미지를 건너뜁니다.
+            </p>
+          )}
+        </div>
+      )}
     </NodeViewWrapper>
   );
 }
