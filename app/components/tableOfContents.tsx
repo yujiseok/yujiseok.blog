@@ -22,45 +22,69 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
-    const headings = entries
-      .map(({ id }) => document.getElementById(id))
-      .filter((element) => element !== null);
+    // 목차는 xl 미만에서 hidden으로 아예 그려지지 않는다(아래 aside 참고).
+    // 그런데 이 스캔은 항상 붙어 있었다 — 안 보이는 화면에서도 스크롤·리사이즈마다
+    // 헤딩 rect를 다 훑고 있었다는 뜻이다. 미디어쿼리가 맞을 때만 리스너를
+    // 붙이고, xl로 넘어오는 순간(change)에만 새로 붙인다.
+    const mql = window.matchMedia("(min-width: 1280px)");
 
-    /*
-     * 활성 항목은 "기준선(뷰포트 위 30%)을 지나 올라간 마지막 제목"이다.
-     * "지금 밴드 안에 있는 제목"으로 잡으면 긴 섹션을 읽는 동안 제목이 위로
-     * 빠져나가는 순간 아무것도 안 켜져서 깜빡인다. 이 규칙은 들어오고 나가는
-     * 순간이 아니라 매 위치에서 평가해야 하므로 IntersectionObserver 대신
-     * 스크롤마다 rect를 읽는다 — 제목은 많아야 십수 개라 비용이 안 든다.
-     */
-    const update = () => {
-      const line = window.innerHeight * SPY_LINE;
-      const passed = headings.filter(
-        (heading) => heading.getBoundingClientRect().top <= line,
-      );
-      // 마지막 섹션이 짧으면 그 제목은 기준선까지 못 올라온다. 문서 끝에선
-      // 마지막 항목을 켠다. 아무 제목도 안 지났으면 첫 항목이다.
-      const current = isAtBottom()
-        ? headings.at(-1)
-        : (passed.at(-1) ?? headings[0]);
+    let cleanup: (() => void) | undefined;
 
-      setActiveId(current?.id ?? null);
+    const attach = () => {
+      const headings = entries
+        .map(({ id }) => document.getElementById(id))
+        .filter((element) => element !== null);
+
+      /*
+       * 활성 항목은 "기준선(뷰포트 위 30%)을 지나 올라간 마지막 제목"이다.
+       * "지금 밴드 안에 있는 제목"으로 잡으면 긴 섹션을 읽는 동안 제목이 위로
+       * 빠져나가는 순간 아무것도 안 켜져서 깜빡인다. 이 규칙은 들어오고 나가는
+       * 순간이 아니라 매 위치에서 평가해야 하므로 IntersectionObserver 대신
+       * 스크롤마다 rect를 읽는다 — 제목은 많아야 십수 개라 비용이 안 든다.
+       */
+      const update = () => {
+        const line = window.innerHeight * SPY_LINE;
+        const passed = headings.filter(
+          (heading) => heading.getBoundingClientRect().top <= line,
+        );
+        // 마지막 섹션이 짧으면 그 제목은 기준선까지 못 올라온다. 문서 끝에선
+        // 마지막 항목을 켠다. 아무 제목도 안 지났으면 첫 항목이다.
+        const current = isAtBottom()
+          ? headings.at(-1)
+          : (passed.at(-1) ?? headings[0]);
+
+        setActiveId(current?.id ?? null);
+      };
+
+      update();
+      window.addEventListener("scroll", update, { passive: true });
+      window.addEventListener("resize", update);
+      // 스크롤이 멈춘 뒤에 본문 높이가 바뀌면(늦게 뜨는 이미지·폰트 교체 등)
+      // 제목 위치가 밀리는데 scroll 이벤트는 오지 않는다. 본문 크기 변화도
+      // 위치 재평가의 계기로 삼는다.
+      const article = document.querySelector("article");
+      const resizeObserver = new ResizeObserver(update);
+      if (article) resizeObserver.observe(article);
+
+      return () => {
+        window.removeEventListener("scroll", update);
+        window.removeEventListener("resize", update);
+        resizeObserver.disconnect();
+      };
     };
 
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    // 스크롤이 멈춘 뒤에 본문 높이가 바뀌면(늦게 뜨는 이미지·폰트 교체 등)
-    // 제목 위치가 밀리는데 scroll 이벤트는 오지 않는다. 본문 크기 변화도
-    // 위치 재평가의 계기로 삼는다.
-    const article = document.querySelector("article");
-    const resizeObserver = new ResizeObserver(update);
-    if (article) resizeObserver.observe(article);
+    const sync = () => {
+      cleanup?.();
+      cleanup = mql.matches ? attach() : undefined;
+      if (!mql.matches) setActiveId(null);
+    };
+
+    sync();
+    mql.addEventListener("change", sync);
 
     return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-      resizeObserver.disconnect();
+      mql.removeEventListener("change", sync);
+      cleanup?.();
     };
   }, [entries]);
 

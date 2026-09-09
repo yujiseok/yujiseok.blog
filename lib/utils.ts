@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { ComponentType } from "react";
 
+import { parsePost } from "./editor/document";
+
 type ContentType = "writing" | "atelier";
 
 export interface Metadata {
@@ -27,9 +29,13 @@ export const importMdx = (
     ? import(`@/content/writing/${slug}.mdx`)
     : import(`@/content/atelier/${slug}.mdx`);
 
-const getAllContent = async (contentType: ContentType) => {
-  "use cache";
-
+/*
+ * 목록 페이지·RSS·sitemap·llms.txt는 메타데이터만 있으면 된다. importMdx로
+ * 모듈을 평가하면 컴파일된 shiki HTML까지 포함한 본문 전체가 딸려 온다 —
+ * 24개 글을 전부 읽을 때마다 그 비용을 치를 이유가 없다. lib/toc.ts와 같은
+ * 방식으로 원문만 읽어 metadata export만 떼어낸다.
+ */
+export const readAllContent = async (contentType: ContentType) => {
   const files = await fs.readdir(path.join(ROOT_DIR, contentType));
 
   const contents = await Promise.all(
@@ -37,9 +43,12 @@ const getAllContent = async (contentType: ContentType) => {
       .filter((file) => path.extname(file) === ".mdx")
       .map(async (file) => {
         const slug = path.basename(file, ".mdx");
-        const { metadata } = await importMdx(contentType, slug);
+        const source = await fs.readFile(
+          path.join(ROOT_DIR, contentType, file),
+          "utf8",
+        );
 
-        return { metadata, slug };
+        return { metadata: parsePost(source).metadata, slug };
       }),
   );
 
@@ -48,6 +57,12 @@ const getAllContent = async (contentType: ContentType) => {
       new Date(b.metadata.publishedAt).getTime() -
       new Date(a.metadata.publishedAt).getTime(),
   );
+};
+
+const getAllContent = async (contentType: ContentType) => {
+  "use cache";
+
+  return readAllContent(contentType);
 };
 
 export const getAllWritings = () => getAllContent("writing");
