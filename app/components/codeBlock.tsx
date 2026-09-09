@@ -79,8 +79,10 @@ function CodeBlock({
           className={cn(
             "absolute top-2 right-2 flex size-7 items-center justify-center rounded-md",
             "bg-white/10 text-white/80 transition-opacity hover:bg-white/20",
-            // 터치 기기엔 hover가 없으니 항상 보이게, 마우스 기기에선 hover/focus 때만.
-            "group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0",
+            // 마우스 기기에선 hover/focus 때만, 터치 기기(pointer-coarse)엔 항상.
+            // [@media(hover:hover)]:opacity-0 같은 임의 미디어 변형은 생성 순서상
+            // group-hover 뒤에 와서 호버해도 0에 머물렀다 — 기본값은 변형 없이 둔다.
+            "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
           )}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
