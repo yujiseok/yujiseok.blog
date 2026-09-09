@@ -9,8 +9,8 @@ import type { TocEntry } from "@/lib/toc";
 // article의 scroll-mt와 같은 값이어야 클릭 이동과 해시 이동이 같은 자리에 선다.
 const SCROLL_OFFSET = -32;
 
-// 뷰포트 상단 30% 밴드. 여기 들어온 마지막 heading을 읽는 중으로 본다.
-const SPY_ROOT_MARGIN = "0px 0px -70% 0px";
+// 이 비율 위로 올라간 제목을 "지나갔다"고 본다
+const SPY_LINE = 0.3;
 
 const isAtBottom = () =>
   window.innerHeight + window.scrollY >=
@@ -25,41 +25,34 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
       .map(({ id }) => document.getElementById(id))
       .filter((element) => element !== null);
 
-    // IntersectionObserver는 밴드에 "들어오고 나간" 순간만 알려주므로 현재
-    // 밴드 안에 있는 id를 따로 들고 있어야 한다.
-    const inBand = new Set<string>();
-
+    /*
+     * 활성 항목은 "기준선(뷰포트 위 30%)을 지나 올라간 마지막 제목"이다.
+     * "지금 밴드 안에 있는 제목"으로 잡으면 긴 섹션을 읽는 동안 제목이 위로
+     * 빠져나가는 순간 아무것도 안 켜져서 깜빡인다. 이 규칙은 들어오고 나가는
+     * 순간이 아니라 매 위치에서 평가해야 하므로 IntersectionObserver 대신
+     * 스크롤마다 rect를 읽는다 — 제목은 많아야 십수 개라 비용이 안 든다.
+     */
     const update = () => {
-      const last = entries.findLast(({ id }) => inBand.has(id));
-
-      /*
-       * 마지막 섹션이 짧으면 그 heading은 상단 밴드까지 올라오지 못한다.
-       * 그대로 두면 문서 끝까지 읽어도 직전 항목이 켜져 있어 위치가 어긋난다.
-       */
-      setActiveId(
-        isAtBottom() ? (entries.at(-1)?.id ?? null) : (last?.id ?? null),
+      const line = window.innerHeight * SPY_LINE;
+      const passed = headings.filter(
+        (heading) => heading.getBoundingClientRect().top <= line,
       );
+      // 마지막 섹션이 짧으면 그 제목은 기준선까지 못 올라온다. 문서 끝에선
+      // 마지막 항목을 켠다. 아무 제목도 안 지났으면 첫 항목이다.
+      const current = isAtBottom()
+        ? headings.at(-1)
+        : (passed.at(-1) ?? headings[0]);
+
+      setActiveId(current?.id ?? null);
     };
 
-    const observer = new IntersectionObserver(
-      (records) => {
-        records.forEach((record) => {
-          if (record.isIntersecting) inBand.add(record.target.id);
-          else inBand.delete(record.target.id);
-        });
-
-        update();
-      },
-      { rootMargin: SPY_ROOT_MARGIN },
-    );
-
-    headings.forEach((heading) => observer.observe(heading));
-    // 바닥 판정만을 위한 구독. setState는 값이 같으면 리렌더 없이 빠진다.
+    update();
     window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
 
     return () => {
-      observer.disconnect();
       window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
     };
   }, [entries]);
 
