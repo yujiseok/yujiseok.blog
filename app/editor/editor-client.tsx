@@ -84,7 +84,10 @@ export default function EditorClient({
         // ```ts title="..." 인 글을 열었다 저장만 해도 제목이 사라진다.
         codeBlock: false,
       }),
-      CodeBlockShiki,
+      // 새 블록은 language가 null이라 칠할 근거가 없다. 이 블로그 코드펜스는
+      // ts/tsx가 대부분이라 ts로 열고, 다르면 블록 우상단에서 바꾼다.
+      // 기존 글의 언어 없는 펜스는 markdownToDoc이 null을 명시해 그대로 남는다.
+      CodeBlockShiki.configure({ defaultLanguage: "ts" }),
       Underline,
       Image,
       MdxBlock,
@@ -120,7 +123,12 @@ export default function EditorClient({
     });
   };
 
-  const [saveResult, dispatchSave, isSaving] = useActionState<SaveResult, void>(
+  // form의 action으로 넘기므로 payload는 FormData다. 폼에 입력 요소가 없어
+  // 값을 읽지는 않고, 트랜지션 안에서 실행되도록 하는 게 목적이다.
+  const [saveResult, dispatchSave, isSaving] = useActionState<
+    SaveResult,
+    FormData
+  >(
     async () => {
       if (!editor) {
         return {
@@ -278,10 +286,11 @@ export default function EditorClient({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* useActionState의 dispatch는 트랜지션 안에서 불러야 isSaving이 제대로
+            갱신된다. form의 action으로 넘기면 React가 알아서 감싸 준다. */}
+        <form action={dispatchSave} className="flex items-center gap-3">
           <button
-            type="button"
-            onClick={() => dispatchSave()}
+            type="submit"
             disabled={isSaving || !canSave(draft)}
             className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-40 dark:bg-white dark:text-black"
           >
@@ -297,7 +306,7 @@ export default function EditorClient({
               {saveResult.message}
             </span>
           )}
-        </div>
+        </form>
       </section>
     </div>
   );
