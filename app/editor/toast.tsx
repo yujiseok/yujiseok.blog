@@ -114,7 +114,7 @@ function ToastList() {
             {slug && (
               <Toast.Action
                 className="mt-1 w-fit text-xs underline decoration-dashed underline-offset-2"
-                render={<Link href={`/writing/${slug}`} />}
+                render={<Link href={`/posts/${slug}`} />}
               >
                 글 보러 가기
               </Toast.Action>

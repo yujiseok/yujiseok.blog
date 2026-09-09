@@ -1,6 +1,6 @@
 import Link from "next/link";
 import BlurContainer from "../components/blurContainer";
-import Writing from "../components/writing";
+import PostRow from "../components/postRow";
 import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
@@ -20,11 +20,11 @@ export default async function Home() {
 
       <div>
         {writings.map(({ metadata, slug }) => (
-          <Writing key={slug} metadata={metadata} slug={slug} offset={false} />
+          <PostRow key={slug} metadata={metadata} slug={slug} offset={false} />
         ))}
         <div className="flex justify-end">
           <Link
-            href="/writing"
+            href="/posts"
             className="group mt-2 mr-3 flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-400"
           >
             <span>더 보기</span>

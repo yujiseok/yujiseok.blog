@@ -10,7 +10,7 @@ export async function GET() {
   const writingList = writings
     .map(
       (post) =>
-        `- [${post.metadata.title}](${SITE_URL}/writing/${post.slug}): ${post.metadata.summary}`,
+        `- [${post.metadata.title}](${SITE_URL}/posts/${post.slug}): ${post.metadata.summary}`,
     )
     .join("\n");
 

@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { Metadata } from "@/lib/utils";
 import Link from "next/link";
 
-const Writing = ({
+const PostRow = ({
   metadata,
   slug,
   offset = true,
@@ -14,7 +14,7 @@ const Writing = ({
   return (
     <article className="rounded-lg">
       <Link
-        href={`/writing/${slug}`}
+        href={`/posts/${slug}`}
         className={cn(
           "block rounded-lg p-3 transition-colors duration-50 hover:bg-black/5 dark:hover:bg-neutral-200/10",
           offset ? "-m-3" : "-ml-3",
@@ -33,4 +33,4 @@ const Writing = ({
     </article>
   );
 };
-export default Writing;
+export default PostRow;

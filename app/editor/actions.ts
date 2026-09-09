@@ -184,8 +184,8 @@ export async function savePost(input: SavePostInput): Promise<{ ok: true }> {
   // getAllWritings/getAllContent가 "use cache"로 캐싱돼 있어 재검증 없이는
   // 새 글이 홈·목록·상세 어디에도 반영되지 않는다.
   revalidatePath("/");
-  revalidatePath("/writing");
-  revalidatePath(`/writing/${input.slug}`);
+  revalidatePath("/posts");
+  revalidatePath(`/posts/${input.slug}`);
 
   return { ok: true };
 }
@@ -204,8 +204,8 @@ export async function deletePost(slug: string): Promise<{ ok: true }> {
   await fs.unlink(filePath);
 
   revalidatePath("/");
-  revalidatePath("/writing");
-  revalidatePath(`/writing/${slug}`);
+  revalidatePath("/posts");
+  revalidatePath(`/posts/${slug}`);
 
   return { ok: true };
 }

@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const writings = allWritings.map((writing) => ({
-    url: `${SITE_URL}/writing/${writing.slug}`,
+    url: `${SITE_URL}/posts/${writing.slug}`,
     lastModified: writing.metadata.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.8,
@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${SITE_URL}/writing`,
+      url: `${SITE_URL}/posts`,
       lastModified: latestWriting,
       changeFrequency: "weekly" as const,
       priority: 0.9,

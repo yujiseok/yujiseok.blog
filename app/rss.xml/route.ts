@@ -18,8 +18,14 @@ export async function GET() {
       (post) =>
         `<item>
           <title>${escapeXml(post.metadata.title)}</title>
-          <link>${baseURL}/writing/${post.slug}</link>
-          <guid isPermaLink="true">${baseURL}/writing/${post.slug}</guid>
+          <link>${baseURL}/posts/${post.slug}</link>
+          <!--
+            guid는 URL일 필요가 없고 안정적인 고유 문자열이기만 하면 된다.
+            /writing → /posts로 옮기면서 이 값을 같이 바꾸면 구독자 리더가
+            기존 글 전부를 새 글로 다시 띄운다. 옛 경로를 그대로 박아 둔다.
+            301 리다이렉트로는 막을 수 없다 — 리더는 guid로 식별한다.
+          -->
+          <guid isPermaLink="false">${baseURL}/writing/${post.slug}</guid>
           <description>${escapeXml(post.metadata.summary)}</description>
           <author>yujiseok</author>
           <pubDate>${new Date(post.metadata.publishedAt).toUTCString()}</pubDate>

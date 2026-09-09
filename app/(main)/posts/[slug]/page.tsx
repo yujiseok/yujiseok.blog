@@ -35,13 +35,13 @@ export async function generateMetadata(props: {
   return {
     title,
     description,
-    alternates: alternates(`/writing/${writing.slug}`),
+    alternates: alternates(`/posts/${writing.slug}`),
     openGraph: {
       title: { absolute: title },
       description,
       type: "article",
       publishedTime,
-      url: `${SITE_URL}/writing/${writing.slug}`,
+      url: `${SITE_URL}/posts/${writing.slug}`,
       ...SITE_OG,
     },
   };
@@ -62,7 +62,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
     headline: writing.metadata.title,
     description: writing.metadata.summary,
     datePublished: writing.metadata.publishedAt,
-    url: `${SITE_URL}/writing/${params.slug}`,
+    url: `${SITE_URL}/posts/${params.slug}`,
     author: {
       "@type": "Person",
       name: "유지석",
@@ -72,7 +72,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
 
   return (
     <>
-      <FixedBackLink href="/writing" />
+      <FixedBackLink href="/posts" />
       <BlurContainer className="block gap-0">
         <script
           type="application/ld+json"

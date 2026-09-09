@@ -1,6 +1,6 @@
 import BlurContainer from "@/app/components/blurContainer";
 import FixedBackLink from "@/app/components/fixedBackLink";
-import Writing from "@/app/components/writing";
+import PostRow from "@/app/components/postRow";
 import { getAllWritings } from "@/lib/utils";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
@@ -9,11 +9,11 @@ import { alternates, SITE_OG } from "@/lib/metadata";
 export const metadata: Metadata = {
   title: "Writing",
   description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
-  alternates: alternates("/writing"),
+  alternates: alternates("/posts"),
   openGraph: {
     title: "Writing",
     description: "공유하고 싶은 생각 또는 기술들을 소개합니다.",
-    url: `${SITE_URL}/writing`,
+    url: `${SITE_URL}/posts`,
     type: "website",
     ...SITE_OG,
   },
@@ -27,7 +27,7 @@ async function PostPage() {
       <FixedBackLink href="/" />
       <BlurContainer className="gap-8">
         {writings.map(({ metadata, slug }) => (
-          <Writing key={slug} metadata={metadata} slug={slug} />
+          <PostRow key={slug} metadata={metadata} slug={slug} />
         ))}
       </BlurContainer>
     </>

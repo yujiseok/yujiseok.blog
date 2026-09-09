@@ -23,7 +23,7 @@ export const resumeData = {
             "캐싱 도입으로 응답 시간 최대 75% 단축 (800ms → 200ms)",
             "네트워크 트래픽 80% 및 활성 컨테이너 수 60% 절감하여 GCP 인프라 비용 절감 기여",
           ],
-          link: "https://yujiseok.blog/writing/nextjs-rendering-optimization",
+          link: "https://yujiseok.blog/posts/nextjs-rendering-optimization",
           linkText: "Next.js 렌더링 전략 개선기",
         },
         {
@@ -33,7 +33,7 @@ export const resumeData = {
             "GitHub Actions 캐시의 한계를 파악하고, GCS 기반 Turborepo Remote Cache를 자체 구축하여 CI 빌드 재사용성 극대화",
             "FULL TURBO 시 빌드 소요 시간 최대 99.6% 단축 (146s → 0.6s)",
           ],
-          link: "https://yujiseok.blog/writing/turborepo",
+          link: "https://yujiseok.blog/posts/turborepo",
           linkText: "Turborepo Remote Cache 적용기",
         },
         {
@@ -54,7 +54,7 @@ export const resumeData = {
             "무한 스크롤 환경의 최적화를 위한 가상 스크롤 도입, 렌더링 비용 46% 및 롱태스크 시간을 40.7% 감소시켜 UX 개선",
             "리렌더링 방지를 위한 메모이제이션 적용, 스크롤 시 발생하는 스크립트 실행 시간 42.3% 단축",
           ],
-          link: "https://yujiseok.blog/writing/how-to-implement-portfolio",
+          link: "https://yujiseok.blog/posts/how-to-implement-portfolio",
           linkText: "서비스 Masonry 레이아웃 구현 회고",
         },
         {
@@ -63,7 +63,7 @@ export const resumeData = {
             "동적 HTML 렌더 시 불필요한 서버 사이드 네비게이션을 방지하는 라우팅 인터셉트 훅 구현",
             "20줄 미만의 코드로 불필요 페이지 로드 제거, 스크립트 실행 시간 78% 단축 및 UX 극대화 (총 실행 시간 46.2% ↓)",
           ],
-          link: "https://yujiseok.blog/writing/improve-navigation",
+          link: "https://yujiseok.blog/posts/improve-navigation",
           linkText: "서비스 서버 사이드 네비게이션 개선기",
         },
         {
@@ -72,7 +72,7 @@ export const resumeData = {
             "스크롤 기반 애니메이션, 타입라이터 효과 등 인터랙션을 통한 사용자 몰입 경험 제공",
             "랜딩 페이지와 설문 기능을 통해 약 1,000명의 컨퍼런스 참여자 모객 및 비즈니스 목표 달성",
           ],
-          link: "https://yujiseok.blog/writing/2024-gencon",
+          link: "https://yujiseok.blog/posts/2024-gencon",
           linkText: "젠콘 랜딩 페이지 개발 회고",
         },
       ],
@@ -96,7 +96,7 @@ export const resumeData = {
       period: "2023.03",
       description: "리액트 공식 문서 예제 코드의 문법 오류 수정",
       link: "https://github.com/reactjs/react.dev/pull/5791",
-      blogLink: "https://yujiseok.blog/writing/how-i-contributed-react-docs",
+      blogLink: "https://yujiseok.blog/posts/how-i-contributed-react-docs",
       blogLinkText: "React 공식 문서 기여 회고",
     },
   ],
