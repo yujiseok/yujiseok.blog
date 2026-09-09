@@ -13,6 +13,7 @@ import { useActionState, useReducer, useState, useTransition } from "react";
 
 import { cn } from "@/lib/cn";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
+import { BlockAlign } from "./align";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
 import { ResizableImage } from "./image-node";
@@ -118,6 +119,9 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         tabSize: 2,
       }),
       Underline,
+      // 문단·제목에 align attr만 얹는다. 저장하면 markdown.ts가
+      // <div style={{ textAlign }}>로 감싼다.
+      BlockAlign,
       ResizableImage,
       MdxBlock,
       SlashCommand,

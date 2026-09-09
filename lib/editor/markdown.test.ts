@@ -801,3 +801,163 @@ describe("왕복 - markdown -> doc -> markdown", () => {
     expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 });
+
+describe("문단 정렬 - <div style={{ textAlign }}>", () => {
+  const alignDiv = (style: string, inner: string) =>
+    `<div style={${style}}>\n  ${inner}\n</div>\n`;
+
+  it("가운데 정렬 div 를 문단의 align attr 로 읽는다", () => {
+    expect(
+      markdownToDoc(alignDiv('{ textAlign: "center" }', "가운데")),
+    ).toEqual({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { align: "center" },
+          content: [{ type: "text", text: "가운데" }],
+        },
+      ],
+    });
+  });
+
+  it("오른쪽 정렬 div 를 읽는다", () => {
+    expect(markdownToDoc(alignDiv('{ textAlign: "right" }', "오른쪽"))).toEqual(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            attrs: { align: "right" },
+            content: [{ type: "text", text: "오른쪽" }],
+          },
+        ],
+      },
+    );
+  });
+
+  it("제목도 정렬 대상이다", () => {
+    expect(
+      markdownToDoc(alignDiv('{ textAlign: "center" }', "## 제목")),
+    ).toEqual({
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2, align: "center" },
+          content: [{ type: "text", text: "제목" }],
+        },
+      ],
+    });
+  });
+
+  it("textAlign: left 는 align 없는 문단으로 정규화한다", () => {
+    // 왼쪽은 렌더 기본이라 attr 을 남길 이유가 없다. div 만 사라진다.
+    expect(markdownToDoc(alignDiv('{ textAlign: "left" }', "왼쪽"))).toEqual({
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "왼쪽" }] },
+      ],
+    });
+  });
+
+  it.each([
+    [
+      "className 동반",
+      '<div className="flex" style={{ textAlign: "center" }}>\n  본문\n</div>',
+    ],
+    [
+      "속성 2개짜리 style",
+      '<div style={{ textAlign: "center", color: "red" }}>\n  본문\n</div>',
+    ],
+    [
+      "자식이 <Image>",
+      '<div style={{ textAlign: "center" }}>\n  <Image src="/a.png" width={7} height={8} />\n</div>',
+    ],
+    ["변수 표현식", "<div style={{ textAlign: align }}>\n  본문\n</div>"],
+    [
+      "자식 2개",
+      '<div style={{ textAlign: "center" }}>\n  첫째\n\n  둘째\n</div>',
+    ],
+  ])("%s 는 승격하지 않고 mdxBlock 으로 남긴다", (_, md) => {
+    expect(markdownToDoc(`${md}\n`)).toEqual({
+      type: "doc",
+      content: [{ type: "mdxBlock", attrs: { value: md } }],
+    });
+  });
+
+  it("align 이 붙은 문단·제목을 div 로 직렬화한다", () => {
+    const doc: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { align: "center" },
+          content: [{ type: "text", text: "가운데" }],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2, align: "right" },
+          content: [{ type: "text", text: "오른쪽 제목" }],
+        },
+      ],
+    };
+
+    expect(docToMarkdown(doc)).toBe(
+      '<div style={{ textAlign: "center" }}>\n  가운데\n</div>\n\n' +
+        '<div style={{ textAlign: "right" }}>\n  ## 오른쪽 제목\n</div>\n',
+    );
+  });
+
+  it("align 이 null 이거나 left 면 감싸지 않는다", () => {
+    const doc: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { align: null },
+          content: [{ type: "text", text: "기본" }],
+        },
+        {
+          type: "paragraph",
+          attrs: { align: "left" },
+          content: [{ type: "text", text: "왼쪽" }],
+        },
+      ],
+    };
+
+    expect(docToMarkdown(doc)).toBe("기본\n\n왼쪽\n");
+  });
+
+  it("목록 안 문단의 align 은 무시한다", () => {
+    // `- <div ...>` 가 되면 마크다운이 깨진다. 정렬은 최상위에서만 씌운다.
+    const doc: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  attrs: { align: "center" },
+                  content: [{ type: "text", text: "항목" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(docToMarkdown(doc)).toBe("- 항목\n");
+  });
+
+  it("정렬 div 가 왕복해도 그대로다", () => {
+    const md = '<div style={{ textAlign: "center" }}>\n  가운데\n</div>\n';
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+});

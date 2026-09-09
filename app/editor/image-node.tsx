@@ -1,6 +1,5 @@
 "use client";
 
-import { Toolbar } from "@base-ui/react/toolbar";
 import { Image } from "@tiptap/extension-image";
 import {
   NodeViewWrapper,
@@ -12,11 +11,10 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type ReactNode,
 } from "react";
 
 import { cn } from "@/lib/cn";
-import { ICON_BUTTON } from "./ui";
+import { toAlign, type Align } from "./align";
 
 /*
  * 기본 Image 익스텐션은 src/alt/title만 다루고 크기·정렬은 손댈 수 없다.
@@ -27,18 +25,16 @@ import { ICON_BUTTON } from "./ui";
  *
  * setImage 커맨드·parseHTML·입력 규칙은 부모 것을 그대로 물려받는다 —
  * image-upload.ts와 슬래시 커맨드가 setImage를 부른다.
+ *
+ * 정렬 UI는 여기 없다. 이미지든 문단이든 툴바의 정렬 버튼 하나로 건다 —
+ * 정렬 컨트롤이 두 군데 있으면 어느 쪽이 지금 값인지 알 수 없다.
+ * 판정과 적용은 app/editor/align.ts에 있다.
  */
 
-const ALIGN_VALUES = ["left", "center", "right"] as const;
-type ImageAlign = (typeof ALIGN_VALUES)[number];
-
-// 이보다 좁아지면 정렬 툴바가 이미지를 통째로 덮어 무엇을 줄이는지 안 보인다.
+// 이보다 좁아지면 크기 조절 핸들 둘이 맞닿아 무엇을 줄이는지 안 보인다.
 const MIN_WIDTH = 80;
 // 키보드 한 걸음. 드래그와 달리 연속값이 아니라 눈에 띄는 단위여야 한다.
 const KEY_STEP = 16;
-
-const toAlign = (value: unknown): ImageAlign | null =>
-  ALIGN_VALUES.find((align) => align === value) ?? null;
 
 /**
  * width/height는 next/image가 요구하는 픽셀 숫자다. HTML에서 파싱하면 문자열로
@@ -91,7 +87,7 @@ interface ImageAttrs {
   title: string | null;
   width: number | null;
   height: number | null;
-  align: ImageAlign | null;
+  align: Align | null;
 }
 
 // node.attrs는 스키마가 타입을 보장하지 않는 Record<string, any>다. 노드뷰
@@ -105,36 +101,7 @@ const readAttrs = (attrs: Record<string, unknown>): ImageAttrs => ({
   align: toAlign(attrs.align),
 });
 
-interface AlignOption {
-  id: string;
-  /** attr에 실제로 들어갈 값. 가운데는 기본값이라 null이다. */
-  value: ImageAlign | null;
-  label: string;
-  icon: ReactNode;
-}
-
-const ALIGN_OPTIONS: AlignOption[] = [
-  {
-    id: "left",
-    value: "left",
-    label: "왼쪽 정렬",
-    icon: <AlignIcon variant="left" />,
-  },
-  {
-    id: "center",
-    value: null,
-    label: "가운데 정렬",
-    icon: <AlignIcon variant="center" />,
-  },
-  {
-    id: "right",
-    value: "right",
-    label: "오른쪽 정렬",
-    icon: <AlignIcon variant="right" />,
-  },
-];
-
-const ALIGN_CLASS: Record<ImageAlign, string> = {
+const ALIGN_CLASS: Record<Align, string> = {
   left: "justify-start",
   center: "justify-center",
   right: "justify-end",
@@ -309,34 +276,6 @@ function ImageNodeView({
           )}
         />
 
-        {selected && (
-          <Toolbar.Root
-            aria-label="이미지 정렬"
-            className="absolute top-2 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-lg bg-neutral-900/90 p-0.5 shadow-md backdrop-blur-sm"
-          >
-            {ALIGN_OPTIONS.map((option) => {
-              const isActive = align === (option.value ?? "center");
-              return (
-                <Toolbar.Button
-                  key={option.id}
-                  aria-label={option.label}
-                  aria-pressed={isActive}
-                  // 버튼을 누르는 순간 에디터가 blur되면 노드 선택이 풀려
-                  // 툴바가 클릭 전에 사라진다. app/editor/toolbar.tsx와 같은 이유.
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => updateAttributes({ align: option.value })}
-                  className={cn(
-                    alignButtonClass,
-                    isActive ? alignButtonActiveClass : alignButtonIdleClass,
-                  )}
-                >
-                  {option.icon}
-                </Toolbar.Button>
-              );
-            })}
-          </Toolbar.Root>
-        )}
-
         {selected &&
           ratio !== null &&
           RESIZE_HANDLES.map((handle) => (
@@ -358,48 +297,6 @@ function ImageNodeView({
   );
 }
 
-// 이미지 위에 떠 있어 어떤 색 위에 얹힐지 모른다. code-block-shiki의 트리거처럼
-// 글자·호버 색만 어두운 배경용으로 뒤집어 쓴다.
-const alignButtonClass = cn(ICON_BUTTON, "h-6 min-w-6 px-0");
-const alignButtonActiveClass = "bg-white/20 text-white";
-const alignButtonIdleClass = "text-neutral-300 hover:bg-white/10";
-
 // touch-none이 없으면 터치 드래그가 스크롤로 새어 나가 크기 조절이 끊긴다.
 const handleClass =
   "absolute top-1/2 h-12 w-1.5 -translate-y-1/2 cursor-ew-resize touch-none rounded-full bg-neutral-900/80 ring-1 ring-white/70 transition-colors hover:bg-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:focus-visible:outline-white";
-
-// 정렬 아이콘 세 개는 가운데 짧은 줄의 시작점만 다르다. 같은 SVG를 세 번
-// 적는 대신 그 좌표만 데이터로 둔다.
-const ALIGN_LINE_START: Record<ImageAlign, number> = {
-  left: 3,
-  center: 6,
-  right: 9,
-};
-const ALIGN_LINE_LENGTH = 12;
-
-function AlignIcon({ variant }: { variant: ImageAlign }) {
-  const start = ALIGN_LINE_START[variant];
-
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line
-        x1={start}
-        y1="12"
-        x2={start + ALIGN_LINE_LENGTH}
-        y2="12"
-        strokeWidth="3"
-      />
-      <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  );
-}

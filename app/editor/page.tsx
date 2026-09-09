@@ -1,9 +1,17 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import EditorClient from "./editor-client";
 import { listPosts, readPost } from "./actions";
 import type { LoadedPostInput } from "./draft";
+
+// 에디터는 (main) 레이아웃 밖이라 헤더도 푸터 내비도 없다. 여기 링크가 없으면
+// 주소를 직접 고치는 것 말고는 나갈 길이 없다.
+const EXIT_LINKS = [
+  { href: "/", label: "홈" },
+  { href: "/posts", label: "글 목록" },
+];
 
 // 로컬 도구라 스트리밍 껍데기를 먼저 보낼 이유가 없다. Suspense로 감싸는 대신
 // 블로킹 렌더를 허용해 목록을 갖춘 완성된 화면을 한 번에 준다.
@@ -49,6 +57,17 @@ export default async function EditorPage(props: {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-2 py-10 sm:px-4">
+      <nav aria-label="사이트 이동" className="mb-6 flex items-center gap-4">
+        {EXIT_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
       <EditorClient initialPosts={posts} initialPost={initialPost} />
     </main>
   );

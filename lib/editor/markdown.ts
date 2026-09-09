@@ -219,10 +219,11 @@ function convertBlockToTiptap(
     case "image":
       return convertImageToTiptap(node);
     case "mdxJsxFlowElement":
-      // 정적으로 읽히는 <Image>만 편집 가능한 노드로 승격한다. 나머지 JSX는
-      // 아래로 흘러 원문 그대로 보존된다.
+      // 정적으로 읽히는 <Image>와 정렬용 <div>만 편집 가능한 노드로 승격한다.
+      // 나머지 JSX는 아래로 흘러 원문 그대로 보존된다.
       return (
-        convertImageJsxToTiptap(node) ?? {
+        convertImageJsxToTiptap(node) ??
+        convertAlignDivToTiptap(node, source) ?? {
           type: "mdxBlock",
           attrs: { value: rawSlice(node, source) },
         }
@@ -242,9 +243,11 @@ function convertBlockToTiptap(
 // 값이 형식을 결정하므로 왕복이 깨지지 않는다.
 // ----------------------------------------------------------------------------
 
-const IMAGE_ALIGNS = ["left", "center", "right"] as const;
+// 이미지와 문단이 같은 값 체계를 쓴다. 다만 "값 없음"의 뜻은 서로 다르다 —
+// 이미지는 가운데가, 문단은 왼쪽이 렌더 기본이다. app/editor/align.ts 참고.
+const ALIGNS = ["left", "center", "right"] as const;
 
-type ImageAlign = (typeof IMAGE_ALIGNS)[number];
+type Align = (typeof ALIGNS)[number];
 
 interface ImageAttrs {
   src: string;
@@ -252,7 +255,7 @@ interface ImageAttrs {
   title?: string;
   width: number | null;
   height: number | null;
-  align: ImageAlign | null;
+  align: Align | null;
 }
 
 const EMPTY_IMAGE_ATTRS: ImageAttrs = {
@@ -281,8 +284,8 @@ const imageNode = (attrs: ImageAttrs): JSONContent => ({
 
 type JsxAttrValue = MdxJsxAttribute["value"];
 
-const isImageAlign = (value: string): value is ImageAlign =>
-  IMAGE_ALIGNS.some((align) => align === value);
+const isAlign = (value: string): value is Align =>
+  ALIGNS.some((candidate) => candidate === value);
 
 const readString = <T>(
   value: JsxAttrValue,
@@ -317,7 +320,7 @@ const IMAGE_ATTR_READERS = new Map<
   [
     "align",
     (value) =>
-      readString(value, (align) => (isImageAlign(align) ? { align } : null)),
+      readString(value, (align) => (isAlign(align) ? { align } : null)),
   ],
 ]);
 
@@ -348,6 +351,86 @@ function convertImageJsxToTiptap(
   );
 
   return attrs.src ? imageNode(attrs) : null;
+}
+
+// ----------------------------------------------------------------------------
+// 문단 정렬
+// 마크다운에는 정렬을 담을 자리가 없어 <div style={{ textAlign }}> 로 감싼다.
+// <p style> 는 remark 가 자식을 다시 paragraph 로 넣어 <p><p> 가 되므로 쓸 수
+// 없다. <Image> 와 같은 구조 — 판독기와 생성기를 한 쌍의 함수로 격리한다.
+// ----------------------------------------------------------------------------
+
+/**
+ * style={{ textAlign: "center" }} 하나만 정렬로 읽는다. 프로퍼티가 더 있거나
+ * 값이 변수면(= 정적으로 못 읽으면) null 이다.
+ */
+function readTextAlign(value: JsxAttrValue): Align | null {
+  if (value == null || typeof value === "string") return null;
+
+  const body = value.data?.estree?.body ?? [];
+  const [statement] = body;
+  if (body.length !== 1 || statement?.type !== "ExpressionStatement") {
+    return null;
+  }
+
+  const { expression } = statement;
+  if (expression.type !== "ObjectExpression") return null;
+
+  const [property] = expression.properties;
+  if (expression.properties.length !== 1 || property?.type !== "Property") {
+    return null;
+  }
+  if (property.key.type !== "Identifier" || property.key.name !== "textAlign") {
+    return null;
+  }
+
+  const literal = property.value;
+  return literal.type === "Literal" &&
+    typeof literal.value === "string" &&
+    isAlign(literal.value)
+    ? literal.value
+    : null;
+}
+
+/**
+ * 이름이 정확히 div 이고, 속성이 style 하나뿐이고, 그 값이 textAlign 한
+ * 프로퍼티짜리 객체이고, 자식이 문단·제목 하나뿐일 때만 정렬로 승격한다.
+ *
+ * 이렇게까지 좁히는 이유: openForEditing 의 lossless 판정이 쓰는
+ * mdast-util-to-string 은 attribute 값을 보지 않는다. <div className="flex"> 를
+ * 잘못 승격시켜 className 을 날려도 lossless 는 계속 true 다. 안전망은 판정식이
+ * 아니라 오직 이 조건들이다 — 하나라도 어긋나면 null 을 돌려 호출자가 원문
+ * 그대로(mdxBlock) 두게 한다.
+ */
+function convertAlignDivToTiptap(
+  node: MdastNode & { type: "mdxJsxFlowElement" },
+  source: string,
+): JSONContent | null {
+  if (node.name !== "div" || node.attributes.length !== 1) return null;
+
+  const [attribute] = node.attributes;
+  if (attribute.type !== "mdxJsxAttribute" || attribute.name !== "style") {
+    return null;
+  }
+
+  const align = readTextAlign(attribute.value);
+  if (align === null || node.children.length !== 1) return null;
+
+  const child = convertBlockToTiptap(node.children[0], source);
+  // 이미지나 중첩 JSX 가 나오면 align attr 의 뜻이 달라진다(이미지는 null 이
+  // 가운데다). 문단·제목으로 읽힌 것만 받는다.
+  if (
+    child === null ||
+    (child.type !== "paragraph" && child.type !== "heading")
+  ) {
+    return null;
+  }
+
+  // 왼쪽은 문단의 렌더 기본이라 attr 을 비운다 — 보이는 결과는 같고 div 만
+  // 사라진다.
+  return align === "left"
+    ? child
+    : { ...child, attrs: { ...child.attrs, align } };
 }
 
 function convertInlineChildren(
@@ -457,13 +540,51 @@ function textNode(text: string, marks: TiptapMark[]): JSONContent {
 // ----------------------------------------------------------------------------
 
 export function docToMarkdown(doc: JSONContent): string {
-  const children = (doc.content ?? []).map(convertBlockToMdast);
+  const children = (doc.content ?? []).map(convertTopLevelBlockToMdast);
   const tree: MdastRoot = {
     type: "root",
     children: children as MdastRoot["children"],
   };
   return String(stringifier().stringify(tree));
 }
+
+/**
+ * 정렬 div 는 최상위에서만 씌운다. 목록·인용 안에서 감싸면 `- <div ...>` 가
+ * 되어 마크다운이 깨지므로, 재귀 경로인 convertBlockToMdast 는 align 을 아예
+ * 보지 않는다.
+ */
+function convertTopLevelBlockToMdast(node: JSONContent): MdastNode {
+  const align = wrappingAlignOf(node);
+  const mdast = convertBlockToMdast(node);
+
+  return align === null ? mdast : alignDivToMdast(align, mdast);
+}
+
+// 왼쪽(과 null)은 문단의 렌더 기본이라 감쌀 이유가 없다. 이미지의 align 은
+// image 노드가 <Image align="..."> 로 따로 쓴다.
+const wrappingAlignOf = (node: JSONContent): Exclude<Align, "left"> | null => {
+  if (node.type !== "paragraph" && node.type !== "heading") return null;
+
+  const align = node.attrs?.align;
+  return align === "center" || align === "right" ? align : null;
+};
+
+const alignDivToMdast = (align: Align, child: MdastNode): MdastNode =>
+  ({
+    type: "mdxJsxFlowElement",
+    name: "div",
+    attributes: [
+      {
+        type: "mdxJsxAttribute",
+        name: "style",
+        value: {
+          type: "mdxJsxAttributeValueExpression",
+          value: `{ textAlign: "${align}" }`,
+        },
+      },
+    ],
+    children: [child],
+  }) as unknown as MdastNode;
 
 function convertBlockToMdast(node: JSONContent): MdastNode {
   switch (node.type) {
@@ -571,7 +692,7 @@ function imageJsxToMdast(
   if (width == null || height == null) return null;
 
   const title = attrs.title as string | undefined;
-  const align = attrs.align as ImageAlign | null | undefined;
+  const align = attrs.align as Align | null | undefined;
 
   return {
     type: elementType,

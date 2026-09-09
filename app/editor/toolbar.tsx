@@ -16,6 +16,13 @@ import {
 
 import { cn } from "@/lib/cn";
 import {
+  ALIGN_OPTIONS,
+  applyAlign,
+  readAlign,
+  type Align,
+  type AlignTarget,
+} from "./align";
+import {
   ICON_BUTTON,
   KBD,
   MENU_ITEM,
@@ -49,6 +56,9 @@ interface ActiveState {
   orderedList: boolean;
   blockquote: boolean;
   codeBlock: boolean;
+  /** alignTarget이 null이면 의미 없는 값이다. 버튼은 target을 먼저 본다. */
+  align: Align;
+  alignTarget: AlignTarget | null;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -68,6 +78,8 @@ const INACTIVE_STATE: ActiveState = {
   orderedList: false,
   blockquote: false,
   codeBlock: false,
+  align: "left",
+  alignTarget: null,
   canUndo: false,
   canRedo: false,
 };
@@ -166,24 +178,19 @@ const MARK_BUTTONS: ToolbarButton[] = [
   },
 ];
 
-const LIST_BUTTONS: ToolbarButton[] = [
-  {
-    kind: "command",
-    id: "bulletList",
-    label: "불릿 목록",
-    content: "•",
-    isActive: (state) => state.bulletList,
-    run: (editor) => editor.chain().focus().toggleBulletList().run(),
-  },
-  {
-    kind: "command",
-    id: "orderedList",
-    label: "번호 목록",
-    content: "1.",
-    isActive: (state) => state.orderedList,
-    run: (editor) => editor.chain().focus().toggleOrderedList().run(),
-  },
-];
+// 이미지든 문단이든 정렬 버튼은 이 세 개뿐이다. 무엇에 적용할지(그리고 지금
+// 값이 무엇인지)는 align.ts가 판정하므로 여기선 같은 run을 그대로 나열한다.
+const ALIGN_BUTTONS: ToolbarButton[] = ALIGN_OPTIONS.map((option) => ({
+  kind: "command",
+  id: `align-${option.value}`,
+  label: option.label,
+  content: <AlignIcon variant={option.value} />,
+  isActive: (state) =>
+    state.alignTarget !== null && state.align === option.value,
+  // 코드블록·mdxBlock·목록 안처럼 정렬을 저장할 수 없는 자리에서는 잠근다.
+  isDisabled: (state) => state.alignTarget === null,
+  run: (editor) => applyAlign(editor, option.value),
+}));
 
 const INSERT_BUTTONS: ToolbarButton[] = [
   {
@@ -259,11 +266,46 @@ const BLOCK_OPTIONS: BlockOption[] = [
   },
 ];
 
+type ListValue = "none" | "bulletList" | "orderedList";
+
+interface ListOption {
+  value: ListValue;
+  label: string;
+  isActive: (state: ActiveState) => boolean;
+  /**
+   * "목록 없음"에는 켤 명령이 없다 — 끄는 건 지금 걸린 목록의 토글이 맡는다.
+   * 해제 전용 명령을 따로 두면 켜는 경로와 끄는 경로가 갈려 어긋난다.
+   */
+  run?: (editor: Editor) => void;
+}
+
+const LIST_OPTIONS: ListOption[] = [
+  {
+    value: "none",
+    label: "목록 없음",
+    isActive: (state) => !state.bulletList && !state.orderedList,
+  },
+  {
+    value: "bulletList",
+    label: "글머리 기호",
+    isActive: (state) => state.bulletList,
+    run: (editor) => editor.chain().focus().toggleBulletList().run(),
+  },
+  {
+    value: "orderedList",
+    label: "번호 매기기",
+    isActive: (state) => state.orderedList,
+    run: (editor) => editor.chain().focus().toggleOrderedList().run(),
+  },
+];
+
 // 그룹을 데이터로 표현해 구분선이 그룹 사이에 자동으로 나오게 한다. 버튼을
-// 하나씩 나열하는 대신 이 배열 + BLOCK_OPTIONS만 고치면 툴바가 바뀐다.
+// 하나씩 나열하는 대신 이 배열 + BLOCK_OPTIONS/LIST_OPTIONS만 고치면 툴바가
+// 바뀐다.
 type ToolbarSection =
   | { id: string; label: string; kind: "buttons"; buttons: ToolbarButton[] }
-  | { id: string; label: string; kind: "block-select" };
+  | { id: string; label: string; kind: "block-select" }
+  | { id: string; label: string; kind: "list-select" };
 
 const SECTIONS: ToolbarSection[] = [
   {
@@ -274,7 +316,8 @@ const SECTIONS: ToolbarSection[] = [
   },
   { id: "marks", label: "텍스트 서식", kind: "buttons", buttons: MARK_BUTTONS },
   { id: "block", label: "블록 종류", kind: "block-select" },
-  { id: "lists", label: "목록", kind: "buttons", buttons: LIST_BUTTONS },
+  { id: "lists", label: "목록", kind: "list-select" },
+  { id: "align", label: "정렬", kind: "buttons", buttons: ALIGN_BUTTONS },
   { id: "insert", label: "삽입", kind: "buttons", buttons: INSERT_BUTTONS },
 ];
 
@@ -291,27 +334,34 @@ export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
   // 타이핑 한 글자마다 이 컴포넌트가 리렌더된다.
   const active = useEditorState({
     editor,
-    selector: ({ editor }): ActiveState =>
-      editor
-        ? {
-            bold: editor.isActive("bold"),
-            italic: editor.isActive("italic"),
-            strike: editor.isActive("strike"),
-            code: editor.isActive("code"),
-            underline: editor.isActive("underline"),
-            link: editor.isActive("link"),
-            heading1: editor.isActive("heading", { level: 1 }),
-            heading2: editor.isActive("heading", { level: 2 }),
-            heading3: editor.isActive("heading", { level: 3 }),
-            paragraph: editor.isActive("paragraph"),
-            bulletList: editor.isActive("bulletList"),
-            orderedList: editor.isActive("orderedList"),
-            blockquote: editor.isActive("blockquote"),
-            codeBlock: editor.isActive("codeBlock"),
-            canUndo: editor.can().undo(),
-            canRedo: editor.can().redo(),
-          }
-        : INACTIVE_STATE,
+    selector: ({ editor }): ActiveState => {
+      if (!editor) return INACTIVE_STATE;
+
+      // 정렬은 "무엇에 걸리는지"와 "지금 값이 무엇인지"가 한 판정에서 같이
+      // 나온다. 둘을 따로 읽으면 이미지/문단 사이에서 어긋난다.
+      const { target, align } = readAlign(editor);
+
+      return {
+        bold: editor.isActive("bold"),
+        italic: editor.isActive("italic"),
+        strike: editor.isActive("strike"),
+        code: editor.isActive("code"),
+        underline: editor.isActive("underline"),
+        link: editor.isActive("link"),
+        heading1: editor.isActive("heading", { level: 1 }),
+        heading2: editor.isActive("heading", { level: 2 }),
+        heading3: editor.isActive("heading", { level: 3 }),
+        paragraph: editor.isActive("paragraph"),
+        bulletList: editor.isActive("bulletList"),
+        orderedList: editor.isActive("orderedList"),
+        blockquote: editor.isActive("blockquote"),
+        codeBlock: editor.isActive("codeBlock"),
+        align,
+        alignTarget: target,
+        canUndo: editor.can().undo(),
+        canRedo: editor.can().redo(),
+      };
+    },
   });
 
   const state = active ?? INACTIVE_STATE;
@@ -327,36 +377,47 @@ export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
             {index > 0 && (
               <Toolbar.Separator className="mx-1 h-5 w-px shrink-0 bg-neutral-200 dark:bg-neutral-800" />
             )}
-            {section.kind === "buttons" ? (
-              <Toolbar.Group
-                aria-label={section.label}
-                className="flex shrink-0 items-center gap-0.5"
-              >
-                {section.buttons.map((button) =>
-                  button.kind === "command" ? (
-                    <ToolbarButtonItem
-                      key={button.id}
-                      button={button}
-                      editor={editor}
-                      state={state}
-                    />
-                  ) : (
-                    <LinkPopover
-                      key={button.id}
-                      editor={editor}
-                      state={state}
-                    />
-                  ),
-                )}
-              </Toolbar.Group>
-            ) : (
-              <BlockTypeSelect editor={editor} state={state} />
-            )}
+            <SectionContent section={section} editor={editor} state={state} />
           </Fragment>
         ))}
       </Toolbar.Root>
     </Tooltip.Provider>
   );
+}
+
+interface SectionContentProps {
+  section: ToolbarSection;
+  editor: Editor | null;
+  state: ActiveState;
+}
+
+function SectionContent({ section, editor, state }: SectionContentProps) {
+  switch (section.kind) {
+    case "buttons":
+      return (
+        <Toolbar.Group
+          aria-label={section.label}
+          className="flex shrink-0 items-center gap-0.5"
+        >
+          {section.buttons.map((button) =>
+            button.kind === "command" ? (
+              <ToolbarButtonItem
+                key={button.id}
+                button={button}
+                editor={editor}
+                state={state}
+              />
+            ) : (
+              <LinkPopover key={button.id} editor={editor} state={state} />
+            ),
+          )}
+        </Toolbar.Group>
+      );
+    case "block-select":
+      return <BlockTypeSelect editor={editor} state={state} />;
+    case "list-select":
+      return <ListSelect editor={editor} state={state} />;
+  }
 }
 
 interface ToolbarButtonItemProps {
@@ -548,33 +609,91 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
   );
 }
 
-interface BlockTypeSelectProps {
+interface SelectSectionProps {
   editor: Editor | null;
   state: ActiveState;
 }
 
-function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
+function BlockTypeSelect({ editor, state }: SelectSectionProps) {
   const current =
     BLOCK_OPTIONS.find((option) => option.isActive(state))?.value ??
     "paragraph";
 
-  const handleValueChange = (value: BlockValue | null) => {
+  return (
+    <ToolbarSelect
+      label="블록 종류"
+      options={BLOCK_OPTIONS}
+      value={current}
+      disabled={!editor}
+      onChange={(value) =>
+        editor && BLOCK_OPTIONS.find((o) => o.value === value)?.run(editor)
+      }
+    />
+  );
+}
+
+function ListSelect({ editor, state }: SelectSectionProps) {
+  const current =
+    LIST_OPTIONS.find((option) => option.isActive(state))?.value ?? "none";
+
+  return (
+    <ToolbarSelect
+      label="목록"
+      options={LIST_OPTIONS}
+      value={current}
+      disabled={!editor}
+      onChange={(value) => {
+        // "목록 없음"은 지금 걸린 목록을 끄는 것이다 — 켜는 명령과 같은 토글을
+        // 한 번 더 부른다. 같은 값을 다시 고르는 경우는 ToolbarSelect가 이미
+        // 막았으므로 여기서 current는 반드시 목록이다.
+        const target = value === "none" ? current : value;
+        if (editor) LIST_OPTIONS.find((o) => o.value === target)?.run?.(editor);
+      }}
+    />
+  );
+}
+
+interface SelectOption<Value extends string> {
+  value: Value;
+  label: string;
+}
+
+interface ToolbarSelectProps<Value extends string> {
+  label: string;
+  options: SelectOption<Value>[];
+  value: Value;
+  disabled: boolean;
+  onChange: (value: Value) => void;
+}
+
+/**
+ * 블록 종류·목록처럼 "여럿 중 하나"인 상태를 고르는 드롭다운. 두 벌의 옵션이
+ * 같은 트리거·팝업을 쓰므로 값 타입만 제네릭으로 열어 둔다.
+ */
+function ToolbarSelect<Value extends string>({
+  label,
+  options,
+  value,
+  disabled,
+  onChange,
+}: ToolbarSelectProps<Value>) {
+  const handleValueChange = (next: Value | null) => {
     // 이미 선택된 값을 다시 고르면 아무 것도 하지 않는다 — 여기 쓰이는 명령은
-    // toggleHeading 같은 토글이라, 같은 값을 다시 실행하면 본문으로 꺼져버린다.
-    if (!editor || value === null || value === current) return;
-    BLOCK_OPTIONS.find((option) => option.value === value)?.run(editor);
+    // toggleHeading 같은 토글이라, 같은 값을 다시 실행하면 꺼져버린다.
+    if (next === null || next === value) return;
+    onChange(next);
   };
 
   return (
     <Select.Root
-      value={current}
+      value={value}
       onValueChange={handleValueChange}
-      disabled={!editor}
+      disabled={disabled}
     >
       <Toolbar.Button
         render={<Select.Trigger />}
-        aria-label="블록 종류"
-        disabled={!editor}
+        aria-label={label}
+        disabled={disabled}
         className={cn(
           ICON_BUTTON,
           UNPRESSED,
@@ -582,17 +701,21 @@ function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
         )}
       >
         <Select.Value className="truncate">
-          {() =>
-            BLOCK_OPTIONS.find((option) => option.value === current)?.label ??
-            "본문"
-          }
+          {() => options.find((option) => option.value === value)?.label ?? ""}
         </Select.Value>
         <Select.Icon className="text-neutral-400 dark:text-neutral-600">
           <CaretDownIcon />
         </Select.Icon>
       </Toolbar.Button>
       <Select.Portal>
-        <Select.Positioner sideOffset={4} className={POSITIONER}>
+        {/* 기본값(true)은 네이티브 select처럼 선택된 항목을 트리거 위에 포개
+            띄워 툴바를 가린다. 툴바는 sticky라 늘 화면 위쪽에 있으므로
+            아래로 떨어뜨린다. */}
+        <Select.Positioner
+          alignItemWithTrigger={false}
+          sideOffset={4}
+          className={POSITIONER}
+        >
           <Select.Popup
             className={cn(
               POPUP,
@@ -600,7 +723,7 @@ function BlockTypeSelect({ editor, state }: BlockTypeSelectProps) {
             )}
           >
             <Select.List>
-              {BLOCK_OPTIONS.map((option) => (
+              {options.map((option) => (
                 <Select.Item
                   key={option.value}
                   value={option.value}
@@ -749,6 +872,42 @@ function CheckIcon() {
       aria-hidden="true"
     >
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+// 정렬 아이콘 세 개는 가운데 짧은 줄의 시작점만 다르다. 같은 SVG를 세 번
+// 적는 대신 그 좌표만 데이터로 둔다.
+const ALIGN_LINE_START: Record<Align, number> = {
+  left: 3,
+  center: 6,
+  right: 9,
+};
+const ALIGN_LINE_LENGTH = 12;
+
+function AlignIcon({ variant }: { variant: Align }) {
+  const start = ALIGN_LINE_START[variant];
+
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line
+        x1={start}
+        y1="12"
+        x2={start + ALIGN_LINE_LENGTH}
+        y2="12"
+        strokeWidth="3"
+      />
+      <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   );
 }
