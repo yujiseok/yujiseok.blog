@@ -19,9 +19,6 @@ export const setUploadSlug = (slug: string | null) => {
   uploadSlug.current = slug;
 };
 
-/** 실패를 사용자에게 알리는 유일한 지점. 툴바와 슬래시 커맨드가 같이 쓴다. */
-const reportFailure = reportEditorError;
-
 /**
  * 숨은 input[type=file]을 그때그때 만들어 띄운다. 취소로 창을 닫으면 change가
  * 오지 않으므로 cancel도 같이 듣는다 — 안 그러면 Promise가 영영 안 풀려
@@ -110,7 +107,7 @@ export async function insertImageByUpload(editor: Editor): Promise<void> {
   // 저장 경로가 /images/<slug>/ 라 슬러그 없이는 어디에 둘지 정할 수 없다.
   // 여기서 슬러그를 되묻지 않고 상단 입력으로 돌려보낸다.
   if (!slug || !isValidSlug(slug)) {
-    reportFailure("이미지를 올리려면 슬러그를 먼저 정하세요.");
+    reportEditorError("이미지를 올리려면 슬러그를 먼저 정하세요.");
     return;
   }
 
@@ -132,7 +129,7 @@ export async function insertImageByUpload(editor: Editor): Promise<void> {
       .setImage({ src, ...(alt ? { alt } : {}), ...(size ?? {}) })
       .run();
   } catch (error) {
-    reportFailure(
+    reportEditorError(
       error instanceof Error ? error.message : "이미지를 올리지 못했습니다.",
     );
   }

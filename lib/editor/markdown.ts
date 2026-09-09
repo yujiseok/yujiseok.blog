@@ -149,7 +149,7 @@ function convertBlockToTiptap(
       }
       return {
         type: "paragraph",
-        content: convertInlineChildren(node.children, source),
+        content: convertInlineChildren(node.children, [], source),
       };
     }
     case "heading": {
@@ -158,7 +158,7 @@ function convertBlockToTiptap(
         // 상한을 3으로 깎으면 기존 글의 ####가 조용히 ###로 강등된다.
         // 마크다운이 허용하는 6까지 그대로 받는다.
         attrs: { level: node.depth },
-        content: convertInlineChildren(node.children, source),
+        content: convertInlineChildren(node.children, [], source),
       };
     }
     case "list": {
@@ -433,16 +433,12 @@ function convertAlignDivToTiptap(
     : { ...child, attrs: { ...child.attrs, align } };
 }
 
-function convertInlineChildren(
+const convertInlineChildren = (
   children: MdastNode[],
+  marks: TiptapMark[],
   source: string,
-): JSONContent[] {
-  const result: JSONContent[] = [];
-  for (const child of children) {
-    result.push(...convertInline(child, [], source));
-  }
-  return result;
-}
+): JSONContent[] =>
+  children.flatMap((child) => convertInline(child, marks, source));
 
 function convertInline(
   node: MdastNode,
@@ -453,19 +449,19 @@ function convertInline(
     case "text":
       return [textNode(node.value, marks)];
     case "strong":
-      return flattenChildren(
+      return convertInlineChildren(
         node.children,
         [...marks, { type: "bold" }],
         source,
       );
     case "emphasis":
-      return flattenChildren(
+      return convertInlineChildren(
         node.children,
         [...marks, { type: "italic" }],
         source,
       );
     case "delete":
-      return flattenChildren(
+      return convertInlineChildren(
         node.children,
         [...marks, { type: "strike" }],
         source,
@@ -480,7 +476,7 @@ function convertInline(
       }
       const attrs: Record<string, unknown> = { href: node.url };
       if (node.title) attrs.title = node.title;
-      return flattenChildren(
+      return convertInlineChildren(
         node.children,
         [...marks, { type: "link", attrs }],
         source,
@@ -492,7 +488,7 @@ function convertInline(
       return [convertImageToTiptap(node)];
     case "mdxJsxTextElement":
       if (node.name === "u") {
-        return flattenChildren(
+        return convertInlineChildren(
           node.children,
           [...marks, { type: "underline" }],
           source,
@@ -510,18 +506,6 @@ function convertInline(
 // 블록의 mdxBlock에 대응하는 인라인판. 편집은 못 하지만 저장해도 깎이지 않는다.
 function rawInline(node: MdastNode, source: string): JSONContent {
   return { type: "mdxInline", attrs: { value: rawSlice(node, source) } };
-}
-
-function flattenChildren(
-  children: MdastNode[],
-  marks: TiptapMark[],
-  source: string,
-): JSONContent[] {
-  const result: JSONContent[] = [];
-  for (const child of children) {
-    result.push(...convertInline(child, marks, source));
-  }
-  return result;
 }
 
 function textNode(text: string, marks: TiptapMark[]): JSONContent {

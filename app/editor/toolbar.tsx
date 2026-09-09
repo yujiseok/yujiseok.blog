@@ -23,6 +23,7 @@ import {
   type AlignTarget,
 } from "./align";
 import {
+  FIELD,
   ICON_BUTTON,
   KBD,
   MENU_ITEM,
@@ -583,7 +584,9 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
                 aria-label="링크 URL"
                 placeholder="https://example.com"
                 defaultValue={draft?.href ?? ""}
-                className="w-56 rounded-md border border-neutral-200 bg-transparent px-2 py-1 text-sm focus:outline-none dark:border-neutral-800"
+                // 팝오버 안의 한 줄은 h-7 아이콘 버튼과 나란하므로 FIELD의
+                // 높이·반경만 그 리듬으로 낮춘다.
+                className={cn(FIELD, "h-7 w-56 rounded-md px-2")}
               />
               <button
                 type="submit"
