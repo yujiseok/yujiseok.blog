@@ -152,12 +152,11 @@ function convertBlockToTiptap(
       };
     }
     case "heading": {
-      // 상한을 3으로 깎으면 기존 글의 ####가 조용히 ###로 강등된다.
-      // 마크다운이 허용하는 6까지 그대로 받는다.
-      const level = Math.min(6, Math.max(1, node.depth));
       return {
         type: "heading",
-        attrs: { level },
+        // 상한을 3으로 깎으면 기존 글의 ####가 조용히 ###로 강등된다.
+        // 마크다운이 허용하는 6까지 그대로 받는다.
+        attrs: { level: node.depth },
         content: convertInlineChildren(node.children, source),
       };
     }
