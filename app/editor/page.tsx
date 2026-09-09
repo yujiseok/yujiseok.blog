@@ -1,0 +1,30 @@
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+
+import EditorClient from "./editor-client";
+import { listPosts } from "./actions";
+
+// 로컬 도구라 스트리밍 껍데기를 먼저 보낼 이유가 없다. Suspense로 감싸는 대신
+// 블로킹 렌더를 허용해 목록을 갖춘 완성된 화면을 한 번에 준다.
+export const instant = false;
+
+export default async function EditorPage() {
+  // 로컬 dev 전용 글쓰기 도구다. 프로덕션 빌드에는 아예 없는 라우트로 취급한다
+  // — Server Action 쪽 가드는 actions.ts에서 별도로 다시 건다.
+  // cacheComponents가 켜져 있어 세그먼트 설정(dynamic = "force-dynamic")은 쓸 수
+  // 없다. fs를 읽는 listPosts가 빌드 타임 프리렌더에 걸리지 않도록
+  // connection()으로 요청 시점까지 미룬다.
+  await connection();
+
+  if (process.env.NODE_ENV !== "development") {
+    notFound();
+  }
+
+  const posts = await listPosts();
+
+  return (
+    <main className="mx-auto w-full max-w-5xl px-2 py-10 sm:px-4">
+      <EditorClient initialPosts={posts} />
+    </main>
+  );
+}
