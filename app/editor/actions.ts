@@ -71,11 +71,22 @@ function assertValidMetadata(metadata: PostMetadata) {
  * 문서의 형태는 갖췄는지 확인하고 아니면 즉시 던진다.
  */
 function parseDocument(json: string): JSONContent {
+  // 타입은 string이지만 실제로 넘어오는 값은 신뢰 경계 밖이다. 특히 dev에서
+  // 서버만 HMR되고 브라우저에 옛 번들이 남아 있으면 객체가 그대로 날아온다.
+  // 그때 "형식이 올바르지 않습니다"만 던지면 원인을 알 수 없어 타입을 밝힌다.
+  if (typeof json !== "string") {
+    throw new Error(
+      `문서를 JSON 문자열로 보내야 합니다(받은 타입: ${typeof json}). 브라우저를 새로고침하세요.`,
+    );
+  }
+
   const doc: unknown = (() => {
     try {
       return JSON.parse(json);
     } catch {
-      throw new Error("문서 형식이 올바르지 않습니다.");
+      throw new Error(
+        `문서 JSON을 읽지 못했습니다. 앞부분: ${json.slice(0, 40)}`,
+      );
     }
   })();
 

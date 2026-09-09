@@ -1,21 +1,17 @@
 "use client";
 
 import { Combobox } from "@base-ui/react/combobox";
+import { Toast } from "@base-ui/react/toast";
 import { format } from "date-fns";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import Image from "@tiptap/extension-image";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import {
-  useActionState,
-  useEffect,
-  useReducer,
-  useState,
-  useTransition,
-} from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useReducer, useState, useTransition } from "react";
 
-import { listPosts, readPost, savePost, type PostListItem } from "./actions";
+import { listPosts, savePost, type PostListItem } from "./actions";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
 import {
@@ -31,16 +27,12 @@ import {
 } from "./draft";
 import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
+import { EditorToastViewport, useSaveToast } from "./toast";
 import { EditorToolbar } from "./toolbar";
 
 // toISOString()은 UTC로 변환한다 — KST 자정 근처에 새 글을 쓰면 발행일이
 // 하루 밀리거나 당겨진다. date-fns의 format은 로컬 기준이다.
 const today = () => format(new Date(), "yyyy-MM-dd");
-
-type SaveResult =
-  | { status: "idle" }
-  | { status: "success" }
-  | { status: "error"; message: string };
 
 interface EditorClientProps {
   initialPosts: PostListItem[];
@@ -48,13 +40,30 @@ interface EditorClientProps {
   initialPost: LoadedPostInput | null;
 }
 
-export default function EditorClient({
-  initialPosts,
-  initialPost,
-}: EditorClientProps) {
+export default function EditorClient(props: EditorClientProps) {
+  // 저장 결과는 토스트로만 알린다. useSaveToast가 Provider 안에서만 동작하므로
+  // 폼을 한 겹 안으로 넣는다.
+  return (
+    <Toast.Provider>
+      {/* URL의 ?post이 곧 "열려 있는 글"이다. 그게 바뀌면 폼을 통째로 다시
+          세운다 — 어떤 글을 열었는지가 상태가 아니라 주소에 있어야
+          새로고침해도 살아남고, 뒤로 가기도 그냥 동작한다. */}
+      <EditorForm key={props.initialPost?.slug ?? "new"} {...props} />
+      <EditorToastViewport />
+    </Toast.Provider>
+  );
+}
+
+function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
+  const toast = useSaveToast();
+  const router = useRouter();
   const [posts, setPosts] = useState(initialPosts);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, startLoadTransition] = useTransition();
+
+  // 글을 여는 건 클라이언트 상태 변경이 아니라 이동이다. page.tsx가 ?post을
+  // 읽어 서버에서 미리 읽어 넘기므로 여기서 readPost를 다시 부를 일이 없다.
+  const openPost = (slug: string) =>
+    startLoadTransition(() => router.push(`/editor?post=${slug}`));
 
   // 폼 필드·불러온 원본·왕복 안전 여부는 항상 함께 움직인다(새 글, 글 열기,
   // 저장 완료). 흩어진 setState로 두면 한 곳을 빠뜨려 image가 사라지거나
@@ -99,45 +108,13 @@ export default function EditorClient({
   // Tiptap 에디터는 React 상태가 아니라 외부 시스템이다. draft.doc은 새 글·글
   // 열기에서만 새 참조가 되므로(다른 액션은 그대로 흘려보낸다) 타이핑마다
   // 내용을 되돌려 쓰지 않는다.
-  useEffect(() => {
-    if (!editor) return;
-    editor.commands.setContent(draft.doc);
-  }, [editor, draft.doc]);
-
-  const startNewPost = () => {
-    dispatch({ type: "reset", publishedAt: today() });
-    setLoadError(null);
-  };
-
-  const loadPost = (slug: string) => {
-    setLoadError(null);
-    startLoadTransition(async () => {
-      try {
-        const { metadata, doc, lossless } = await readPost(slug);
-        dispatch({ type: "loaded", slug, metadata, doc, lossless });
-      } catch (error) {
-        setLoadError(
-          error instanceof Error ? error.message : "글을 불러오지 못했습니다.",
-        );
-      }
-    });
-  };
-
   // form의 action으로 넘기므로 payload는 FormData다. 폼에 입력 요소가 없어
   // 값을 읽지는 않고, 트랜지션 안에서 실행되도록 하는 게 목적이다.
-  const [saveResult, dispatchSave, isSaving] = useActionState<
-    SaveResult,
-    FormData
-  >(
+  const [, dispatchSave, isSaving] = useActionState<null, FormData>(
     async () => {
       if (!editor) {
-        return {
-          status: "error",
-          message: "에디터가 아직 준비되지 않았습니다.",
-        };
-      }
-      if (!canSave(draft)) {
-        return { status: "error", message: "저장할 수 없는 상태입니다." };
+        toast.failed("에디터가 아직 준비되지 않았습니다.");
+        return null;
       }
 
       const metadata = draftMetadata(draft);
@@ -153,16 +130,22 @@ export default function EditorClient({
         });
         dispatch({ type: "saved", slug: draft.slug, metadata });
         setPosts(await listPosts());
-        return { status: "success" };
+        toast.saved(draft.slug);
+
+        // 새 글이었거나 슬러그를 바꿔 저장했다면 주소가 아직 그 글을 가리키지
+        // 않는다. 여기서 맞춰 둬야 새로고침했을 때 방금 쓴 글이 열린다.
+        if (initialPost?.slug !== draft.slug) {
+          router.replace(`/editor?post=${draft.slug}`);
+        }
       } catch (error) {
-        return {
-          status: "error",
-          message:
-            error instanceof Error ? error.message : "저장에 실패했습니다.",
-        };
+        toast.failed(
+          error instanceof Error ? error.message : "저장에 실패했습니다.",
+        );
       }
+
+      return null;
     },
-    { status: "idle" },
+    null,
   );
 
   return (
@@ -171,11 +154,11 @@ export default function EditorClient({
         <PostPicker
           posts={posts}
           selectedSlug={draft.loaded?.slug ?? null}
-          onSelect={loadPost}
+          onSelect={openPost}
         />
         <button
           type="button"
-          onClick={startNewPost}
+          onClick={() => startLoadTransition(() => router.push("/editor"))}
           className="shrink-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium dark:border-neutral-800"
         >
           + 새 글
@@ -194,10 +177,6 @@ export default function EditorClient({
           IDE에서 편집하세요.
         </p>
       )}
-      {loadError && (
-        <p className="text-xs text-red-600 dark:text-red-400">{loadError}</p>
-      )}
-
       <section className="flex flex-col gap-6">
         <div className="grid gap-3">
           <label className="grid gap-1 text-sm">
@@ -298,16 +277,6 @@ export default function EditorClient({
           >
             {isSaving ? "저장 중..." : "저장"}
           </button>
-          {saveResult.status === "success" && (
-            <span className="text-sm text-emerald-600 dark:text-emerald-400">
-              저장했습니다.
-            </span>
-          )}
-          {saveResult.status === "error" && (
-            <span className="text-sm text-red-600 dark:text-red-400">
-              {saveResult.message}
-            </span>
-          )}
         </form>
       </section>
     </div>

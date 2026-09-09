@@ -201,17 +201,15 @@ describe("저장 가능 여부", () => {
   });
 });
 
-describe("새 글로 초기화", () => {
-  it("불러온 글의 흔적을 모두 지운다", () => {
-    const draft = apply(
-      blank(),
-      { ...loadedAction({ title: "글", image: "/a.png" }), lossless: false },
-      { type: "reset", publishedAt: "2026-09-09" },
-    );
+// 새 글로 돌아가는 건 /editor로 이동해 폼을 다시 세우는 것이라, 리듀서가
+// 아니라 이 초기 상태가 "깨끗한 새 글"의 정의다.
+describe("새 글의 초기 상태", () => {
+  it("불러온 글의 흔적이 없다", () => {
+    const draft = createDraft("2026-09-09");
 
-    expect(draft).toEqual(createDraft("2026-09-09"));
     expect(isLossy(draft)).toBe(false);
     expect(isOverwrite(draft)).toBe(false);
     expect(draftMetadata(draft).image).toBeUndefined();
+    expect(draft.publishedAt).toBe("2026-09-09");
   });
 });

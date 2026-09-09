@@ -25,7 +25,6 @@ export interface Draft {
 }
 
 export type DraftAction =
-  | { type: "reset"; publishedAt: string }
   | {
       type: "loaded";
       slug: string;
@@ -63,9 +62,6 @@ export const createDraft = (publishedAt: string): Draft => ({
 
 export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
   switch (action.type) {
-    case "reset":
-      return createDraft(action.publishedAt);
-
     case "loaded":
       return {
         loaded: {
