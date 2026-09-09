@@ -102,6 +102,9 @@ html:has([data-resume-page="true"]) {
   --tw-prose-bullets: #a3a3a3;
   --tw-prose-hr: #e5e5e5;
   --tw-prose-quote-borders: #e5e5e5;
+  /* 표 테두리도 hr·구분선과 같은 뉴트럴. prose 기본은 파란 기가 도는 gray라 튄다 */
+  --tw-prose-th-borders: #e5e5e5;
+  --tw-prose-td-borders: #e5e5e5;
 
   font-size: 17px;
   line-height: 28px;
@@ -116,6 +119,8 @@ html:has([data-resume-page="true"]) {
     --tw-prose-bullets: #525252;
     --tw-prose-hr: #262626;
     --tw-prose-quote-borders: #262626;
+    --tw-prose-th-borders: #262626;
+    --tw-prose-td-borders: #262626;
   }
 }
 
