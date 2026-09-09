@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { Combobox } from "@base-ui/react/combobox";
 import { Toast } from "@base-ui/react/toast";
 import { format } from "date-fns";
@@ -11,7 +12,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useRouter } from "next/navigation";
 import { useActionState, useReducer, useState, useTransition } from "react";
 
-import { listPosts, savePost, type PostListItem } from "./actions";
+import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
 import {
@@ -43,8 +44,9 @@ interface EditorClientProps {
 export default function EditorClient(props: EditorClientProps) {
   // 저장 결과는 토스트로만 알린다. useSaveToast가 Provider 안에서만 동작하므로
   // 폼을 한 겹 안으로 넣는다.
+  // limit 없이 두면 같은 실패를 반복할 때 토스트가 끝없이 쌓여 화면을 덮는다.
   return (
-    <Toast.Provider>
+    <Toast.Provider limit={3}>
       {/* URL의 ?post이 곧 "열려 있는 글"이다. 그게 바뀌면 폼을 통째로 다시
           세운다 — 어떤 글을 열었는지가 상태가 아니라 주소에 있어야
           새로고침해도 살아남고, 뒤로 가기도 그냥 동작한다. */}
@@ -59,6 +61,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
   const router = useRouter();
   const [posts, setPosts] = useState(initialPosts);
   const [isLoading, startLoadTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   // 글을 여는 건 클라이언트 상태 변경이 아니라 이동이다. page.tsx가 ?post을
   // 읽어 서버에서 미리 읽어 넘기므로 여기서 readPost를 다시 부를 일이 없다.
@@ -96,7 +99,13 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       // 새 블록은 language가 null이라 칠할 근거가 없다. 이 블로그 코드펜스는
       // ts/tsx가 대부분이라 ts로 열고, 다르면 블록 우상단에서 바꾼다.
       // 기존 글의 언어 없는 펜스는 markdownToDoc이 null을 명시해 그대로 남는다.
-      CodeBlockShiki.configure({ defaultLanguage: "ts" }),
+      // 코드블록 안에서 Tab은 포커스를 옮기는 대신 들여쓴다. 목록의 Tab
+      // 들여쓰기는 StarterKit의 listItem이 이미 처리한다.
+      CodeBlockShiki.configure({
+        defaultLanguage: "ts",
+        enableTabIndentation: true,
+        tabSize: 2,
+      }),
       Underline,
       Image,
       MdxBlock,
@@ -108,6 +117,19 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
   // Tiptap 에디터는 React 상태가 아니라 외부 시스템이다. draft.doc은 새 글·글
   // 열기에서만 새 참조가 되므로(다른 액션은 그대로 흘려보낸다) 타이핑마다
   // 내용을 되돌려 쓰지 않는다.
+  const removePost = (slug: string) =>
+    startDeleteTransition(async () => {
+      try {
+        await deletePost(slug);
+        // 방금 지운 글을 계속 보여 줄 수 없다. 빈 에디터로 되돌린다.
+        router.push("/editor");
+      } catch (error) {
+        toast.failed(
+          error instanceof Error ? error.message : "삭제하지 못했습니다.",
+        );
+      }
+    });
+
   // form의 action으로 넘기므로 payload는 FormData다. 폼에 입력 요소가 없어
   // 값을 읽지는 않고, 트랜지션 안에서 실행되도록 하는 게 목적이다.
   const [, dispatchSave, isSaving] = useActionState<null, FormData>(
@@ -255,9 +277,12 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         </div>
 
         <div className="relative rounded-lg border border-neutral-200 dark:border-neutral-800">
-          <EditorToolbar editor={editor} />
+          <EditorToolbar editor={editor} slug={draft.slug} />
+          {/* DragHandle의 기본 배치는 left-start라 핸들 오른쪽 끝이 블록 왼쪽
+              끝에 딱 붙고 위로 정렬된다. 오른쪽 여백으로 본문과 떼어 놓고,
+              본문 한 줄 높이(1.75rem) 안에서 세로 가운데로 맞춘다. */}
           {editor && (
-            <DragHandle editor={editor}>
+            <DragHandle editor={editor} className="flex h-7 items-center pr-2">
               <GripIcon />
             </DragHandle>
           )}
@@ -269,19 +294,80 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
 
         {/* useActionState의 dispatch는 트랜지션 안에서 불러야 isSaving이 제대로
             갱신된다. form의 action으로 넘기면 React가 알아서 감싸 준다. */}
-        <form action={dispatchSave} className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={isSaving || !canSave(draft)}
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-40 dark:bg-white dark:text-black"
-          >
-            {isSaving ? "저장 중..." : "저장"}
-          </button>
-        </form>
+        <div className="flex items-center gap-3">
+          <form action={dispatchSave}>
+            <button
+              type="submit"
+              disabled={isSaving || !canSave(draft)}
+              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-40 dark:bg-white dark:text-black"
+            >
+              {isSaving ? "저장 중..." : "저장"}
+            </button>
+          </form>
+
+          {/* 이미 파일이 있는 글만 지울 수 있다. 저장한 적 없는 새 글은
+              지울 대상 자체가 없다. */}
+          {draft.loaded && (
+            <DeletePostDialog
+              title={draft.loaded.metadata.title}
+              disabled={isDeleting}
+              onConfirm={() => removePost(draft.loaded!.slug)}
+            />
+          )}
+        </div>
       </section>
     </div>
   );
 }
+
+interface DeletePostDialogProps {
+  title: string;
+  disabled: boolean;
+  onConfirm: () => void;
+}
+
+// 되돌릴 수 없는 동작이라 한 번 묻는다. 네이티브 confirm 대신 Base UI를 써
+// 나머지 UI와 톤을 맞춘다.
+const DeletePostDialog = ({
+  title,
+  disabled,
+  onConfirm,
+}: DeletePostDialogProps) => (
+  <AlertDialog.Root>
+    <AlertDialog.Trigger
+      // form 안이 아니지만, 나중에 옮겨도 submit으로 새지 않게 명시한다
+      type="button"
+      disabled={disabled}
+      className="rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-40 dark:text-red-400"
+    >
+      {disabled ? "삭제 중..." : "삭제"}
+    </AlertDialog.Trigger>
+
+    <AlertDialog.Portal>
+      <AlertDialog.Backdrop className="fixed inset-0 z-40 bg-black/40 data-ending-style:opacity-0 data-starting-style:opacity-0" />
+      <AlertDialog.Popup className="fixed top-1/2 left-1/2 z-50 flex w-80 max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
+        <AlertDialog.Title className="text-sm font-medium">
+          이 글을 지울까요?
+        </AlertDialog.Title>
+        <AlertDialog.Description className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+          &ldquo;{title}&rdquo; 파일을 지웁니다. 되돌릴 수 없습니다. 올린
+          이미지는 남습니다.
+        </AlertDialog.Description>
+        <div className="flex justify-end gap-2">
+          <AlertDialog.Close className="rounded-lg px-3 py-1.5 text-sm text-neutral-600 transition-colors hover:bg-black/5 dark:text-neutral-300 dark:hover:bg-neutral-200/10">
+            취소
+          </AlertDialog.Close>
+          <AlertDialog.Close
+            onClick={onConfirm}
+            className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+          >
+            삭제
+          </AlertDialog.Close>
+        </div>
+      </AlertDialog.Popup>
+    </AlertDialog.Portal>
+  </AlertDialog.Root>
+);
 
 interface PostOption {
   value: string;

@@ -2,20 +2,40 @@
 
 import { Toast } from "@base-ui/react/toast";
 import Link from "next/link";
+import { useEffect } from "react";
 
 /**
  * 저장 결과를 알리는 토스트. 성공하면 방금 쓴 글로 바로 갈 수 있어야 해서
- * slug를 같이 실어 보낸다. 실패는 눈으로 놓치면 글을 잃은 줄 모르므로
- * 자동으로 사라지지 않는다(useSaveToast의 timeout 참고).
+ * slug를 같이 실어 보낸다.
  */
 interface SaveToastData {
   slug?: string;
 }
 
+// 에러는 성공보다 오래 보여 주되 반드시 사라진다. 무한으로 두면 같은 실패를
+// 반복할 때 화면이 토스트로 덮인다.
+const ERROR_TIMEOUT = 8000;
+
 const slugOf = (data: unknown): string | null =>
   typeof data === "object" && data !== null && "slug" in data
     ? ((data as SaveToastData).slug ?? null)
     : null;
+
+/**
+ * 훅을 쓸 수 없는 자리(ProseMirror 플러그인, 업로드 유틸)에서도 실패를 알려야
+ * 한다. Provider 안에서 싱크를 등록해 두고 그쪽에서 부른다 — 에디터가 화면에
+ * 하나뿐인 로컬 도구라 이 정도 seam이 가장 싸다.
+ */
+let sink: ((message: string) => void) | null = null;
+
+export const reportEditorError = (message: string) => {
+  if (sink) {
+    sink(message);
+    return;
+  }
+  // Provider가 아직 안 붙었을 때 조용히 삼키면 원인을 알 수 없다.
+  console.error(message);
+};
 
 export function useSaveToast() {
   const manager = Toast.useToastManager();
@@ -32,13 +52,28 @@ export function useSaveToast() {
         title: "저장하지 못했습니다",
         description: message,
         type: "error",
-        // 0이면 직접 닫을 때까지 남는다. 저장 실패는 놓치면 안 되는 소식이다.
-        timeout: 0,
+        // 저장 실패는 성공보다 오래 남기지만, 무한히 두면 화면을 덮는다.
+        timeout: ERROR_TIMEOUT,
       }),
   };
 }
 
 export function EditorToastViewport() {
+  const manager = Toast.useToastManager();
+
+  useEffect(() => {
+    sink = (message) =>
+      manager.add({
+        title: "문제가 생겼습니다",
+        description: message,
+        type: "error",
+        timeout: ERROR_TIMEOUT,
+      });
+    return () => {
+      sink = null;
+    };
+  }, [manager]);
+
   return (
     <Toast.Portal>
       <Toast.Viewport className="fixed right-4 bottom-4 z-50 flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">

@@ -161,13 +161,14 @@ describe("개발 환경 가드", () => {
     "NODE_ENV가 %s면 모든 액션이 거부된다",
     async (env) => {
       vi.stubEnv("NODE_ENV", env);
-      const { listPosts, readPost, savePost } = await loadActions();
+      const { listPosts, readPost, savePost, deletePost } = await loadActions();
 
       await expect(listPosts()).rejects.toThrow();
       await expect(readPost("any-post")).rejects.toThrow();
       await expect(
         savePost({ slug: "any-post", metadata: METADATA, doc: DOC }),
       ).rejects.toThrow();
+      await expect(deletePost("any-post")).rejects.toThrow();
     },
   );
 });
@@ -223,5 +224,56 @@ describe("readPost 무손실 판정", () => {
     );
 
     expect((await readPost("inline-jsx")).lossless).toBe(true);
+  });
+});
+
+describe("deletePost", () => {
+  it("글 파일을 지운다", async () => {
+    const { savePost, deletePost, listPosts } = await loadActions();
+
+    await savePost({ slug: "goodbye", metadata: METADATA, doc: DOC });
+    await deletePost("goodbye");
+
+    expect(fs.existsSync(path.join(writingDir, "goodbye.mdx"))).toBe(false);
+    expect(await listPosts()).toEqual([]);
+  });
+
+  it("다른 글은 건드리지 않는다", async () => {
+    const { savePost, deletePost, listPosts } = await loadActions();
+
+    await savePost({ slug: "keep", metadata: METADATA, doc: DOC });
+    await savePost({ slug: "drop", metadata: METADATA, doc: DOC });
+    await deletePost("drop");
+
+    expect((await listPosts()).map((post) => post.slug)).toEqual(["keep"]);
+  });
+
+  it("없는 글을 지우려 하면 실패한다", async () => {
+    const { deletePost } = await loadActions();
+
+    // 조용히 성공하면 슬러그를 잘못 눌러도 알 수 없다
+    await expect(deletePost("never-existed")).rejects.toThrow();
+  });
+
+  it.each(["../evil", "a/b", "/etc/passwd", "..", ".hidden", "", "Upper"])(
+    "경로를 벗어나는 slug를 거부한다: %s",
+    async (slug) => {
+      const { deletePost } = await loadActions();
+
+      await expect(deletePost(slug)).rejects.toThrow();
+    },
+  );
+
+  it("업로드한 이미지는 남긴다", async () => {
+    const { savePost, deletePost } = await loadActions();
+    const imageDir = path.join(tmpDir, "public", "images", "with-image");
+    fs.mkdirSync(imageDir, { recursive: true });
+    fs.writeFileSync(path.join(imageDir, "shot.png"), "png");
+
+    await savePost({ slug: "with-image", metadata: METADATA, doc: DOC });
+    await deletePost("with-image");
+
+    // 다른 글이 같은 파일을 참조할 수 있다. 글 하나 지우자고 지우지 않는다
+    expect(fs.existsSync(path.join(imageDir, "shot.png"))).toBe(true);
   });
 });

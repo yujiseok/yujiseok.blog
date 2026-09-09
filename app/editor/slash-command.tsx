@@ -9,6 +9,8 @@ import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 
 import { cn } from "@/lib/cn";
 
+import { insertImageByUpload } from "./image-upload";
+
 export interface SlashCommandItem {
   title: string;
   keywords: string[];
@@ -91,13 +93,11 @@ const SLASH_ITEMS: SlashCommandItem[] = [
     title: "이미지",
     keywords: ["image", "img", "이미지"],
     run: (editor, range) => {
-      const url = window.prompt("이미지 URL을 입력하세요");
-      const chain = editor.chain().focus().deleteRange(range);
-      if (url) {
-        chain.setImage({ src: url }).run();
-      } else {
-        chain.run();
-      }
+      // 파일 선택창을 열기 전에 "/이미지" 텍스트부터 지운다. 업로드가 끝날
+      // 때까지 남겨두면 명령이 씹힌 것처럼 보이고, 그 사이 커서가 움직이면
+      // range가 엉뚱한 곳을 가리킨다.
+      editor.chain().focus().deleteRange(range).run();
+      void insertImageByUpload(editor);
     },
   },
 ];

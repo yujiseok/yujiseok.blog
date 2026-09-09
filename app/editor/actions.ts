@@ -189,3 +189,23 @@ export async function savePost(input: SavePostInput): Promise<{ ok: true }> {
 
   return { ok: true };
 }
+
+export async function deletePost(slug: string): Promise<{ ok: true }> {
+  assertDevOnly();
+
+  const filePath = resolvePostPath(slug);
+
+  if (!(await exists(filePath))) {
+    throw new Error(`없는 글입니다: ${slug}`);
+  }
+
+  // public/images/<slug>/ 는 남긴다. 글 하나 지우자고 다른 글이 참조할 수도
+  // 있는 파일까지 건드리지 않는다 — 필요하면 직접 지우는 게 안전하다.
+  await fs.unlink(filePath);
+
+  revalidatePath("/");
+  revalidatePath("/writing");
+  revalidatePath(`/writing/${slug}`);
+
+  return { ok: true };
+}

@@ -1,16 +1,27 @@
 "use client";
 
+import { Popover } from "@base-ui/react/popover";
 import { Select } from "@base-ui/react/select";
 import { Toolbar } from "@base-ui/react/toolbar";
 import { Tooltip } from "@base-ui/react/tooltip";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
-import { Fragment, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 import { cn } from "@/lib/cn";
 
+import { insertImageByUpload, setUploadSlug } from "./image-upload";
+
 interface EditorToolbarProps {
   editor: Editor | null;
+  /** 업로드한 이미지가 들어갈 public/images/<slug>/ 를 정한다. 없으면 업로드를 거절한다 */
+  slug?: string;
 }
 
 interface ActiveState {
@@ -61,11 +72,24 @@ interface ButtonConfig {
   content: ReactNode;
   isActive?: (state: ActiveState) => boolean;
   isDisabled?: (state: ActiveState) => boolean;
-  run: (editor: Editor) => void;
+  // 업로드처럼 시간이 걸리는 명령은 Promise를 돌려준다. 그동안 버튼이 잠기고
+  // 스피너가 돈다 — 진행 상태를 명령마다 따로 들고 있을 필요가 없다.
+  // 반환 타입이 unknown인 건 대부분의 명령이 chain().run()의 boolean을 그대로
+  // 흘려보내기 때문이다. Promise가 아닌 값은 전부 무시한다.
+  run: (editor: Editor) => unknown;
 }
 
-const HISTORY_BUTTONS: ButtonConfig[] = [
+// 대부분의 항목은 누르는 즉시 run이 도는 버튼이지만, 링크는 URL을 받아야 해서
+// 팝오버가 필요하다. 섹션이 kind로 갈리듯 항목도 kind로 갈라 특별 취급을
+// 렌더러 한 곳에 가둔다 — 나머지 버튼은 여전히 설정 배열 그대로 렌더된다.
+// 링크 항목이 라벨·아이콘을 들고 있지 않은 건 BlockTypeSelect가 BLOCK_OPTIONS를
+// 들고 있는 것과 같은 이유다: 팝오버가 자기 UI를 온전히 소유한다.
+type ToolbarButton =
+  ({ kind: "command" } & ButtonConfig) | { kind: "link"; id: string };
+
+const HISTORY_BUTTONS: ToolbarButton[] = [
   {
+    kind: "command",
     id: "undo",
     label: "실행 취소",
     shortcut: "⌘Z",
@@ -74,6 +98,7 @@ const HISTORY_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().undo().run(),
   },
   {
+    kind: "command",
     id: "redo",
     label: "다시 실행",
     shortcut: "⇧⌘Z",
@@ -83,8 +108,9 @@ const HISTORY_BUTTONS: ButtonConfig[] = [
   },
 ];
 
-const MARK_BUTTONS: ButtonConfig[] = [
+const MARK_BUTTONS: ToolbarButton[] = [
   {
+    kind: "command",
     id: "bold",
     label: "굵게",
     shortcut: "⌘B",
@@ -93,6 +119,7 @@ const MARK_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().toggleBold().run(),
   },
   {
+    kind: "command",
     id: "italic",
     label: "기울임",
     shortcut: "⌘I",
@@ -101,6 +128,7 @@ const MARK_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().toggleItalic().run(),
   },
   {
+    kind: "command",
     id: "strike",
     label: "취소선",
     shortcut: "⇧⌘S",
@@ -109,6 +137,7 @@ const MARK_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().toggleStrike().run(),
   },
   {
+    kind: "command",
     id: "underline",
     label: "밑줄",
     shortcut: "⌘U",
@@ -117,6 +146,7 @@ const MARK_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().toggleUnderline().run(),
   },
   {
+    kind: "command",
     id: "code",
     label: "인라인 코드",
     shortcut: "⌘E",
@@ -126,8 +156,9 @@ const MARK_BUTTONS: ButtonConfig[] = [
   },
 ];
 
-const LIST_BUTTONS: ButtonConfig[] = [
+const LIST_BUTTONS: ToolbarButton[] = [
   {
+    kind: "command",
     id: "bulletList",
     label: "불릿 목록",
     content: "•",
@@ -135,6 +166,7 @@ const LIST_BUTTONS: ButtonConfig[] = [
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
   {
+    kind: "command",
     id: "orderedList",
     label: "번호 목록",
     content: "1.",
@@ -143,43 +175,22 @@ const LIST_BUTTONS: ButtonConfig[] = [
   },
 ];
 
-const handleLink = (editor: Editor) => {
-  const previousUrl = editor.getAttributes("link").href as string | undefined;
-  const url = window.prompt("링크 URL을 입력하세요", previousUrl ?? "");
-  if (url === null) return; // 취소
-  if (url.trim() === "") {
-    editor.chain().focus().unsetLink().run();
-    return;
-  }
-  editor.chain().focus().setLink({ href: url.trim() }).run();
-};
-
-const handleImage = (editor: Editor) => {
-  const url = window.prompt("이미지 URL을 입력하세요");
-  if (!url) return;
-  editor.chain().focus().setImage({ src: url }).run();
-};
-
-const INSERT_BUTTONS: ButtonConfig[] = [
+const INSERT_BUTTONS: ToolbarButton[] = [
   {
+    kind: "command",
     id: "horizontalRule",
     label: "구분선",
     content: "—",
     run: (editor) => editor.chain().focus().setHorizontalRule().run(),
   },
   {
+    kind: "command",
     id: "image",
     label: "이미지",
     content: <ImageIcon />,
-    run: handleImage,
+    run: insertImageByUpload,
   },
-  {
-    id: "link",
-    label: "링크",
-    content: <LinkIcon />,
-    isActive: (state) => state.link,
-    run: handleLink,
-  },
+  { kind: "link", id: "link" },
 ];
 
 type BlockValue =
@@ -241,7 +252,7 @@ const BLOCK_OPTIONS: BlockOption[] = [
 // 그룹을 데이터로 표현해 구분선이 그룹 사이에 자동으로 나오게 한다. 버튼을
 // 하나씩 나열하는 대신 이 배열 + BLOCK_OPTIONS만 고치면 툴바가 바뀐다.
 type ToolbarSection =
-  | { id: string; label: string; kind: "buttons"; buttons: ButtonConfig[] }
+  | { id: string; label: string; kind: "buttons"; buttons: ToolbarButton[] }
   | { id: string; label: string; kind: "block-select" };
 
 const SECTIONS: ToolbarSection[] = [
@@ -257,7 +268,15 @@ const SECTIONS: ToolbarSection[] = [
   { id: "insert", label: "삽입", kind: "buttons", buttons: INSERT_BUTTONS },
 ];
 
-export function EditorToolbar({ editor }: EditorToolbarProps) {
+export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
+  // 슬래시 커맨드의 이미지 항목은 ProseMirror 플러그인 안에서 실행돼 이 prop이
+  // 닿지 않는다. 업로드 모듈이 들고 있는 값과 동기화해 두 진입점이 같은 slug를
+  // 쓰게 한다 — React 밖의 외부 시스템이라 effect가 맞는 자리다.
+  useEffect(() => {
+    setUploadSlug(slug ?? null);
+    return () => setUploadSlug(null);
+  }, [slug]);
+
   // 트랜잭션마다 필요한 불리언만 구독한다 — editor 자체를 상태로 들고 있으면
   // 타이핑 한 글자마다 이 컴포넌트가 리렌더된다.
   const active = useEditorState({
@@ -303,14 +322,22 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 aria-label={section.label}
                 className="flex shrink-0 items-center gap-0.5"
               >
-                {section.buttons.map((button) => (
-                  <ToolbarButtonItem
-                    key={button.id}
-                    button={button}
-                    editor={editor}
-                    state={state}
-                  />
-                ))}
+                {section.buttons.map((button) =>
+                  button.kind === "command" ? (
+                    <ToolbarButtonItem
+                      key={button.id}
+                      button={button}
+                      editor={editor}
+                      state={state}
+                    />
+                  ) : (
+                    <LinkPopover
+                      key={button.id}
+                      editor={editor}
+                      state={state}
+                    />
+                  ),
+                )}
               </Toolbar.Group>
             ) : (
               <BlockTypeSelect editor={editor} state={state} />
@@ -339,8 +366,27 @@ interface ToolbarButtonItemProps {
 }
 
 function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
+  const [isRunning, setIsRunning] = useState(false);
+
   const isActive = button.isActive?.(state) ?? false;
-  const disabled = !editor || (button.isDisabled?.(state) ?? false);
+  const disabled =
+    !editor || isRunning || (button.isDisabled?.(state) ?? false);
+
+  // 동기 명령이면 run이 아무 것도 돌려주지 않아 상태가 한 번도 바뀌지 않는다.
+  // 업로드처럼 Promise를 돌려주는 명령만 끝날 때까지 버튼을 잠근다 — 파일
+  // 선택창이 열려 있는 동안 같은 버튼이 두 번 눌리는 걸 막는다.
+  const handleClick = async () => {
+    if (!editor) return;
+    const running = button.run(editor);
+    if (!(running instanceof Promise)) return;
+
+    setIsRunning(true);
+    try {
+      await running;
+    } finally {
+      setIsRunning(false);
+    }
+  };
 
   return (
     <Tooltip.Root>
@@ -349,12 +395,13 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
           <Toolbar.Button
             aria-label={button.label}
             aria-pressed={isActive}
+            aria-busy={isRunning}
             disabled={disabled}
             // 클릭이 mousedown 시점에 에디터의 selection focus를 뺏어가는 걸
             // 막는다 — preventDefault 없이는 버튼을 누르는 순간 에디터가
             // blur되어 다음 커맨드가 잘못된(또는 사라진) selection에 적용된다.
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => editor && button.run(editor)}
+            onClick={handleClick}
             className={cn(
               buttonBaseClass,
               isActive ? buttonActiveClass : buttonInactiveClass,
@@ -362,7 +409,7 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
           />
         }
       >
-        {button.content}
+        {isRunning ? <SpinnerIcon /> : button.content}
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner sideOffset={8}>
@@ -375,6 +422,144 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>
+  );
+}
+
+// 팝오버를 여는 순간의 selection과 그때의 href. 입력창으로 포커스가 넘어가면
+// 에디터가 blur되고, 그 사이 selection이 흔들리면 엉뚱한 곳에 링크가 붙는다.
+// 적용 시점에 이 범위를 되돌린 뒤 명령을 건다.
+interface LinkDraft {
+  from: number;
+  to: number;
+  href: string;
+}
+
+interface LinkPopoverProps {
+  editor: Editor | null;
+  state: ActiveState;
+}
+
+// window.prompt를 대신한다. 세 갈래 동작은 그대로다 — 그냥 닫으면 아무 일도
+// 없고(취소), 빈 값으로 적용하면 unsetLink, 값이 있으면 setLink다.
+function LinkPopover({ editor, state }: LinkPopoverProps) {
+  // 열림 여부와 "어디에 적용할지"를 한 상태로 묶는다 — selection을 모르는 채
+  // 열려 있는 상태를 만들 수 없다. 닫히면 팝업이 언마운트돼 다음에 열 때
+  // 입력값이 defaultValue로 새로 채워진다.
+  const [draft, setDraft] = useState<LinkDraft | null>(null);
+  const isOpen = draft !== null;
+
+  const handleOpenChange = (open: boolean) => {
+    if (!editor) return;
+    if (!open) {
+      setDraft(null);
+      // Esc·바깥 클릭으로 닫아도 커서를 에디터로 돌려준다. 안 그러면 포커스가
+      // body로 떨어져 방금까지 쓰던 자리를 잃는다.
+      editor.chain().focus().run();
+      return;
+    }
+    const { from, to } = editor.state.selection;
+    // getAttributes는 Record<string, any>라 값을 그대로 믿지 않는다.
+    const href: unknown = editor.getAttributes("link").href;
+    setDraft({ from, to, href: typeof href === "string" ? href : "" });
+  };
+
+  const applyLink = (rawHref: string) => {
+    if (!editor || !draft) return;
+    const href = rawHref.trim();
+    const chain = editor
+      .chain()
+      .focus()
+      .setTextSelection({ from: draft.from, to: draft.to });
+    (href === "" ? chain.unsetLink() : chain.setLink({ href })).run();
+    setDraft(null);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // form이라 Enter가 곧 적용이다. 별도 키 핸들러를 달 이유가 없다.
+    const url = new FormData(event.currentTarget).get("url");
+    applyLink(typeof url === "string" ? url : "");
+  };
+
+  return (
+    <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
+      {/* 팝오버가 열려 있는 동안엔 툴팁을 끈다 — 같은 버튼에 말풍선과 입력창이
+          겹쳐 뜨면 입력창을 가린다. */}
+      <Tooltip.Root disabled={isOpen}>
+        <Tooltip.Trigger
+          render={
+            <Popover.Trigger
+              render={
+                <Toolbar.Button
+                  aria-label="링크"
+                  aria-pressed={state.link}
+                  disabled={!editor}
+                  // 다른 버튼과 같은 이유로 mousedown을 막는다 — 여기서
+                  // 에디터가 blur되면 팝오버를 열기도 전에 selection을 잃는다.
+                  onMouseDown={(event) => event.preventDefault()}
+                  className={cn(
+                    buttonBaseClass,
+                    state.link ? buttonActiveClass : buttonInactiveClass,
+                  )}
+                />
+              }
+            />
+          }
+        >
+          <LinkIcon />
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner sideOffset={8}>
+            <Tooltip.Popup className={tooltipPopupClass}>링크</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+      <Popover.Portal>
+        <Popover.Positioner
+          align="start"
+          sideOffset={8}
+          className="z-20 outline-none"
+        >
+          {/* 닫힐 때 Base UI가 트리거로 포커스를 되돌리면 위에서 건 에디터
+              포커스를 도로 뺏는다. 포커스 복귀는 이 컴포넌트가 직접 맡는다. */}
+          <Popover.Popup
+            finalFocus={false}
+            className="rounded-lg border border-neutral-200 bg-white p-2 shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
+          >
+            <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
+              <input
+                // type="url"로 두면 /posts/foo 같은 내부 경로가 네이티브 검증에
+                // 걸린다. 본문 링크는 상대 경로도 쓰므로 형식을 강제하지 않는다.
+                type="text"
+                name="url"
+                inputMode="url"
+                autoComplete="off"
+                aria-label="링크 URL"
+                placeholder="https://example.com"
+                defaultValue={draft?.href ?? ""}
+                className="w-56 rounded-md border border-neutral-200 bg-transparent px-2 py-1 text-sm focus:outline-none dark:border-neutral-800"
+              />
+              <button
+                type="submit"
+                className={cn(buttonBaseClass, buttonInactiveClass, "px-2")}
+              >
+                적용
+              </button>
+              {/* 걸린 링크가 없을 때 띄우면 아무 일도 하지 않는 버튼이 된다 */}
+              {draft !== null && draft.href !== "" && (
+                <button
+                  type="button"
+                  onClick={() => applyLink("")}
+                  className={cn(buttonBaseClass, buttonInactiveClass, "px-2")}
+                >
+                  해제
+                </button>
+              )}
+            </form>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 
@@ -519,6 +704,25 @@ function ImageIcon() {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
+// 회전은 CSS에 맡긴다 — 진행 표시 하나 때문에 애니메이션 루프를 돌릴 이유가 없다
+function SpinnerIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className="animate-spin"
+      aria-hidden="true"
+    >
+      <path d="M12 3a9 9 0 1 0 9 9" />
     </svg>
   );
 }
