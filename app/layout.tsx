@@ -67,7 +67,8 @@ export default function RootLayout({
       <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-white">
         {/* Lenis가 children을 감싸야 하위의 useLenis()가 인스턴스를 받는다.
             형제로 두면 컨텍스트가 비어 목차 클릭 스크롤이 동작하지 않는다.
-            상단 blur 스트립은 헤더가 대신하므로 뺐다. */}
+            상단에 있던 backdrop-blur 스트립은 배경이 평면이 되면서 할 일이
+            없어져 뺐다 — 스크롤마다 재래스터 비용만 들었다. */}
         <Lenis>{children}</Lenis>
 
         <Analytics />

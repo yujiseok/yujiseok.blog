@@ -117,8 +117,9 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
           {writing.metadata.summary}
         </p>
 
-        {/* scroll-mt는 목차 클릭·해시 이동 시 제목이 화면 맨 위에 붙지 않게 한다 */}
-        <article className="prose dark:prose-invert prose-headings:scroll-mt-28 mx-auto mt-10 max-w-2xl">
+        {/* scroll-mt는 해시 이동 시 제목이 화면 맨 위에 붙지 않게 한다.
+            tableOfContents.tsx의 SCROLL_OFFSET(-32px)과 같은 값이다. */}
+        <article className="prose dark:prose-invert prose-headings:scroll-mt-8 mx-auto mt-10 max-w-2xl">
           <Content />
         </article>
       </BlurContainer>

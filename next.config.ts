@@ -21,8 +21,9 @@ const nextConfig: NextConfig = {
     ["/post", "/writing"].flatMap((legacy) => [
       { source: legacy, destination: "/posts", permanent: true },
       {
-        source: `${legacy}/:slug`,
-        destination: "/posts/:slug",
+        // :path*라야 /writing/<slug>/opengraph-image 같은 하위 경로도 따라온다
+        source: `${legacy}/:path*`,
+        destination: "/posts/:path*",
         permanent: true,
       },
     ]),

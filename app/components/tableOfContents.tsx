@@ -5,11 +5,9 @@ import { useLenis } from "lenis/react";
 import { cn } from "@/lib/cn";
 import type { TocEntry } from "@/lib/toc";
 
-// indent는 0~2로 정규화돼 오지만 Tailwind는 동적 클래스를 못 만든다.
-const INDENT_CLASS = ["pl-4", "pl-7", "pl-10"] as const;
-
-// 헤더(56px)에 가리지 않도록 띄우는 여백
-const SCROLL_OFFSET = -96;
+// 고정 헤더는 없다. 제목이 뷰포트 맨 위에 딱 붙지 않을 만큼만 띄운다.
+// article의 scroll-mt와 같은 값이어야 클릭 이동과 해시 이동이 같은 자리에 선다.
+const SCROLL_OFFSET = -32;
 
 // 뷰포트 상단 30% 밴드. 여기 들어온 마지막 heading을 읽는 중으로 본다.
 const SPY_ROOT_MARGIN = "0px 0px -70% 0px";
@@ -100,7 +98,7 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
     >
       <nav className="mx-auto w-full max-w-6xl">
         <ul className="pointer-events-auto max-h-[calc(100vh-16rem)] w-56 overflow-y-auto overscroll-contain text-sm">
-          {entries.map(({ id, text, indent }) => {
+          {entries.map(({ id, text }) => {
             const active = id === activeId;
 
             return (
@@ -110,8 +108,8 @@ export const TableOfContents = ({ entries }: { entries: TocEntry[] }) => {
                   onClick={(event) => scrollToHeading(event, id)}
                   aria-current={active ? "location" : undefined}
                   className={cn(
-                    "block border-l py-1.5 leading-snug break-keep transition-colors",
-                    INDENT_CLASS[indent],
+                    // 목차는 최상위 제목만 받으므로 들여쓰기 단계가 없다
+                    "block border-l py-1.5 pl-4 leading-snug break-keep transition-colors",
                     active
                       ? "border-black text-black dark:border-white dark:text-white"
                       : "border-neutral-200 text-neutral-500 hover:text-black dark:border-neutral-800 dark:text-neutral-400 dark:hover:text-white",

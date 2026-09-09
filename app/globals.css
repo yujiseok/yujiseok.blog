@@ -133,8 +133,8 @@ html:has([data-resume-page="true"]) {
 }
 
 .prose h3 {
-  font-size: 20px;
-  line-height: 30px;
+  font-size: 24px;
+  line-height: 32px;
   font-weight: 500;
   letter-spacing: -0.01em;
   margin-block: 40px 16px;
