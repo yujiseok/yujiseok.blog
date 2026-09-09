@@ -81,7 +81,9 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
   return (
     <>
       <FixedBackLink href="/posts" />
-      <TableOfContents entries={toc} />
+      {/* 목차는 최상위 제목만 보여준다. 하위까지 펴면 긴 글에서 목차가 본문보다
+          길어지고, 훑는 용도로는 큰 단락만 있으면 충분하다. */}
+      <TableOfContents entries={toc.filter(({ indent }) => indent === 0)} />
       <BlurContainer className="block gap-0">
         <script
           type="application/ld+json"
@@ -90,11 +92,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        {/* 히어로는 본문 칼럼(672px)보다 넓다. 레이아웃 폭을 늘리면 (main)의
-            다른 라우트까지 흔들리므로, lg 이상에서만 음수 마진으로 양쪽
-            48px씩 밀어내 max-w-3xl(768px)을 만든다. 그보다 좁은 화면은
-            뷰포트를 넘치므로 칼럼 폭 그대로 둔다. */}
-        <header className="mb-10 w-full text-center lg:-mx-12 lg:w-[calc(100%+6rem)]">
+        <header className="mb-10 w-full text-center">
           <div className="flex items-center justify-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
             <time dateTime={writing.metadata.publishedAt}>
               {formatPostDate(writing.metadata.publishedAt)}

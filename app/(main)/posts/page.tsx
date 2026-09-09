@@ -35,7 +35,7 @@ async function PostPage() {
           {TITLE}
         </h1>
 
-        <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+        <ul>
           {writings.map(({ metadata, slug }) => (
             <PostRow key={slug} metadata={metadata} slug={slug} />
           ))}

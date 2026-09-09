@@ -5,7 +5,7 @@ import { getAllWritings } from "@/lib/utils";
 import ArrowUpRight from "../components/arrowUpRight";
 
 export default async function Home() {
-  const writings = (await getAllWritings()).slice(0, 8);
+  const writings = (await getAllWritings()).slice(0, 5);
 
   return (
     <BlurContainer className="gap-10 break-keep">
@@ -17,7 +17,7 @@ export default async function Home() {
       </header>
 
       <div>
-        <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+        <ul>
           {writings.map(({ metadata, slug }) => (
             <PostRow key={slug} metadata={metadata} slug={slug} />
           ))}

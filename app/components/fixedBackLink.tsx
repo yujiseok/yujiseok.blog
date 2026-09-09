@@ -17,10 +17,12 @@ const FixedBackLink = ({ href }: { href: string }) => {
       <div className="mb-6 -ml-1 max-w-4xl lg:mx-auto">
         <Link
           href={href}
-          className="group pointer-events-auto flex w-fit items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400"
+          // 글자까지 두면 목차 위에서 존재감이 과하다. 아이콘만 두고 이름은
+          // 보조기기에만 준다.
+          className="group pointer-events-auto flex w-fit items-center text-neutral-400 transition-colors hover:text-black dark:text-neutral-500 dark:hover:text-white"
         >
           <ArrowUTurnLeft aria-hidden="true" role="presentation" />
-          <span>뒤로 가기</span>
+          <span className="sr-only">뒤로 가기</span>
         </Link>
       </div>
     </nav>

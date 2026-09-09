@@ -21,12 +21,12 @@ export const formatPostDate = (publishedAt: string) => {
 
 const PostRow = ({ metadata, slug }: { metadata: Metadata; slug: string }) => {
   return (
-    <li>
-      {/* 호버는 배경 상자 대신 제목 밑줄이다. 구분선 사이에 둥근 상자가 뜨면
-          모서리가 선과 어긋나고, 순검정 위에서 흐린 배경은 거의 보이지 않는다.
-          밑줄 규칙은 본문 링크와 같다(본문색, offset 4px). */}
-      <Link href={`/posts/${slug}`} className="group block py-4">
-        <h2 className="text-[17px] leading-7 font-medium tracking-[-0.01em] break-keep decoration-1 underline-offset-4 group-hover:underline">
+    // 호버는 행의 위아래 구분선이 진해지는 것이다. 구분선을 divide-y로 부모에
+    // 두면 한 행이 자기 아래 선을 못 바꾸므로, 행마다 border-y를 갖고 -mb-px로
+    // 이웃과 1px을 포갠다. 호버한 행을 위로 올려(z-10) 두 선이 모두 진해진다.
+    <li className="relative -mb-px border-y border-neutral-200 transition-colors hover:z-10 hover:border-neutral-900 dark:border-neutral-800 dark:hover:border-neutral-100">
+      <Link href={`/posts/${slug}`} className="block py-4">
+        <h2 className="text-[17px] leading-7 font-medium tracking-[-0.01em] break-keep">
           {metadata.title}
         </h2>
         {/* 요약은 한 줄까지만. 목록의 리듬은 제목이 쥔다. */}
