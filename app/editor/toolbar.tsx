@@ -1,7 +1,6 @@
 "use client";
 
 import { Popover } from "@base-ui/react/popover";
-import { Select } from "@base-ui/react/select";
 import { Toolbar } from "@base-ui/react/toolbar";
 import { Tooltip } from "@base-ui/react/tooltip";
 import type { Editor } from "@tiptap/core";
@@ -22,11 +21,12 @@ import {
   type Align,
   type AlignTarget,
 } from "./align";
+import { INSERT_BLOCKS } from "./blocks";
+import { EditorSelect, type SelectOption } from "./select";
 import {
   FIELD,
   ICON_BUTTON,
   KBD,
-  MENU_ITEM,
   POPUP,
   POSITIONER,
   PRESSED,
@@ -34,7 +34,7 @@ import {
   UNPRESSED,
 } from "./ui";
 
-import { insertImageByUpload, setUploadSlug } from "./image-upload";
+import { setUploadSlug } from "./image-upload";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -87,8 +87,9 @@ const INACTIVE_STATE: ActiveState = {
 
 interface ButtonConfig {
   id: string;
-  // app/editor/slash-command.tsx의 SLASH_ITEMS와 같은 이름을 쓴다 — 두 진입점이
-  // 서로 다른 이름을 쓰면 같은 동작을 다른 것으로 오해하게 된다.
+  // 슬래시 메뉴와 같은 이름이어야 한다 — 두 진입점이 서로 다른 이름을 쓰면
+  // 같은 동작을 다른 것으로 오해하게 된다. 삽입 항목은 blocks.tsx 한 곳에서
+  // 나오므로 이름이 갈릴 수 없고, 나머지는 여기서 맞춘다.
   label: string;
   // 단축키가 없는 명령(구분선·이미지·링크 등)은 생략한다.
   shortcut?: string;
@@ -193,35 +194,16 @@ const ALIGN_BUTTONS: ToolbarButton[] = ALIGN_OPTIONS.map((option) => ({
   run: (editor) => applyAlign(editor, option.value),
 }));
 
+// 삽입 항목은 슬래시 메뉴와 같은 목록에서 나온다. 링크만 여기 따로 붙는데,
+// URL을 받아야 해서 명령 하나로 끝나지 않기 때문이다.
 const INSERT_BUTTONS: ToolbarButton[] = [
-  {
+  ...INSERT_BLOCKS.map((block): ToolbarButton => ({
     kind: "command",
-    id: "horizontalRule",
-    label: "구분선",
-    content: "—",
-    run: (editor) => editor.chain().focus().setHorizontalRule().run(),
-  },
-  {
-    kind: "command",
-    id: "image",
-    label: "이미지",
-    content: <ImageIcon />,
-    run: insertImageByUpload,
-  },
-  {
-    kind: "command",
-    id: "table",
-    label: "표",
-    content: <TableIcon />,
-    // 행·열 조작은 표 위 우클릭 메뉴에 있다. 표 안에서만 쓸 수 있는 명령을
-    // 툴바에 늘어놓으면 나머지 시간 내내 잠긴 버튼이 자리를 차지한다.
-    run: (editor) =>
-      editor
-        .chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run(),
-  },
+    id: block.id,
+    label: block.label,
+    content: block.icon,
+    run: block.run,
+  })),
   { kind: "link", id: "link" },
 ];
 
@@ -670,11 +652,6 @@ function ListSelect({ editor, state }: SelectSectionProps) {
   );
 }
 
-interface SelectOption<Value extends string> {
-  value: Value;
-  label: string;
-}
-
 interface ToolbarSelectProps<Value extends string> {
   label: string;
   options: SelectOption<Value>[];
@@ -684,8 +661,9 @@ interface ToolbarSelectProps<Value extends string> {
 }
 
 /**
- * 블록 종류·목록처럼 "여럿 중 하나"인 상태를 고르는 드롭다운. 두 벌의 옵션이
- * 같은 트리거·팝업을 쓰므로 값 타입만 제네릭으로 열어 둔다.
+ * 블록 종류·목록처럼 "여럿 중 하나"인 상태를 고르는 드롭다운. 렌더 트리는
+ * select.tsx가 코드블록과 나눠 쓰고, 여기서는 툴바 자리에 맞춰 트리거만
+ * Toolbar.Button으로 감싼다 — 그래야 방향키로 다른 버튼과 함께 넘어간다.
  */
 function ToolbarSelect<Value extends string>({
   label,
@@ -694,69 +672,18 @@ function ToolbarSelect<Value extends string>({
   disabled,
   onChange,
 }: ToolbarSelectProps<Value>) {
-  const handleValueChange = (next: Value | null) => {
-    // 이미 선택된 값을 다시 고르면 아무 것도 하지 않는다 — 여기 쓰이는 명령은
-    // toggleHeading 같은 토글이라, 같은 값을 다시 실행하면 꺼져버린다.
-    if (next === null || next === value) return;
-    onChange(next);
-  };
-
   return (
-    <Select.Root
+    <EditorSelect
+      label={label}
+      options={options}
       value={value}
-      onValueChange={handleValueChange}
       disabled={disabled}
-    >
-      <Toolbar.Button
-        render={<Select.Trigger />}
-        aria-label={label}
-        disabled={disabled}
-        className={cn(
-          ICON_BUTTON,
-          UNPRESSED,
-          "w-24 min-w-24 justify-between gap-1 px-2",
-        )}
-      >
-        <Select.Value className="truncate">
-          {() => options.find((option) => option.value === value)?.label ?? ""}
-        </Select.Value>
-        <Select.Icon className="text-neutral-400 dark:text-neutral-600">
-          <CaretDownIcon />
-        </Select.Icon>
-      </Toolbar.Button>
-      <Select.Portal>
-        {/* 기본값(true)은 네이티브 select처럼 선택된 항목을 트리거 위에 포개
-            띄워 툴바를 가린다. 툴바는 sticky라 늘 화면 위쪽에 있으므로
-            아래로 떨어뜨린다. */}
-        <Select.Positioner
-          alignItemWithTrigger={false}
-          sideOffset={4}
-          className={POSITIONER}
-        >
-          <Select.Popup
-            className={cn(
-              POPUP,
-              "min-w-[var(--anchor-width)] overflow-hidden p-1",
-            )}
-          >
-            <Select.List>
-              {options.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className={MENU_ITEM}
-                >
-                  <Select.ItemIndicator className="flex w-3.5 shrink-0 items-center text-neutral-900 dark:text-white">
-                    <CheckIcon />
-                  </Select.ItemIndicator>
-                  <Select.ItemText>{option.label}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
+      onChange={onChange}
+      trigger={<Toolbar.Button />}
+      triggerClassName={cn(UNPRESSED, "w-24 min-w-24 px-2")}
+      // 툴바는 sticky라 팝업이 트리거 위로 포개지면 툴바 자신을 가린다.
+      alignItemWithTrigger={false}
+    />
   );
 }
 
@@ -818,46 +745,6 @@ function LinkIcon() {
   );
 }
 
-function TableIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="9" y1="9" x2="9" y2="20" />
-    </svg>
-  );
-}
-
-function ImageIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  );
-}
-
 // 회전은 CSS에 맡긴다 — 진행 표시 하나 때문에 애니메이션 루프를 돌릴 이유가 없다
 function SpinnerIcon() {
   return (
@@ -873,42 +760,6 @@ function SpinnerIcon() {
       aria-hidden="true"
     >
       <path d="M12 3a9 9 0 1 0 9 9" />
-    </svg>
-  );
-}
-
-function CaretDownIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }

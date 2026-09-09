@@ -16,6 +16,7 @@ import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { BlockAlign } from "./align";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
+import { DetailsNodes } from "./details-node";
 import { ResizableImage } from "./image-node";
 import {
   canSave,
@@ -28,6 +29,7 @@ import {
   slugNeedsManualInput,
   type LoadedPostInput,
 } from "./draft";
+import { CaretDownIcon } from "./icons";
 import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
 import { TableNodes } from "./table-node";
@@ -127,6 +129,9 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       MdxBlock,
       // GFM 파이프 표. 표·행·셀 네 노드가 한 벌이라 배열째 펼친다.
       ...TableNodes,
+      // <details> 접기. details > (detailsSummary, detailsContent) 세 노드가
+      // 한 벌이다.
+      ...DetailsNodes,
       SlashCommand,
     ],
     content: draft.doc,
@@ -477,20 +482,6 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
     </Combobox.Root>
   );
 };
-
-const CaretDownIcon = () => (
-  <svg
-    width="10"
-    height="10"
-    viewBox="0 0 10 10"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    aria-hidden="true"
-  >
-    <path d="M2 4l3 3 3-3" />
-  </svg>
-);
 
 const GripIcon = () => (
   <svg

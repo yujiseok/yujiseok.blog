@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { JSONContent } from "@tiptap/core";
 
-import { docToMarkdown, markdownToDoc } from "./markdown";
+import { docToMarkdown, markdownToDoc, openForEditing } from "./markdown";
 
 describe("docToMarkdown - 블록", () => {
   it("paragraph 를 문단으로 직렬화한다", () => {
@@ -1117,5 +1117,185 @@ describe("표 - GFM 파이프 표", () => {
       content: [{ type: "mdxBlock", attrs: { value: md } }],
     });
     expect(docToMarkdown(markdownToDoc(`${md}\n`))).toBe(`${md}\n`);
+  });
+});
+
+describe("접기 - <details>", () => {
+  const details = (summary: string, body: string) =>
+    `<details>\n  <summary>${summary}</summary>\n\n  ${body}\n</details>\n`;
+
+  const detailsNode = (
+    summary: JSONContent[],
+    body: JSONContent[],
+    open = false,
+  ): JSONContent => ({
+    type: "details",
+    attrs: { open },
+    content: [
+      { type: "detailsSummary", content: summary },
+      { type: "detailsContent", content: body },
+    ],
+  });
+
+  it("<summary> 와 본문을 details 노드로 읽는다", () => {
+    expect(markdownToDoc(details("제목", "본문"))).toEqual({
+      type: "doc",
+      content: [
+        detailsNode(
+          [{ type: "text", text: "제목" }],
+          [{ type: "paragraph", content: [{ type: "text", text: "본문" }] }],
+        ),
+      ],
+    });
+  });
+
+  it("요약의 마크도 그대로 읽는다", () => {
+    expect(markdownToDoc(details("**굵게**", "본문")).content?.[0]).toEqual(
+      detailsNode(
+        [{ type: "text", text: "굵게", marks: [{ type: "bold" }] }],
+        [{ type: "paragraph", content: [{ type: "text", text: "본문" }] }],
+      ),
+    );
+  });
+
+  it("본문에 코드블록 같은 블록이 여러 개 있어도 전부 담는다", () => {
+    const md =
+      "<details>\n  <summary>코드</summary>\n\n  설명\n\n  ```ts\n  const a = 1;\n  ```\n</details>\n";
+
+    expect(markdownToDoc(md).content?.[0]).toEqual(
+      detailsNode(
+        [{ type: "text", text: "코드" }],
+        [
+          { type: "paragraph", content: [{ type: "text", text: "설명" }] },
+          {
+            type: "codeBlock",
+            attrs: { language: "ts" },
+            content: [{ type: "text", text: "const a = 1;" }],
+          },
+        ],
+      ),
+    );
+  });
+
+  it.each([
+    ["<details open>", true],
+    ["<details open={true}>", true],
+    ["<details open={false}>", false],
+  ])("%s 의 열림 상태를 읽는다", (tag, open) => {
+    const md = `${tag}\n  <summary>제목</summary>\n\n  본문\n</details>\n`;
+
+    expect(markdownToDoc(md).content?.[0]).toEqual(
+      detailsNode(
+        [{ type: "text", text: "제목" }],
+        [{ type: "paragraph", content: [{ type: "text", text: "본문" }] }],
+        open,
+      ),
+    );
+  });
+
+  it("닫힌 상태는 속성 없이 쓴다", () => {
+    // 닫힘이 <details> 의 렌더 기본이라 open={false} 를 적으면 원문에 없던
+    // 속성이 생긴다.
+    expect(docToMarkdown(markdownToDoc(details("제목", "본문")))).toBe(
+      details("제목", "본문"),
+    );
+  });
+
+  it("열린 상태는 JSX 불리언 단축으로 쓴다", () => {
+    const md =
+      "<details open>\n  <summary>제목</summary>\n\n  본문\n</details>\n";
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+
+  it("빈 요약도 왕복한다", () => {
+    const doc: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "details",
+          attrs: { open: false },
+          content: [
+            { type: "detailsSummary" },
+            {
+              type: "detailsContent",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "본문" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const md = docToMarkdown(doc);
+    expect(md).toBe("<details>\n  <summary />\n\n  본문\n</details>\n");
+    expect(markdownToDoc(md)).toEqual(doc);
+  });
+
+  it("중첩된 접기도 왕복한다", () => {
+    const md =
+      "<details>\n  <summary>바깥</summary>\n\n  <details>\n    <summary>안쪽</summary>\n\n    본문\n  </details>\n</details>\n";
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+  });
+
+  it.each([
+    [
+      "모르는 속성",
+      '<details className="x">\n  <summary>a</summary>\n\n  b\n</details>',
+    ],
+    [
+      "open 이 문자열",
+      '<details open="true">\n  <summary>a</summary>\n\n  b\n</details>',
+    ],
+    [
+      "open 이 변수",
+      "<details open={isOpen}>\n  <summary>a</summary>\n\n  b\n</details>",
+    ],
+    [
+      "속성이 둘",
+      '<details open id="a">\n  <summary>a</summary>\n\n  b\n</details>',
+    ],
+    [
+      "요약에 속성",
+      '<details>\n  <summary className="x">a</summary>\n\n  b\n</details>',
+    ],
+    ["요약이 없음", "<details>\n  본문만 있습니다.\n</details>"],
+    [
+      "요약이 첫 자식이 아님",
+      "<details>\n  앞 문단\n\n  <summary>a</summary>\n\n  b\n</details>",
+    ],
+    [
+      "요약에 이미지",
+      "<details>\n  <summary>![a](/a.png)</summary>\n\n  b\n</details>",
+    ],
+    [
+      "요약이 블록 요소",
+      "<details>\n  <summary>\n    a\n  </summary>\n\n  b\n</details>",
+    ],
+    ["본문이 없음", "<details>\n  <summary>a</summary>\n</details>"],
+  ])("%s 이면 승격하지 않고 mdxBlock 으로 남긴다", (_, md) => {
+    expect(markdownToDoc(`${md}\n`)).toEqual({
+      type: "doc",
+      content: [{ type: "mdxBlock", attrs: { value: md } }],
+    });
+    expect(docToMarkdown(markdownToDoc(`${md}\n`))).toBe(`${md}\n`);
+  });
+
+  it("기존 글의 들여쓰기가 제각각이어도 내용은 보존된다", () => {
+    // 저장 시 <details> 안쪽 들여쓰기는 2칸으로 정규화된다. 표기만 달라지고
+    // 코드펜스 안 내용은 그대로라 lossless 다.
+    const md =
+      "<details>\n<summary>제목</summary>\n\n```ts\nconst a = 1;\n```\n\n</details>\n";
+    const opened = openForEditing(md);
+
+    expect(opened.lossless).toBe(true);
+    expect(docToMarkdown(opened.doc)).toBe(
+      "<details>\n  <summary>제목</summary>\n\n  ```ts\n  const a = 1;\n  ```\n</details>\n",
+    );
   });
 });

@@ -8,9 +8,8 @@ import Suggestion, {
 import { useEffect, useImperativeHandle, useState, type Ref } from "react";
 
 import { cn } from "@/lib/cn";
+import { INSERT_BLOCKS } from "./blocks";
 import { MENU_ITEM, POPUP } from "./ui";
-
-import { insertImageByUpload } from "./image-upload";
 
 export interface SlashCommandItem {
   title: string;
@@ -19,7 +18,8 @@ export interface SlashCommandItem {
 }
 
 // 여기 없는 노드는 슬래시 메뉴로 만들 수 없다 — 지원하지 않는 서식이
-// 에디터에 들어갈 길을 아예 막는다.
+// 에디터에 들어갈 길을 아예 막는다. 블록을 새로 끼워 넣는 항목은 툴바의 삽입
+// 그룹과 같은 목록(blocks.tsx)에서 파생시켜 두 진입점의 이름과 동작을 묶는다.
 const SLASH_ITEMS: SlashCommandItem[] = [
   {
     title: "제목 1",
@@ -84,35 +84,17 @@ const SLASH_ITEMS: SlashCommandItem[] = [
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
-  {
-    title: "구분선",
-    keywords: ["divider", "hr", "구분선"],
-    run: (editor, range) =>
-      editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
-  },
-  {
-    title: "표",
-    keywords: ["table", "표", "grid"],
-    // 첫 행이 헤더인 3×3. GFM 표는 헤더 행이 없으면 문법 자체가 성립하지 않는다.
-    run: (editor, range) =>
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run(),
-  },
-  {
-    title: "이미지",
-    keywords: ["image", "img", "이미지"],
+  ...INSERT_BLOCKS.map((block): SlashCommandItem => ({
+    title: block.label,
+    keywords: block.keywords,
     run: (editor, range) => {
-      // 파일 선택창을 열기 전에 "/이미지" 텍스트부터 지운다. 업로드가 끝날
-      // 때까지 남겨두면 명령이 씹힌 것처럼 보이고, 그 사이 커서가 움직이면
-      // range가 엉뚱한 곳을 가리킨다.
+      // 명령을 걸기 전에 "/표" 텍스트부터 지운다. 이미지 업로드처럼 파일
+      // 선택창이 뜨는 명령은 그동안 명령이 씹힌 것처럼 보이고, 그 사이
+      // 커서가 움직이면 range가 엉뚱한 곳을 가리킨다.
       editor.chain().focus().deleteRange(range).run();
-      void insertImageByUpload(editor);
+      void block.run(editor);
     },
-  },
+  })),
 ];
 
 function filterItems(query: string): SlashCommandItem[] {

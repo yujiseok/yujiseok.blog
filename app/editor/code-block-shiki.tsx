@@ -1,10 +1,10 @@
 "use client";
 
-import { Select } from "@base-ui/react/select";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { FIELD, ICON_BUTTON, MENU_ITEM, POPUP, POSITIONER } from "./ui";
+import { EditorSelect } from "./select";
+import { FIELD } from "./ui";
 import { findChildren } from "@tiptap/core";
 import { CodeBlock } from "@tiptap/extension-code-block";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
@@ -283,13 +283,11 @@ export const CodeBlockShiki = CodeBlock.extend({
   },
 });
 
-// 어두운 pre 배경 위에 얹히므로 글자·호버 색만 뒤집어 쓴다.
-const triggerClass = cn(
-  ICON_BUTTON,
-  "h-6 min-w-16 justify-between gap-1 font-mono text-[11px] text-neutral-300 hover:bg-white/10",
-);
-const popupClass = cn(POPUP, "min-w-[var(--anchor-width)] overflow-hidden p-1");
-const itemClass = cn(MENU_ITEM, "font-mono text-xs");
+// 어두운 pre 배경 위에 얹히므로 크기·글자색만 뒤집어 쓴다. 나머지 생김새와
+// 동작은 툴바 드롭다운과 같은 EditorSelect가 들고 있다.
+const triggerClass =
+  "h-6 min-w-16 font-mono text-[11px] text-neutral-300 hover:bg-white/10";
+const itemClass = "font-mono text-xs";
 // FIELD를 코드블록 리듬(h-6)과 어두운 배경에 맞춰 덮어쓴다.
 const titleInputClass = cn(
   FIELD,
@@ -314,12 +312,10 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
     setDraft(title);
   }
 
-  const handleValueChange = (next: string | null) => {
-    // null은 base-ui의 선택 해제 신호다. 값이 아니므로 무시한다.
-    if (next === null || next === value) return;
-    // updateAttributes는 병합이라 meta는 그대로 남는다.
-    updateAttributes({ language: next === NO_LANGUAGE ? null : next });
-  };
+  // Escape는 되돌리기지만 곧바로 blur가 따라온다. 그 시점의 draft는 아직
+  // 되돌리기 전 값이라(setDraft는 다음 렌더에 반영된다) 그대로 두면 취소가
+  // 저장이 된다. 이어지는 커밋 한 번만 건너뛰라고 표시한다.
+  const cancelling = useRef(false);
 
   const commitTitle = () => {
     const nextMeta = writeTitle(meta, draft);
@@ -328,6 +324,14 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
     setDraft(stored);
     setCommitted(stored);
     if (nextMeta !== meta) updateAttributes({ meta: nextMeta });
+  };
+
+  const handleTitleBlur = () => {
+    if (cancelling.current) {
+      cancelling.current = false;
+      return;
+    }
+    commitTitle();
   };
 
   const handleTitleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -341,6 +345,7 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
     }
 
     if (event.key === "Escape") {
+      cancelling.current = true;
       setDraft(title);
       event.currentTarget.blur();
     }
@@ -361,83 +366,27 @@ function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
           autoComplete="off"
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleTitleKeyDown}
-          onBlur={commitTitle}
+          onBlur={handleTitleBlur}
         />
 
-        <Select.Root value={value} onValueChange={handleValueChange}>
-          <Select.Trigger aria-label="코드 언어" className={triggerClass}>
-            <Select.Value className="truncate">
-              {() =>
-                LANGUAGE_OPTIONS.find((option) => option.value === value)
-                  ?.label ?? value
-              }
-            </Select.Value>
-            <Select.Icon className="text-neutral-500">
-              <CaretDownIcon />
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner sideOffset={4} className={POSITIONER}>
-              <Select.Popup className={popupClass}>
-                <Select.List>
-                  {LANGUAGE_OPTIONS.map((option) => (
-                    <Select.Item
-                      key={option.value}
-                      value={option.value}
-                      className={itemClass}
-                    >
-                      <Select.ItemIndicator className="flex w-3.5 shrink-0 items-center text-neutral-900 dark:text-white">
-                        <CheckIcon />
-                      </Select.ItemIndicator>
-                      <Select.ItemText>{option.label}</Select.ItemText>
-                    </Select.Item>
-                  ))}
-                </Select.List>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>
+        <EditorSelect
+          label="코드 언어"
+          options={LANGUAGE_OPTIONS}
+          value={value}
+          onChange={(next) =>
+            // updateAttributes는 병합이라 meta는 그대로 남는다.
+            updateAttributes({
+              language: next === NO_LANGUAGE ? null : next,
+            })
+          }
+          triggerClassName={triggerClass}
+          itemClassName={itemClass}
+        />
       </div>
 
       <pre>
         <NodeViewContent<"code"> as="code" />
       </pre>
     </NodeViewWrapper>
-  );
-}
-
-function CaretDownIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }
