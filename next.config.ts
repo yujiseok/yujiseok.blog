@@ -34,7 +34,13 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   options: {
-    rehypePlugins: [["rehype-pretty-code", { theme: "poimandres" }]],
+    // Turbopack은 플러그인을 문자열(패키지명)로만 받는다 — 로컬 함수는 못 넘긴다.
+    // rehype-slug가 heading에 id를 박아야 목차 링크가 도달할 곳이 생긴다.
+    // rehype-pretty-code는 코드블록만 만지므로 순서 충돌이 없다.
+    rehypePlugins: [
+      ["rehype-slug"],
+      ["rehype-pretty-code", { theme: "poimandres" }],
+    ],
   },
 });
 
