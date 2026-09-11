@@ -334,6 +334,12 @@ details[open] summary::after {
   transform: rotate(135deg);
 }
 
+/* 에디터의 접기 블록은 details-node.tsx가 토글 버튼으로 쉐브론을 따로 그린다.
+   위 규칙까지 걸리면 한 블록에 쉐브론이 둘이 된다 — 발행된 글에만 남긴다. */
+.ProseMirror summary::after {
+  content: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   details::details-content,
   summary::after {

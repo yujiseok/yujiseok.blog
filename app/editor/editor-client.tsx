@@ -350,6 +350,20 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
             </button>
           </form>
 
+          {/* 저장된 글만 열 수 있다. 개발 서버의 실제 글 페이지라 shiki
+              하이라이트·MDX 컴포넌트·본문 스타일이 전부 그대로다 — 초안이어도
+              개발 서버에서는 보이고 프로덕션에는 나가지 않는다. */}
+          {draft.loaded && (
+            <a
+              href={`/posts/${draft.loaded.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(CONTROL, "flex items-center font-medium")}
+            >
+              미리보기
+            </a>
+          )}
+
           {/* 이미 파일이 있는 글만 지울 수 있다. 저장한 적 없는 새 글은
               지울 대상 자체가 없다. */}
           {draft.loaded && (
