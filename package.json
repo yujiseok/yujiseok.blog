@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "check": "bun run typecheck && bun run lint && bun run test"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

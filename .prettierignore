@@ -1,0 +1,9 @@
+# 글 본문은 포매터 대상이 아니다. 에디터(lib/editor/markdown.ts)가 MDX를 직접
+# 직렬화하므로 prettier가 다시 손대면 저장할 때마다 diff가 튀고, 프론트매터
+# 따옴표·줄바꿈이 왕복(round-trip)에서 어긋난다.
+content
+
+# 빌드 산출물·락파일
+.next
+out
+bun.lock

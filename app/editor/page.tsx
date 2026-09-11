@@ -17,10 +17,13 @@ const EXIT_LINKS = [
 // 블로킹 렌더를 허용해 목록을 갖춘 완성된 화면을 한 번에 준다.
 export const instant = false;
 
+const isMissingFile = (error: unknown) =>
+  (error as NodeJS.ErrnoException | null)?.code === "ENOENT";
+
 /**
  * 글 페이지의 "수정" 버튼이 /editor?post=<slug>로 보낸다. 클라이언트에서 다시
- * 왕복하지 않도록 여기서 미리 읽어 넘긴다. 없거나 못 읽는 슬러그면 조용히
- * 빈 화면으로 연다 — 주소를 손으로 고쳤을 뿐인데 도구가 막히면 곤란하다.
+ * 왕복하지 않도록 여기서 미리 읽어 넘긴다. 없거나 못 읽는 슬러그면 빈 화면으로
+ * 연다 — 주소를 손으로 고쳤을 뿐인데 도구가 막히면 곤란하다.
  */
 async function loadRequestedPost(
   slug: string | undefined,
@@ -30,7 +33,16 @@ async function loadRequestedPost(
   try {
     const { metadata, doc, lossless } = await readPost(slug);
     return { slug, metadata, doc, lossless };
-  } catch {
+  } catch (error) {
+    // 없는 슬러그를 새 글로 여는 건 정상 경로다. 반면 파일은 있는데 못 읽은
+    // 것(프론트매터 깨짐 등)은 고쳐야 할 고장인데, 화면은 둘을 똑같은 빈
+    // 에디터로 보여준다. 적어도 개발 서버 콘솔에서는 구별되게 남긴다.
+    if (!isMissingFile(error)) {
+      console.error(
+        `[editor] "${slug}" 글을 읽지 못해 빈 화면으로 엽니다. content/writing/${slug}.mdx 를 확인하세요.`,
+        error,
+      );
+    }
     return null;
   }
 }
