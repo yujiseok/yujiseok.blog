@@ -1,5 +1,5 @@
-import BlurContainer from "@/app/components/blurContainer";
-import Track from "@/app/components/music/track";
+import BlurContainer from "@/app/_components/blur-container";
+import Track from "@/app/(music)/_components/track";
 import { getRecentlyPlayed } from "@/lib/spotify/api";
 import type { Metadata } from "next";
 import { alternates, SITE_OG } from "@/lib/metadata";

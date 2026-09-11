@@ -5,9 +5,9 @@ import Link from "next/link";
 
 import { cn } from "@/lib/cn";
 
-import ExternalLink from "@/app/components/externalLink";
-import CodeBlock from "@/app/components/codeBlock";
-import { Callout } from "@/app/components/callout";
+import ExternalLink from "@/app/_components/external-link";
+import CodeBlock from "@/app/_mdx/code-block";
+import { Callout } from "@/app/_mdx/callout";
 
 // 24개 글 중 2~4개만 쓰는 클라이언트 컴포넌트다(그중 셋은 motion/react까지
 // 끌고 온다). mdx-components.tsx는 모든 글의 렌더 경로에 걸리므로, 정적
@@ -15,17 +15,13 @@ import { Callout } from "@/app/components/callout";
 // next/dynamic으로 바꿔 실제로 렌더되는 글에서만 청크가 로드되게 한다.
 // 다섯 다 SSR을 못 할 이유가 없어(Meteor의 useLayoutEffect도 초기 렌더는
 // 빈 배열이라 서버에서 그대로 그려진다) ssr:false는 쓰지 않는다.
-const GenconTypewriter = dynamic(
-  () => import("@/app/components/2024-gencon/typewriter"),
-);
+const GenconTypewriter = dynamic(() => import("@/app/_mdx/gencon-typewriter"));
 const AtelierTypewriter = dynamic(
-  () => import("@/app/components/atelier/typewriter"),
+  () => import("@/app/_mdx/atelier/typewriter"),
 );
-const GridMasonry = dynamic(
-  () => import("@/app/components/portfolio/GridMasonry"),
-);
-const ShowCase = dynamic(() => import("@/app/components/atelier/showCase"));
-const Meteor = dynamic(() => import("@/app/components/atelier/meteor"));
+const GridMasonry = dynamic(() => import("@/app/_mdx/grid-masonry"));
+const ShowCase = dynamic(() => import("@/app/_mdx/atelier/show-case"));
+const Meteor = dynamic(() => import("@/app/_mdx/atelier/meteor"));
 
 function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   const href = props.href ?? "";

@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { Metadata } from "@/lib/utils";
 import Image from "next/image";
+import type { PostMetadata } from "@/lib/content/document";
 
-const GridItem = ({ metadata, slug }: { metadata: Metadata; slug: string }) => {
+const GridItem = ({
+  metadata,
+  slug,
+}: {
+  metadata: PostMetadata;
+  slug: string;
+}) => {
   const { title, image } = metadata;
 
   return (

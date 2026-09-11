@@ -1,8 +1,8 @@
 import Link from "next/link";
-import BlurContainer from "../components/blurContainer";
-import PostRow from "../components/postRow";
-import { getAllWritings } from "@/lib/utils";
-import ArrowUpRight from "../components/arrowUpRight";
+import BlurContainer from "@/app/_components/blur-container";
+import PostRow from "@/app/(main)/_components/post-row";
+import { getAllWritings } from "@/lib/content/repository";
+import ArrowUpRight from "@/app/_components/arrow-up-right";
 
 export default async function Home() {
   const writings = (await getAllWritings()).slice(0, 5);

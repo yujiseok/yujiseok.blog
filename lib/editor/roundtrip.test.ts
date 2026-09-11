@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-import { parsePost } from "./document";
+import { parsePost } from "@/lib/content/document";
 import { openForEditing } from "./markdown";
 
 // 에디터의 진짜 인수 기준: 이미 쓴 글을 에디터로 열었다가 그대로 저장했을 때

@@ -10,7 +10,7 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Nodes as HastNodes } from "hast";
 
-import { parsePost } from "./editor/document";
+import { parsePost } from "./document";
 import { buildToc, getToc } from "./toc";
 
 /*

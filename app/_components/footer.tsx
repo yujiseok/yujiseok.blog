@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ExternalLink from "@/app/components/externalLink";
+import ExternalLink from "@/app/_components/external-link";
 
 // 렌더가 아닌 모듈 평가 시점(=빌드 시점)에 한 번만 읽는다.
 // 렌더 중 new Date()를 호출하면 cacheComponents가 전 페이지를 dynamic으로 만든다.

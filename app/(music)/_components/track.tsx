@@ -1,6 +1,6 @@
 import { TypeRecentlyPlayedTrack, TypeTopTrack } from "@/types/spotify";
 import Image from "next/image";
-import ExternalLink from "@/app/components/externalLink";
+import ExternalLink from "@/app/_components/external-link";
 
 const Track = ({
   track,

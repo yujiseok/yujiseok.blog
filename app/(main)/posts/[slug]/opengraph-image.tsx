@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getWritingBySlug } from "@/lib/utils";
+import { getWritingBySlug } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 
 export const alt = "Yujiseok's Blog Post";

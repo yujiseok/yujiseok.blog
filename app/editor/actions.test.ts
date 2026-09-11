@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type { PostMetadata } from "@/lib/editor/document";
+import type { PostMetadata } from "@/lib/content/document";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -11,6 +11,7 @@ const METADATA: PostMetadata = {
   title: "제목",
   publishedAt: "2026-09-09",
   summary: "요약",
+  published: true,
 };
 
 // savePost는 doc을 JSON 문자열로 받는다 — 이유는 actions.ts의 parseDocument 참고
@@ -140,6 +141,22 @@ describe("savePost", () => {
 
     await expect(
       savePost({ slug: "bad-meta", metadata, doc: DOC }),
+    ).rejects.toThrow();
+  });
+
+  it("published 가 boolean이 아니면 거부한다", async () => {
+    const { savePost } = await loadActions();
+    // 클라이언트가 보내는 값이라 신뢰 경계 밖이다. 빠뜨린 채 저장되면
+    // 그 글은 프로덕션에서 조용히 사라진다.
+    const metadata = { ...METADATA } as Partial<PostMetadata>;
+    delete metadata.published;
+
+    await expect(
+      savePost({
+        slug: "no-published",
+        metadata: metadata as PostMetadata,
+        doc: DOC,
+      }),
     ).rejects.toThrow();
   });
 

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { isValidSlug } from "@/lib/editor/document";
+import { isValidSlug } from "@/lib/content/document";
 
 const IMAGES_DIR = path.join(process.cwd(), "public", "images");
 

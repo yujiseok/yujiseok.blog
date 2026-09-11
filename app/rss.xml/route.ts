@@ -1,5 +1,5 @@
 import { SITE_URL as baseURL } from "@/lib/constants";
-import { getAllWritings } from "@/lib/utils";
+import { getAllWritings } from "@/lib/content/repository";
 
 const escapeXml = (str: string): string => {
   return str

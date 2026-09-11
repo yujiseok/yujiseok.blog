@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllWritings, getWritingBySlug, importMdx } from "@/lib/utils";
-import BlurContainer from "@/app/components/blurContainer";
-import { TableOfContents } from "@/app/components/tableOfContents";
-import PostNav from "@/app/components/postNav";
-import { getToc } from "@/lib/toc";
-import { formatPostDate } from "@/lib/date";
-import { getNeighbours } from "@/lib/neighbours";
+import {
+  getAllWritings,
+  getWritingBySlug,
+  importMdx,
+} from "@/lib/content/repository";
+import BlurContainer from "@/app/_components/blur-container";
+import { TableOfContents } from "@/app/(main)/_components/table-of-contents";
+import PostNav from "@/app/(main)/_components/post-nav";
+import { getToc } from "@/lib/content/toc";
+import { formatPostDate } from "@/lib/content/date";
+import { getNeighbours } from "@/lib/content/neighbours";
 import { SITE_URL } from "@/lib/constants";
 import { alternates, SITE_OG } from "@/lib/metadata";
 
@@ -58,7 +62,7 @@ const Post = async (props: { params: Promise<{ slug: string }> }) => {
     notFound();
   }
 
-  // 목차는 원문을 다시 파싱해 만든다(lib/toc.ts). 본문은 모듈로 컴파일돼
+  // 목차는 원문을 다시 파싱해 만든다(lib/content/toc.ts). 본문은 모듈로 컴파일돼
   // 컴포넌트로 오므로 거기서 heading을 긁을 수 없다.
   const [{ default: Content }, toc, writings] = await Promise.all([
     importMdx("writing", params.slug),

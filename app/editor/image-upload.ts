@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 
-import { isValidSlug } from "@/lib/editor/document";
+import { isValidSlug } from "@/lib/content/document";
 import { reportEditorError } from "./toast";
 
 // app/editor/upload/route.ts의 화이트리스트와 짝이다. 여기서 막는 건 편의일 뿐,

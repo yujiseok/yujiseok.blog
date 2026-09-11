@@ -54,7 +54,7 @@ const dayPickerClassNames: Partial<ClassNames> = {
 };
 
 export interface DateFieldProps {
-  /** yyyy-MM-dd. lib/editor/document.ts의 PostMetadata.publishedAt과 같은 형식 */
+  /** yyyy-MM-dd. lib/content/document.ts의 PostMetadata.publishedAt과 같은 형식 */
   value: string;
   onChange: (value: string) => void;
   id?: string;

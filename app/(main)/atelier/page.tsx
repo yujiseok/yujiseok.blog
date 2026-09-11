@@ -1,6 +1,6 @@
-import GridItem from "@/app/components/atelier/gridItem";
-import BlurContainer from "@/app/components/blurContainer";
-import { getAllAtelier } from "@/lib/utils";
+import GridItem from "@/app/(main)/atelier/_components/grid-item";
+import BlurContainer from "@/app/_components/blur-container";
+import { getAllAtelier } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 import { alternates, SITE_OG } from "@/lib/metadata";

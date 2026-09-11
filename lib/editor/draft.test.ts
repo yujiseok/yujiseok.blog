@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { PostMetadata } from "@/lib/editor/document";
+import type { PostMetadata } from "@/lib/content/document";
 import {
   canSave,
   createDraft,
@@ -32,6 +32,7 @@ const loadedAction = (
   metadata: {
     publishedAt: "2025-01-02",
     summary: "요약",
+    published: true,
     ...metadata,
   },
 });
@@ -82,6 +83,7 @@ describe("저장할 메타데이터", () => {
       "title",
       "publishedAt",
       "summary",
+      "published",
     ]);
   });
 
@@ -100,6 +102,7 @@ describe("저장할 메타데이터", () => {
           summary: "원래 요약",
           publishedAt: "2025-01-02",
           image: "/cover.png",
+          published: true,
         },
       },
       { type: "title", value: "고친 제목" },
@@ -110,6 +113,7 @@ describe("저장할 메타데이터", () => {
       "summary",
       "publishedAt",
       "image",
+      "published",
     ]);
   });
 
@@ -158,6 +162,7 @@ describe("덮어쓰기 허용 여부", () => {
           title: "New Post",
           publishedAt: "2026-09-09",
           summary: "요약",
+          published: false,
         },
       },
     );
@@ -211,5 +216,44 @@ describe("새 글의 초기 상태", () => {
     expect(isOverwrite(draft)).toBe(false);
     expect(draftMetadata(draft).image).toBeUndefined();
     expect(draft.publishedAt).toBe("2026-09-09");
+  });
+});
+
+describe("발행 여부", () => {
+  it("새 글은 초안으로 시작한다", () => {
+    expect(draftMetadata(blank()).published).toBe(false);
+  });
+
+  it("토글을 켜면 발행으로 저장된다", () => {
+    const draft = apply(blank(), { type: "published", value: true });
+    expect(draftMetadata(draft).published).toBe(true);
+  });
+
+  it("불러온 글의 발행 상태를 이어받는다", () => {
+    const draft = apply(
+      blank(),
+      loadedAction({ title: "초안", published: false }),
+    );
+    expect(draft.published).toBe(false);
+    expect(draftMetadata(draft).published).toBe(false);
+  });
+
+  // published 키가 없던 시절의 글을 열면 초안으로 본다
+  it("published 키가 없는 글은 초안으로 연다", () => {
+    const action = loadedAction({ title: "옛 글" });
+    delete (action.metadata as Partial<PostMetadata>).published;
+
+    expect(apply(blank(), action).published).toBe(false);
+  });
+
+  it("초안을 발행으로 바꿔도 편집하지 않는 키는 지킨다", () => {
+    const draft = apply(
+      blank(),
+      loadedAction({ title: "글", image: "/cover.png", published: false }),
+      { type: "published", value: true },
+    );
+
+    expect(draftMetadata(draft).image).toBe("/cover.png");
+    expect(draftMetadata(draft).published).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { getAllWritings, getAllAtelier } from "@/lib/utils";
+import { getAllWritings, getAllAtelier } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 
 export async function GET() {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { readAllContent } from "./utils";
+import { isPublished } from "./document";
+import { readAllContent } from "./repository";
 
 /*
  * "use cache"는 vitest 환경에서 동작하지 않으므로 캐시 래퍼(getAllContent)가
@@ -25,6 +26,27 @@ describe("readAllContent", () => {
 
     expect(publishedAtTimes).toEqual(
       [...publishedAtTimes].sort((a, b) => b - a),
+    );
+  });
+});
+
+describe("초안 제외", () => {
+  it("기본적으로 published 가 true 인 글만 돌려준다", async () => {
+    const writings = await readAllContent("writing");
+
+    expect(writings.length).toBeGreaterThan(0);
+    expect(writings.every(({ metadata }) => isPublished(metadata))).toBe(true);
+  });
+
+  it("includeDrafts 를 켜면 초안까지 함께 돌려준다", async () => {
+    const [published, all] = await Promise.all([
+      readAllContent("writing"),
+      readAllContent("writing", { includeDrafts: true }),
+    ]);
+
+    expect(all.length).toBeGreaterThanOrEqual(published.length);
+    expect(all.map(({ slug }) => slug)).toEqual(
+      expect.arrayContaining(published.map(({ slug }) => slug)),
     );
   });
 });

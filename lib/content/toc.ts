@@ -9,7 +9,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Heading, Nodes } from "mdast";
 
-import { isValidSlug, parsePost } from "./editor/document";
+import { isValidSlug, parsePost } from "./document";
 
 export interface TocEntry {
   /** rehype-slug가 렌더 시 heading에 박는 id와 같은 값 */

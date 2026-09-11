@@ -12,8 +12,9 @@ import { useRouter } from "next/navigation";
 import { useActionState, useReducer, useState, useTransition } from "react";
 
 import { cn } from "@/lib/cn";
+import { isPublished } from "@/lib/content/document";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
-import { BlockAlign } from "./align";
+import { BlockAlign } from "@/lib/editor/align";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
 import { DetailsNodes } from "./details-node";
@@ -28,7 +29,7 @@ import {
   slugInvalid,
   slugNeedsManualInput,
   type LoadedPostInput,
-} from "./draft";
+} from "@/lib/editor/draft";
 import { CaretDownIcon } from "./icons";
 import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
@@ -85,7 +86,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
 
   // 폼 필드·불러온 원본·왕복 안전 여부는 항상 함께 움직인다(새 글, 글 열기,
   // 저장 완료). 흩어진 setState로 두면 한 곳을 빠뜨려 image가 사라지거나
-  // 덮어쓰기 판정이 어긋난다 — 전이를 draft.ts 한곳에 모아 두고 테스트한다.
+  // 덮어쓰기 판정이 어긋난다 — 전이를 lib/editor/draft.ts 한곳에 모아 두고 테스트한다.
   const [draft, dispatch] = useReducer(draftReducer, initialPost, (post) =>
     post
       ? draftReducer(createDraft(today()), { type: "loaded", ...post })
@@ -298,6 +299,23 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
               }
             />
           </div>
+
+          <label className="flex w-fit items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.published}
+              onChange={(event) =>
+                dispatch({ type: "published", value: event.target.checked })
+              }
+              className="size-4 accent-black dark:accent-white"
+            />
+            <span className="font-medium">발행</span>
+            {!draft.published && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                끄면 초안으로 저장돼 개발 서버에서만 보입니다
+              </span>
+            )}
+          </label>
         </div>
 
         <div className={cn(SURFACE, "relative")}>
@@ -331,6 +349,20 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
               {isSaving ? "저장 중..." : "저장"}
             </button>
           </form>
+
+          {/* 저장된 글만 열 수 있다. 미리보기는 개발 서버의 실제 글 페이지라
+              shiki 하이라이트·MDX 컴포넌트·본문 스타일이 전부 그대로다 —
+              초안이어도 개발 서버에서는 보이고 프로덕션에는 나가지 않는다. */}
+          {draft.loaded && (
+            <a
+              href={`/posts/${draft.loaded.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(CONTROL, "flex items-center font-medium")}
+            >
+              미리보기
+            </a>
+          )}
 
           {/* 이미 파일이 있는 글만 지울 수 있다. 저장한 적 없는 새 글은
               지울 대상 자체가 없다. */}
@@ -428,7 +460,10 @@ interface PostPickerProps {
 const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
   const options: PostOption[] = posts.map((post) => ({
     value: post.slug,
-    label: post.metadata.title,
+    // 목록에서 초안과 발행된 글이 구분돼야 어느 쪽을 여는지 알 수 있다
+    label: isPublished(post.metadata)
+      ? post.metadata.title
+      : `${post.metadata.title} (초안)`,
   }));
   const selected = options.find(({ value }) => value === selectedSlug) ?? null;
 
@@ -440,7 +475,9 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
       isItemEqualToValue={(a, b) => a.value === b.value}
       onValueChange={(option) => option && onSelect(option.value)}
     >
-      <Combobox.InputGroup className="relative w-64 shrink-0">
+      {/* w-64로는 한글 제목이 트리거에서 잘린다. 목록과 같은 폭을 주되
+          좁은 화면에서는 줄어들게 상한만 건다. */}
+      <Combobox.InputGroup className="relative w-[28rem] max-w-full shrink">
         <Combobox.Input
           placeholder="글 열기..."
           aria-label="글 열기"
@@ -455,17 +492,28 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
       </Combobox.InputGroup>
 
       <Combobox.Portal>
-        <Combobox.Positioner sideOffset={4} className={POSITIONER}>
+        <Combobox.Positioner
+          align="start"
+          sideOffset={4}
+          className={POSITIONER}
+        >
+          {/* 목록은 제목을 읽으라고 여는 것이라 내용만큼 넓어지게 둔다. 그러면
+              기본 center 정렬로는 팝업이 좌우로 퍼져 입력창 왼쪽 밖까지
+              삐져나가므로 align="start"로 왼쪽을 맞춘다. */}
           <Combobox.Popup
             className={cn(
               POPUP,
-              "w-[var(--anchor-width)] max-w-[var(--available-width)] overflow-hidden p-1",
+              "max-w-[var(--available-width)] min-w-[var(--anchor-width)] overflow-hidden p-1",
             )}
           >
             <Combobox.Empty className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
               해당하는 글이 없습니다.
             </Combobox.Empty>
-            <Combobox.List className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain data-empty:p-0">
+            {/* Lenis가 wheel을 가로채므로 이 컨테이너만 예외로 뺀다(select.tsx 참고) */}
+            <Combobox.List
+              data-lenis-prevent
+              className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain data-empty:p-0"
+            >
               {(option: PostOption) => (
                 <Combobox.Item
                   key={option.value}

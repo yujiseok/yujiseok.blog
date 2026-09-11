@@ -1,9 +1,9 @@
 import Link from "next/link";
-import type { Metadata } from "@/lib/utils";
+import type { PostMetadata } from "@/lib/content/document";
 
 interface PostNavItem {
   slug: string;
-  metadata: Metadata;
+  metadata: PostMetadata;
 }
 
 const PostNavCell = ({

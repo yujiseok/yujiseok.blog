@@ -20,7 +20,7 @@ import {
   readAlign,
   type Align,
   type AlignTarget,
-} from "./align";
+} from "@/lib/editor/align";
 import { INSERT_BLOCKS } from "./blocks";
 import { EditorSelect, type SelectOption } from "./select";
 import {
@@ -682,7 +682,6 @@ function ToolbarSelect<Value extends string>({
       trigger={<Toolbar.Button />}
       triggerClassName={cn(UNPRESSED, "w-24 min-w-24 px-2")}
       // 툴바는 sticky라 팝업이 트리거 위로 포개지면 툴바 자신을 가린다.
-      alignItemWithTrigger={false}
     />
   );
 }

@@ -1,6 +1,6 @@
-import BlurContainer from "@/app/components/blurContainer";
-import PostRow from "@/app/components/postRow";
-import { getAllWritings } from "@/lib/utils";
+import BlurContainer from "@/app/_components/blur-container";
+import PostRow from "@/app/(main)/_components/post-row";
+import { getAllWritings } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 import { alternates, SITE_OG } from "@/lib/metadata";

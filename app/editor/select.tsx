@@ -33,11 +33,6 @@ interface EditorSelectProps<Value extends string> {
   /** 자리마다 다른 건 크기와 색뿐이다(코드블록은 어두운 pre 위에 얹힌다) */
   triggerClassName?: string;
   itemClassName?: string;
-  /**
-   * 기본값(true)은 네이티브 select처럼 선택된 항목을 트리거 위에 포개 띄운다.
-   * 툴바는 sticky라 그러면 툴바 자신을 가리므로 false로 아래에 떨어뜨린다.
-   */
-  alignItemWithTrigger?: boolean;
 }
 
 export function EditorSelect<Value extends string>({
@@ -49,7 +44,6 @@ export function EditorSelect<Value extends string>({
   trigger,
   triggerClassName,
   itemClassName,
-  alignItemWithTrigger = true,
 }: EditorSelectProps<Value>) {
   const handleValueChange = (next: Value | null) => {
     // null은 base-ui의 선택 해제 신호다. 값이 아니므로 무시한다. 이미 선택된
@@ -84,18 +78,29 @@ export function EditorSelect<Value extends string>({
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
+        {/*
+         * alignItemWithTrigger는 쓰지 않는다. 켜면 base-ui가 네이티브 select처럼
+         * 선택 항목을 트리거 위에 포개면서 팝업 높이와 스크롤을 자체 계산하는데,
+         * 그러면 아래 List의 overflow가 무시돼 언어 목록(16개)이 잘린 채 잠긴다.
+         * 툴바 입장에서도 sticky한 자기 자신을 가리지 않아 이쪽이 낫다.
+         */}
         <Select.Positioner
-          alignItemWithTrigger={alignItemWithTrigger}
+          alignItemWithTrigger={false}
           sideOffset={4}
           className={POSITIONER}
         >
           <Select.Popup
             className={cn(
               POPUP,
-              "min-w-[var(--anchor-width)] overflow-hidden p-1",
+              "max-h-[var(--available-height)] min-w-[var(--anchor-width)] overflow-x-hidden p-1",
             )}
           >
-            <Select.List>
+            {/* 루트 레이아웃의 Lenis가 전역에서 wheel을 가로채 이 안의 스크롤을
+                먹는다. data-lenis-prevent로 이 컨테이너만 빼 준다. */}
+            <Select.List
+              data-lenis-prevent
+              className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain"
+            >
               {options.map((option) => (
                 <Select.Item
                   key={option.value}

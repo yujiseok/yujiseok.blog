@@ -1,4 +1,4 @@
-import Track from "@/app/components/music/track";
+import Track from "@/app/(music)/_components/track";
 import {
   getPlaylistById,
   getPlaylists,
@@ -7,11 +7,11 @@ import {
 import { ViewTransition } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import BlurContainer from "@/app/components/blurContainer";
-import ArrowUpRight from "@/app/components/arrowUpRight";
+import BlurContainer from "@/app/_components/blur-container";
+import ArrowUpRight from "@/app/_components/arrow-up-right";
 import type { Metadata } from "next";
 import { alternates, SITE_OG } from "@/lib/metadata";
-import ExternalLink from "@/app/components/externalLink";
+import ExternalLink from "@/app/_components/external-link";
 
 export const generateStaticParams = async () => {
   try {

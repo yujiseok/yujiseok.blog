@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getAllAtelier, getAtelierBySlug, importMdx } from "@/lib/utils";
+import {
+  getAllAtelier,
+  getAtelierBySlug,
+  importMdx,
+} from "@/lib/content/repository";
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { alternates, SITE_OG } from "@/lib/metadata";

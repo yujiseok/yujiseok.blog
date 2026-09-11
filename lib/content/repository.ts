@@ -2,20 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { ComponentType } from "react";
 
-import { parsePost } from "./editor/document";
+import { isPublished, parsePost, type PostMetadata } from "./document";
 
 type ContentType = "writing" | "atelier";
 
-export interface Metadata {
-  title: string;
-  summary: string;
-  publishedAt: string;
-  image?: string;
-}
-
 interface MdxModule {
   default: ComponentType;
-  metadata: Metadata;
+  metadata: PostMetadata;
 }
 
 const ROOT_DIR = path.join(process.cwd(), "content");
@@ -32,10 +25,13 @@ export const importMdx = (
 /*
  * 목록 페이지·RSS·sitemap·llms.txt는 메타데이터만 있으면 된다. importMdx로
  * 모듈을 평가하면 컴파일된 shiki HTML까지 포함한 본문 전체가 딸려 온다 —
- * 24개 글을 전부 읽을 때마다 그 비용을 치를 이유가 없다. lib/toc.ts와 같은
+ * 24개 글을 전부 읽을 때마다 그 비용을 치를 이유가 없다. lib/content/toc.ts와 같은
  * 방식으로 원문만 읽어 metadata export만 떼어낸다.
  */
-export const readAllContent = async (contentType: ContentType) => {
+export const readAllContent = async (
+  contentType: ContentType,
+  { includeDrafts = false }: { includeDrafts?: boolean } = {},
+) => {
   const files = await fs.readdir(path.join(ROOT_DIR, contentType));
 
   const contents = await Promise.all(
@@ -52,17 +48,26 @@ export const readAllContent = async (contentType: ContentType) => {
       }),
   );
 
-  return contents.sort(
-    (a, b) =>
-      new Date(b.metadata.publishedAt).getTime() -
-      new Date(a.metadata.publishedAt).getTime(),
-  );
+  return contents
+    .filter(({ metadata }) => includeDrafts || isPublished(metadata))
+    .sort(
+      (a, b) =>
+        new Date(b.metadata.publishedAt).getTime() -
+        new Date(a.metadata.publishedAt).getTime(),
+    );
 };
+
+/*
+ * 개발 서버에서만 초안을 남긴다. 쓰는 중인 글을 실제 화면으로 확인하기 위한
+ * 것이고, 프로덕션 빌드에서는 목록·홈·RSS·sitemap·llms.txt·이웃 글·상세
+ * 어디에도 남지 않는다 — 그 경로가 모두 이 함수를 지나기 때문이다.
+ */
+const INCLUDE_DRAFTS = process.env.NODE_ENV === "development";
 
 const getAllContent = async (contentType: ContentType) => {
   "use cache";
 
-  return readAllContent(contentType);
+  return readAllContent(contentType, { includeDrafts: INCLUDE_DRAFTS });
 };
 
 export const getAllWritings = () => getAllContent("writing");

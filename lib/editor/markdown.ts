@@ -252,7 +252,7 @@ function convertBlockToTiptap(
 // ----------------------------------------------------------------------------
 
 // 이미지와 문단이 같은 값 체계를 쓴다. 다만 "값 없음"의 뜻은 서로 다르다 —
-// 이미지는 가운데가, 문단은 왼쪽이 렌더 기본이다. app/editor/align.ts 참고.
+// 이미지는 가운데가, 문단은 왼쪽이 렌더 기본이다. lib/editor/align.ts 참고.
 const ALIGNS = ["left", "center", "right"] as const;
 
 type Align = (typeof ALIGNS)[number];

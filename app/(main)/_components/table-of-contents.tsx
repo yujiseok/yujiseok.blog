@@ -3,7 +3,7 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { useLenis } from "lenis/react";
 import { cn } from "@/lib/cn";
-import type { TocEntry } from "@/lib/toc";
+import type { TocEntry } from "@/lib/content/toc";
 
 // Lenis의 scrollTo는 요소의 scroll-margin-top을 이미 반영한다. 여기에 또
 // 여백을 더하면 해시로 진입했을 때(32px)와 클릭했을 때(64px)의 착지가

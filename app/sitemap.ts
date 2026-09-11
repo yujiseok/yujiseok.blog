@@ -1,4 +1,4 @@
-import { getAllWritings, getAllAtelier } from "@/lib/utils";
+import { getAllWritings, getAllAtelier } from "@/lib/content/repository";
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 

@@ -1,4 +1,4 @@
-import Footer from "../components/footer";
+import Footer from "@/app/_components/footer";
 
 // 뒤로 가기는 라우트마다 목적지가 달라 각 페이지가 직접 렌더한다.
 // 홈은 돌아갈 곳이 없으므로 아예 그리지 않는다.

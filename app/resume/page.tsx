@@ -1,12 +1,12 @@
-import ArrowUpRight from "@/app/components/arrowUpRight";
-import BlurContainer from "@/app/components/blurContainer";
+import ArrowUpRight from "@/app/_components/arrow-up-right";
+import BlurContainer from "@/app/_components/blur-container";
 import { resumeData } from "./resume";
 import { SITE_URL } from "@/lib/constants";
-import ResumeProfile from "./components/ResumeProfile";
-import ResumeContent from "./components/ResumeContent";
-import ContentContainer from "./components/ContentContainer";
+import ResumeProfile from "./_components/resume-profile";
+import ResumeContent from "./_components/resume-content";
+import ContentContainer from "./_components/content-container";
 import { alternates, SITE_OG } from "@/lib/metadata";
-import ExternalLink from "@/app/components/externalLink";
+import ExternalLink from "@/app/_components/external-link";
 
 export const metadata = {
   title: `${resumeData.profile.name} | ${resumeData.profile.title}`,

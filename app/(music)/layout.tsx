@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import NavBar from "../components/music/navBar";
-import Footer from "../components/footer";
+import NavBar from "@/app/(music)/_components/nav-bar";
+import Footer from "@/app/_components/footer";
 
 // alternates/openGraph.url은 라우트별 값이라 레이아웃에 두면 하위 페이지가 통째로 상속한다.
 export const metadata: Metadata = {

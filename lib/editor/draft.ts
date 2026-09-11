@@ -1,6 +1,11 @@
 import type { JSONContent } from "@tiptap/core";
 
-import { isValidSlug, toSlug, type PostMetadata } from "@/lib/editor/document";
+import {
+  isPublished,
+  isValidSlug,
+  toSlug,
+  type PostMetadata,
+} from "@/lib/content/document";
 
 /**
  * 파일로 존재하는 글의 원본. null이면 아직 파일이 없는 새 글이다.
@@ -21,6 +26,8 @@ export interface Draft {
   title: string;
   summary: string;
   publishedAt: string;
+  /** 끄면 초안이다 — 프로덕션 빌드에서 통째로 빠진다 */
+  published: boolean;
   doc: JSONContent;
 }
 
@@ -35,6 +42,8 @@ export type DraftAction =
   | { type: "title"; value: string }
   | { type: "slug"; value: string }
   | { type: "field"; field: "summary" | "publishedAt"; value: string }
+  // field 액션은 string 전용이라 섞지 않는다
+  | { type: "published"; value: boolean }
   | { type: "saved"; slug: string; metadata: PostMetadata };
 
 /** 서버가 미리 읽어 넘겨준 글. /editor?post=<slug>로 바로 열 때 쓴다 */
@@ -57,6 +66,8 @@ export const createDraft = (publishedAt: string): Draft => ({
   title: "",
   summary: "",
   publishedAt,
+  // 새 글은 초안으로 시작한다. 다 쓰고 나서 켜는 게 순서다
+  published: false,
   doc: emptyDoc(),
 });
 
@@ -76,6 +87,7 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
         title: action.metadata.title,
         summary: action.metadata.summary,
         publishedAt: action.metadata.publishedAt,
+        published: isPublished(action.metadata),
         doc: action.doc,
       };
 
@@ -91,6 +103,9 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
 
     case "field":
       return { ...draft, [action.field]: action.value };
+
+    case "published":
+      return { ...draft, published: action.value };
 
     case "saved":
       // 저장한 순간부터 그 파일이 원본이다 — 같은 슬러그로 다시 저장하면
@@ -109,7 +124,7 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
 /**
  * 저장할 메타데이터. 기존 글은 원본 위에 편집한 값만 덮어쓴다 — 새로 조립하면
  * image처럼 에디터가 다루지 않는 키가 날아가고 키 순서도 바뀌어,
- * lib/editor/document.ts가 보장하는 바이트 왕복이 깨진다. 새 글은
+ * lib/content/document.ts가 보장하는 바이트 왕복이 깨진다. 새 글은
  * content/writing의 관례인 title·publishedAt·summary 순으로 만든다.
  */
 export const draftMetadata = (draft: Draft): PostMetadata =>
@@ -119,11 +134,13 @@ export const draftMetadata = (draft: Draft): PostMetadata =>
         title: draft.title,
         summary: draft.summary,
         publishedAt: draft.publishedAt,
+        published: draft.published,
       }
     : {
         title: draft.title,
         publishedAt: draft.publishedAt,
         summary: draft.summary,
+        published: draft.published,
       };
 
 /** 불러온 그 파일을 고쳐 쓰는 중일 때만 덮어쓰기를 허용한다 */

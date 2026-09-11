@@ -3,6 +3,8 @@ export interface PostMetadata {
   publishedAt: string;
   summary: string;
   image?: string;
+  /** 글을 공개할지. 프로덕션 빌드는 이 값이 true 인 글만 내보낸다 */
+  published: boolean;
 }
 
 export interface PostDocument {
@@ -34,6 +36,14 @@ export const parsePost = (source: string): PostDocument => {
     body: source.slice(match[0].length).trim(),
   };
 };
+
+/*
+ * parsePost 는 JSON.parse 결과를 캐스팅할 뿐이라 타입이 필수라도 런타임에는
+ * published 가 없을 수 있다. 키를 빠뜨린 글이 조용히 공개되는 쪽이 더 나쁘므로
+ * true 라고 못 박은 글만 발행으로 본다.
+ */
+export const isPublished = (metadata: PostMetadata): boolean =>
+  metadata.published === true;
 
 export const isValidSlug = (slug: string): boolean =>
   slug.length <= MAX_SLUG_LENGTH && SLUG.test(slug);

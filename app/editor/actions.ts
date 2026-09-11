@@ -12,7 +12,7 @@ import {
   serializePost,
   type PostDocument,
   type PostMetadata,
-} from "@/lib/editor/document";
+} from "@/lib/content/document";
 import { docToMarkdown, openForEditing } from "@/lib/editor/markdown";
 
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
@@ -55,6 +55,10 @@ function assertValidMetadata(metadata: PostMetadata) {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.publishedAt)) {
     throw new Error("발행일은 YYYY-MM-DD 형식이어야 합니다.");
+  }
+  // 빠뜨린 채 저장되면 그 글은 프로덕션에서 조용히 사라진다
+  if (typeof metadata.published !== "boolean") {
+    throw new Error("발행 여부는 true 또는 false 여야 합니다.");
   }
 }
 

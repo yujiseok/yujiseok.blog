@@ -4,7 +4,7 @@ import { connection } from "next/server";
 
 import EditorClient from "./editor-client";
 import { listPosts, readPost } from "./actions";
-import type { LoadedPostInput } from "./draft";
+import type { LoadedPostInput } from "@/lib/editor/draft";
 
 // 에디터는 (main) 레이아웃 밖이라 헤더도 푸터 내비도 없다. 여기 링크가 없으면
 // 주소를 직접 고치는 것 말고는 나갈 길이 없다.

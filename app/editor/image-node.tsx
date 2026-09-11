@@ -15,7 +15,7 @@ import {
 } from "react";
 
 import { cn } from "@/lib/cn";
-import { toAlign, type Align } from "./align";
+import { toAlign, type Align } from "@/lib/editor/align";
 import { FIELD } from "./ui";
 
 /*
@@ -30,7 +30,7 @@ import { FIELD } from "./ui";
  *
  * 정렬 UI는 여기 없다. 이미지든 문단이든 툴바의 정렬 버튼 하나로 건다 —
  * 정렬 컨트롤이 두 군데 있으면 어느 쪽이 지금 값인지 알 수 없다.
- * 판정과 적용은 app/editor/align.ts에 있다.
+ * 판정과 적용은 lib/editor/align.ts에 있다.
  */
 
 // 이보다 좁아지면 크기 조절 핸들 둘이 맞닿아 무엇을 줄이는지 안 보인다.

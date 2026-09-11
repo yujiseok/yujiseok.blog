@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import BlurContainer from "@/app/components/blurContainer";
-import PostRow from "@/app/components/postRow";
-import Footer from "@/app/components/footer";
-import { getAllWritings } from "@/lib/utils";
+import BlurContainer from "@/app/_components/blur-container";
+import PostRow from "@/app/(main)/_components/post-row";
+import Footer from "@/app/_components/footer";
+import { getAllWritings } from "@/lib/content/repository";
 
 export const metadata: Metadata = { title: "404" };
 
