@@ -24,13 +24,11 @@ const PostRow = ({
             </span>
           )}
         </h2>
-        {/* 요약은 한 줄까지만. 목록의 리듬은 제목이 쥔다. */}
-        <p className="mt-0.5 line-clamp-1 text-[15px] break-keep text-neutral-600 dark:text-neutral-400">
-          {metadata.summary}
-        </p>
+        {/* 요약은 싣지 않는다. 목록에서 고르는 근거는 제목이고, 한 줄로 잘린
+            요약은 그 판단을 돕지 못한 채 행만 무겁게 했다. */}
         <time
           dateTime={metadata.publishedAt}
-          className="mt-2 block text-sm text-neutral-500 dark:text-neutral-400"
+          className="mt-1 block text-sm text-neutral-500 dark:text-neutral-400"
         >
           {formatPostDate(metadata.publishedAt)}
         </time>
