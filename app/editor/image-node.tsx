@@ -312,8 +312,11 @@ function ImageNodeView({
     >
       {/* 이미지 노드에는 편집 가능한 내용이 없다. 툴바·핸들이 ProseMirror의
           편집 영역으로 취급되지 않도록 통째로 닫는다. */}
+      {/* not-prose가 없으면 .prose img의 margin: 2em 0 이 이 이미지에도 걸린다.
+          그 여백은 utilities 레이어의 m-0을 이기고(globals.css의 레이어 주석 참고)
+          이미지 아래에 34px 빈칸을 남겨 alt 입력칸이 멀찍이 떨어져 보였다. */}
       <div
-        className="relative inline-block max-w-full leading-none"
+        className="not-prose relative inline-block max-w-full leading-none"
         contentEditable={false}
       >
         {/* next/image는 빌드 타임에 아는 경로를 최적화한다. 여기 src는 방금
@@ -329,7 +332,10 @@ function ImageNodeView({
           // 원본이 본문 칸보다 크면 표시만 칸에 맞춰 줄인다(attr은 원본 그대로).
           style={displayWidth === null ? undefined : { width: displayWidth }}
           className={cn(
-            "m-0 h-auto max-w-full rounded-md",
+            // block이 아니면 img가 inline이라 baseline 아래로 줄 높이만큼(여기선
+            // 34px) 빈 공간이 생긴다. 래퍼의 leading-none은 prose 규칙에 덮여
+            // 듣지 않는다 — 이미지 자신을 블록으로 만드는 쪽이 확실하다.
+            "m-0 block h-auto max-w-full rounded-md",
             selected &&
               "outline-2 outline-offset-2 outline-black dark:outline-white",
           )}
