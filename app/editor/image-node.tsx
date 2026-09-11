@@ -354,10 +354,12 @@ function ImageNodeView({
       </div>
 
       {/* 선택했을 때만 연다. 늘 떠 있으면 글을 읽는 화면이 입력칸으로 덮인다.
-          래퍼 폭을 그대로 쓰므로 작은 이미지에서도 입력칸은 본문 폭이다. */}
+          폭은 이미지에 맞춘다 — 본문 폭으로 늘리면 좁은 이미지 아래에서 입력칸만
+          양옆으로 튀어나와 둘이 한 덩어리로 보이지 않는다. */}
       {selected && (
         <div
-          className="w-full"
+          className="w-full max-w-full"
+          style={displayWidth === null ? undefined : { width: displayWidth }}
           contentEditable={false}
           // 노드뷰 루트는 draggable이라, 안에서 텍스트를 끌면 이미지가 통째로
           // 끌려갈 수 있다. 이 영역은 드래그 대상이 아니다.
