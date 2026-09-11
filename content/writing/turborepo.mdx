@@ -61,23 +61,19 @@ GitHub Actions 러너는 매 실행마다 깨끗한 환경에서 시작한다.
 
 캐시 키가 매칭되면 `.turbo`를 복원해서 Turborepo가 로컬 캐시로 활용한다.
 
-<div>
-  <Image
-    src="/images/turborepo/actions-cache-miss.png"
-    width={768}
-    height={100}
-    alt="actions/cache 캐시 MISS"
-  />
-</div>
+<Image
+  src="/images/turborepo/actions-cache-miss.png"
+  width={768}
+  height={100}
+  alt="actions/cache 캐시 MISS"
+/>
 
-<div>
-  <Image
-    src="/images/turborepo/actions-cache-build.png"
-    width={768}
-    height={100}
-    alt="actions/cache 캐시 HIT"
-  />
-</div>
+<Image
+  src="/images/turborepo/actions-cache-build.png"
+  width={768}
+  height={100}
+  alt="actions/cache 캐시 HIT"
+/>
 
 얼핏 잘 되는 것 같았는데, 실제로 써보니 캐시 MISS가 생각보다 자주 발생했다.
 원인을 파악해보니 `actions/cache`에는 구조적인 한계가 있었다.
@@ -193,14 +189,12 @@ env:
 
 여기까지 설정하면 `Remote caching enabled` 상태로 전환된다.
 
-<div>
-  <Image
-    src="/images/turborepo/remote-cache-hit.png"
-    width={768}
-    height={200}
-    alt="Remote Cache 적용 후 — 5 cached, FULL TURBO 6.5초"
-  />
-</div>
+<Image
+  src="/images/turborepo/remote-cache-hit.png"
+  width={768}
+  height={200}
+  alt="Remote Cache 적용 후 — 5 cached, FULL TURBO 6.5초"
+/>
 
 ---
 
