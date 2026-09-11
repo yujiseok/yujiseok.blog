@@ -25,14 +25,14 @@ describe("기존 글을 열었다 저장해도 내용이 보존된다", () => {
 });
 
 /*
- * 위가 "이미 쓴 글"의 보존이라면, 이쪽은 에디터에서 직접 친 JSX다. mdxBlock의
- * textarea에 넣은 원문이 파일에 그대로 가야 한다 — 여기가 깨지면 사용자가 쓴
- * 컴포넌트가 저장하는 순간 사라진다.
+ * mdxBlock은 에디터가 모르는 JSX를 원문 그대로 들고 있다가 저장할 때 되돌려
+ * 놓는 역할만 한다. 여기가 깨지면 <Callout> 같은 컴포넌트가 든 글을 에디터로
+ * 열었다 저장하는 것만으로 사라진다.
  */
-describe("에디터에서 친 MDX 블록", () => {
+describe("MDX 블록은 원문을 잃지 않는다", () => {
   const source = "<Callout>\n  직접 친 JSX\n</Callout>";
 
-  it("원문 그대로 파일에 쓰인다", () => {
+  it("저장하면 원문 그대로 파일에 쓰인다", () => {
     const doc = {
       type: "doc",
       content: [{ type: "mdxBlock", attrs: { value: source } }],

@@ -63,20 +63,6 @@ export const INSERT_BLOCKS: InsertBlock[] = [
     icon: <DetailsIcon />,
     run: (editor) => editor.chain().focus().setDetails().run(),
   },
-  {
-    id: "mdx",
-    label: "MDX",
-    keywords: ["mdx", "jsx", "컴포넌트", "callout"],
-    icon: <MdxIcon />,
-    // 빈 블록으로 열고 원문은 노드뷰의 textarea에서 친다. 에디터가 JSX를
-    // 해석하지 않으므로 어떤 컴포넌트든 이 길로 들어갈 수 있다.
-    run: (editor) =>
-      editor
-        .chain()
-        .focus()
-        .insertContent({ type: "mdxBlock", attrs: { value: "" } })
-        .run(),
-  },
 ];
 
 function TableIcon() {
@@ -115,25 +101,6 @@ function ImageIcon() {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
-    </svg>
-  );
-}
-
-function MdxIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="8 6 3 12 8 18" />
-      <polyline points="16 6 21 12 16 18" />
     </svg>
   );
 }

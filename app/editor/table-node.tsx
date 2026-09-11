@@ -17,6 +17,7 @@ import {
 import { Fragment, type MouseEvent as ReactMouseEvent } from "react";
 
 import { cn } from "@/lib/cn";
+import { BlockDeleteButton } from "./block-delete";
 import { MENU_ITEM, POPUP, POSITIONER } from "./ui";
 
 /*
@@ -97,7 +98,7 @@ const ACTION_GROUPS: TableAction[][] = [
   ],
 ];
 
-function TableNodeView({ editor }: ReactNodeViewProps) {
+function TableNodeView({ editor, deleteNode }: ReactNodeViewProps) {
   // 메뉴 항목은 전부 selection을 보고 도는 커맨드다. 우클릭이 캐럿을 옮기지
   // 않는 브라우저(Firefox)에서도 방금 누른 셀에 걸리도록 좌표에서 위치를 직접
   // 구해 selection을 옮겨 둔다.
@@ -110,7 +111,8 @@ function TableNodeView({ editor }: ReactNodeViewProps) {
   };
 
   return (
-    <NodeViewWrapper className="my-6">
+    <NodeViewWrapper className="group relative my-6">
+      <BlockDeleteButton onDelete={deleteNode} label="표 삭제" />
       <ContextMenu.Root>
         {/* 열이 많은 표가 본문 칸을 밀고 나가지 않도록 가로 스크롤만 연다 */}
         <ContextMenu.Trigger

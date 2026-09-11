@@ -13,6 +13,7 @@ import {
 } from "@tiptap/react";
 
 import { cn } from "@/lib/cn";
+import { BlockDeleteButton } from "./block-delete";
 import { CaretDownIcon } from "./icons";
 import { ICON_BUTTON, SURFACE, UNPRESSED } from "./ui";
 
@@ -36,16 +37,21 @@ import { ICON_BUTTON, SURFACE, UNPRESSED } from "./ui";
 // 참고). 본문 노드가 스스로 붙이는 data-type으로 찾는다.
 const COLLAPSED = "[&_[data-type=detailsContent]]:hidden";
 
-function DetailsView({ node, updateAttributes }: ReactNodeViewProps) {
+function DetailsView({
+  node,
+  updateAttributes,
+  deleteNode,
+}: ReactNodeViewProps) {
   const open = node.attrs.open === true;
 
   return (
     <NodeViewWrapper
       className={cn(
         SURFACE,
-        "my-4 flex gap-1 bg-neutral-50 p-2 dark:bg-neutral-900",
+        "group relative my-4 flex gap-1 bg-neutral-50 p-2 dark:bg-neutral-900",
       )}
     >
+      <BlockDeleteButton onDelete={deleteNode} label="접기 블록 삭제" />
       <button
         type="button"
         contentEditable={false}

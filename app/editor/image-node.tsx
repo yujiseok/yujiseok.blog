@@ -15,6 +15,7 @@ import {
 } from "react";
 
 import { cn } from "@/lib/cn";
+import { BlockDeleteButton } from "./block-delete";
 import { toAlign, type Align } from "@/lib/editor/align";
 import { FIELD } from "./ui";
 
@@ -177,6 +178,7 @@ function ImageNodeView({
   node,
   updateAttributes,
   selected,
+  deleteNode,
   ref,
 }: ReactNodeViewProps) {
   const attrs = readAttrs(node.attrs);
@@ -316,9 +318,11 @@ function ImageNodeView({
           그 여백은 utilities 레이어의 m-0을 이기고(globals.css의 레이어 주석 참고)
           이미지 아래에 34px 빈칸을 남겨 alt 입력칸이 멀찍이 떨어져 보였다. */}
       <div
-        className="not-prose relative inline-block max-w-full leading-none"
+        className="group not-prose relative inline-block max-w-full leading-none"
         contentEditable={false}
       >
+        {/* 리사이즈 핸들은 이미지 좌우 가운데라 우상단과 겹치지 않는다 */}
+        <BlockDeleteButton onDelete={deleteNode} label="이미지 삭제" />
         {/* next/image는 빌드 타임에 아는 경로를 최적화한다. 여기 src는 방금
             업로드한 파일이고 이 화면은 로컬 전용 에디터라 그냥 img를 쓴다.
             발행된 글은 mdx-components.tsx가 next/image로 그린다. */}
