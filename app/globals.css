@@ -463,3 +463,12 @@ details[open] summary::after {
     animation: none;
   }
 }
+
+/*
+ * 포커스 링을 쓰지 않는다. 키보드로 옮겨 다닐 때 지금 어디에 있는지 보이지
+ * 않게 되는 대가가 있지만, 누를 때마다 테두리가 튀는 쪽을 원하지 않는다.
+ */
+*:focus,
+*:focus-visible {
+  outline: none;
+}
