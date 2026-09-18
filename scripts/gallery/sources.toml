@@ -1,0 +1,200 @@
+# 작가별 이미지 출처. URL을 코드에 박지 않고 여기 데이터로 둔다.
+# 새 작가를 얹을 때는 [[artist.<폴더>]] 항목을 더하면 되고 collect.py는 고치지 않는다.
+#
+# kind    html    = 정적 HTML (Scrapling Fetcher). 인라인 JS·srcset·title 속성도 정규식으로 긁는다
+#         browser = JS 렌더링/챌린지 통과가 필요한 곳 (Scrapling StealthyFetcher)
+#         json    = 사이트 내부 API를 그대로 호출
+#         commons = Wikimedia Commons 검색 + imageinfo 배치
+# origin  origins.py의 규칙 이름. 썸네일 주소를 원본으로 되돌린다
+# pattern 이미지 URL을 찾는 정규식. (?P<url>) 이름 그룹을 쓰면 (?P<caption>) (?P<year>)
+#         와 짝지어 작품명·연도까지 같이 읽는다. 없으면 매치 전체를 URL로 쓴다
+#
+# 해상도는 전부 실측값이다(실제로 받아서 픽셀을 다시 쟀다).
+
+# ── 이우환 ───────────────────────────────────────────────────────────────────
+# 국제갤러리 소속이지만 그쪽은 최대 800px이라 후보에서 뺐다.
+[[artist.lee-ufan]]
+name = "tinakim"
+kind = "html"
+url = "https://tinakimgallery.com/artists/47-lee-ufan/"
+origin = "artlogic"
+# 실측 2696×2000, 4659×3494. 파일명에 작품명·연도가 들어 있다
+pattern = '''https://static-assets\.artlogic\.net/[^"'\s\\)]+?\.(?:jpg|jpeg|png)'''
+# 이 페이지의 artlogic URL 297개는 대부분 전시·뉴스·인물 사진이다. 작품 기록은
+# /images/view/ 에만 있다
+include = '''/images/view/'''
+strip = ['''\btinakimgallery\b''', '''\blee\b''', '''\bufan\b''', '''\bno\b''']
+delay = 1.5
+
+[[artist.lee-ufan]]
+name = "lisson"
+kind = "html"
+url = "https://www.lissongallery.com/artists/lee-ufan"
+origin = "lisson"
+# CDN 캐러셀 이미지. 실측 3840×2240 ~ 3840×5207. 파일명이 해시라 캡션은 없다.
+# 같은 페이지의 _next/image 경유 S3 원본은 1000px대라 쓰지 않는다
+pattern = '''https://d7ra36y65tyn0\.cloudfront\.net/image/[^"'\s\\)]+?-S\d+x-FWEBP'''
+delay = 1.5
+
+[[artist.lee-ufan]]
+name = "pace"
+kind = "html"
+url = "https://www.pacegallery.com/artists/lee-ufan/"
+origin = "pace"
+# srcset의 width-2000이 하드캡. 실측 2000×1125 ~ 2000×2536
+pattern = '''https://[^"'\s\\)]+?\.width-\d+\.(?:jpg|jpeg|png)'''
+# 작품이 아닌 화면 캡처가 한 장 섞여 있다
+exclude = '''(?i)screenshot'''
+delay = 1.5
+
+# 해외 갤러리는 영문 연작명으로 파일명을 짓는다. 한국 작가는 한글 작품명으로
+# 걸고 싶으므로 연작명만 갈아 끼운다(작품마다 번역표를 두면 유지가 안 된다).
+[titles.lee-ufan]
+"from-point" = "점으로부터"
+"from-line" = "선으로부터"
+"relatum" = "관계항"
+"correspondance" = "조응"
+"correspondence" = "조응"
+"dialogue" = "대화"
+"response" = "응답"
+"with-winds" = "바람과-함께"
+
+# ── 김환기 ───────────────────────────────────────────────────────────────────
+[[artist.kim-whanki]]
+name = "whankimuseum"
+kind = "html"
+# https는 406으로 막힌다. http로 들어가야 한다
+url = "http://whankimuseum.org/museum/gallery/collection/"
+origin = "passthrough"
+# <a href="...jpg" title="김환기, <19-I-68 III>, 1968, 신문지에 유채, 58x38cm">
+# 작품명이 한글로 그대로 들어 있는 드문 출처다. 실측 913×1334 ~ 1517×1920
+pattern = '''<a[^>]+href="(?P<url>http://whankimuseum\.org/wp-content/uploads/[^"]+?\.jpg)"[^>]*title="(?P<caption>[^"]*)"'''
+# -640x480.jpg 처럼 치수가 붙은 것은 워드프레스가 만든 리사이즈본이다
+exclude = '''-\d+x\d+\.jpg$'''
+delay = 1.5
+
+# MMCA 소장품 상세페이지(very_/maxi_ 접두 파일이 1920px대, 메타데이터가 깔끔)도
+# 쓸 수 있지만, 목록 검색 API가 파라미터를 무시해서 wrkinfoSeqno를 대량으로
+# 열거할 방법을 아직 못 찾았다. 개별 번호를 손으로 넣어야 하므로 꺼 둔다.
+[[artist.kim-whanki]]
+name = "mmca"
+kind = "html"
+url = "https://www.mmca.go.kr/collections/collectionsDetailPage.do?wrkinfoSeqno=9324"
+origin = "passthrough"
+pattern = '''https://umss\.mmca\.go\.kr:443/jsp/upload/[^"'\s]+?/detA/(?:very|maxi)_[^"'\s]+?\.(?:jpg|JPG)'''
+enabled = false
+
+# ── 힐마 아프 클린트 ──────────────────────────────────────────────────────────
+# 퍼블릭 도메인이라 Commons가 메인이다. 다만 3300px와 400px가 섞여 있어
+# imageinfo의 크기로 내려받기 전에 걸러낸다. 무간격 호출은 5번째부터 429다.
+[[artist.hilma-af-klint]]
+name = "commons"
+kind = "commons"
+# deepcategory는 카테고리 트리를 타고 내려가 묘지 사진과 다른 작가 작품까지
+# 끌어온다(실측: 161건 중 상당수가 회화가 아니었다). 직속 카테고리만 본다
+query = 'incategory:"Paintings by Hilma af Klint"'
+# artist_match는 걸지 않는다. extmetadata.Artist가 화가가 아니라 사진을 올린
+# 사람인 경우가 섞여 있어서다(실측: "Hilma af Klint, Poppy.jpg"의 Artist가
+# "Gotogo"). incategory는 사람이 정리한 목록이라 그 자체를 믿는 편이 낫다.
+# 반대로 노이즈가 많은 카테고리(몬드리안 2760건)에서는 artist_match를 쓴다.
+origin = "passthrough"
+strip = ['''\bhilma\b''', '''\baf\b''', '''\bklint\b''']
+delay = 3.0
+
+# ── 박서보 ───────────────────────────────────────────────────────────────────
+# 이미 41장으로 상한을 넘겼다. 상한을 올릴 때 쓸 출처만 적어 둔다.
+# Perrotin은 규칙(d:NNNxauto 제거)은 맞지만 이 작가의 마스터가 작아 실측
+# 918×1181 / 981×1181처럼 1200px 미달이 많고, 작품 JSON도 이제 페이지에
+# 없다(포트레이트 1장만 남음) → browser로 다시 확인해야 한다.
+[[artist.park-seo-bo]]
+name = "perrotin"
+kind = "browser"
+url = "https://www.perrotin.com/en/artists/park-seo-bo/203"
+origin = "perrotin"
+pattern = '''https://s3\.perrotin\.com/(?:d:\d+xauto/)?details/photo/[^"'\s\\)]+?\.jpe?g'''
+strip = ['''\bseo\b''', '''\bbo\b''', '''\bpark\b''']
+enabled = false
+
+[titles.park-seo-bo]
+"ecriture" = "묘법"
+
+# ── 유영국 ───────────────────────────────────────────────────────────────────
+# 지금 있는 66장이 바로 이 재단 사이트에서 온 것이다(파일명 형식이 같다).
+# 재단에는 170점이 있어 상한을 올리면 100장 남짓 더 받을 수 있다. 실측 1600px대.
+[[artist.yoo-young-kuk]]
+name = "foundation"
+kind = "html"
+url = "http://www.yooyoungkuk.org/about/work_list.php?year=1970"
+origin = "passthrough"
+prefix = "http://www.yooyoungkuk.org"
+pattern = '''background-image:url\('(?P<url>/upload/work/[^']+?\.jpg)'\)'''
+# 파일명이 <번호>-<제목>-<연도>-<재료>-<규격> 이다. 재료·규격·번호를 떼면 제목이 남는다
+strip = ['''^\d+\b''', '''\boil\b''', '''\bon\b''', '''\bcanvas\b''', '''\bpaper\b''', '''\d+x[\d.]+\w*''']
+delay = 1.5
+
+# 재단이 영문 제목으로 파일명을 짓는다. 실제 작품명은 대부분 「작품」과 「산」이다
+[titles.yoo-young-kuk]
+"work" = "작품"
+"mountain" = "산"
+"mountian" = "산"
+"sun-and-moon" = "해와-달"
+"on-the-sea" = "바다"
+"a-man" = "사람"
+"thawing-of-the-ground" = "해토"
+"mountain-blue-green" = "산-청록"
+"painting-with-a-mountain" = "산이-있는-그림"
+"temple-on-the-mountain" = "산사"
+"composition" = "구성"
+"valley" = "계곡"
+"street" = "거리"
+"spring-rain" = "봄비"
+"untitled" = "무제"
+"morning" = "아침"
+"spirit" = "정신"
+"sea-plant" = "해초"
+"circle" = "원"
+"work-circle-a" = "작품-원-가"
+"work-circle-c" = "작품-원-다"
+"mountain-red" = "산-적"
+"mountain-blue" = "산-청"
+"city" = "도시"
+"tree" = "나무"
+"fish" = "물고기"
+"bird" = "새"
+
+# ── 정상화 ───────────────────────────────────────────────────────────────────
+# 이번 판 범위는 아니다. 실측만 끝내 뒀으니 --artist chung-sang-hwa 한 번이면 된다.
+# 갤러리현대는 Vue SPA지만 내부 XHR을 그대로 부르면 촬영 원본이 나온다.
+# 실측 2988×4000 / 3206×4000 / 3204×4000, 총 15점.
+[[artist.chung-sang-hwa]]
+name = "galleryhyundai"
+kind = "json"
+url = "https://www.galleryhyundai.com/artist/view/data"
+method = "POST"
+body = { artistSn = "20000000007" }
+items = "workList"
+image_field = "workImageOrgnl.physiclFlpth"
+prefix = "https://www.galleryhyundai.com/public"
+origin = "passthrough"
+delay = 1.0
+
+# 재단 목록 페이지에는 구간마다 9점씩 36점만 서버렌더링되고, 나머지는 "더 보기"가
+# ajax.work_get.php 를 두드려 채운다. type은 cont1~cont4(1900·1960·1970·1980년대,
+# 각 30·50·50·40점), limit은 오프셋이고 응답은 열 단위 배열이다.
+[[artist.yoo-young-kuk]]
+name = "foundation-more"
+kind = "json"
+url = "http://www.yooyoungkuk.org/about/ajax.work_get.php"
+session_url = "http://www.yooyoungkuk.org/about/work_list.php"
+method = "POST"
+form = true
+types = ["cont1", "cont2", "cont3", "cont4"]
+type_field = "type"
+page_field = "limit"
+page_start = 9
+page_step = 9
+page_max = 63
+columns = { image = "image", title = "title", year = "year" }
+prefix = "http://www.yooyoungkuk.org"
+origin = "passthrough"
+delay = 1.0
