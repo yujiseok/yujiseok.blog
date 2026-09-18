@@ -1,10 +1,12 @@
 import { getAllWritings, getAllAtelier } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
+import { getGallery } from "@/lib/gallery";
 
 export async function GET() {
-  const [writings, ateliers] = await Promise.all([
+  const [writings, ateliers, gallery] = await Promise.all([
     getAllWritings(),
     getAllAtelier(),
+    getGallery(),
   ]);
 
   const writingList = writings
@@ -21,6 +23,16 @@ export async function GET() {
     )
     .join("\n");
 
+  // 이미지 자체는 LLM에게 줄 게 없다. 어떤 작가를 몇 점 모아 뒀는지만 알린다.
+  const galleryList = [...new Set(gallery.map(({ artist }) => artist.name))]
+    .map((name) => ({
+      name,
+      count: gallery.filter(({ artist }) => artist.name === name).length,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .map(({ name, count }) => `- ${name}: ${count}점`)
+    .join("\n");
+
   const llmsTxt = `# Yujiseok's Blog
 
 > 공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그. 프론트엔드 개발, React, Next.js, TypeScript 등 웹 개발 기술을 다룹니다.
@@ -34,6 +46,12 @@ ${writingList}
 ## Atelier
 
 ${atelierList}
+
+## Gallery
+
+모아 둔 그림. ${SITE_URL}/gallery
+
+${galleryList}
 
 ## Links
 

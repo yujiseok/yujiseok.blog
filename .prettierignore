@@ -7,3 +7,6 @@ content
 .next
 out
 bun.lock
+
+# 이미지는 포매터가 볼 것이 없다. 수집 중에 목록이 바뀌면 읽다 실패하기도 한다.
+public/images/
