@@ -511,11 +511,7 @@ const PostPicker = ({ posts, selectedSlug, onSelect }: PostPickerProps) => {
             <Combobox.Empty className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
               해당하는 글이 없습니다.
             </Combobox.Empty>
-            {/* Lenis가 wheel을 가로채므로 이 컨테이너만 예외로 뺀다(select.tsx 참고) */}
-            <Combobox.List
-              data-lenis-prevent
-              className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain data-empty:p-0"
-            >
+            <Combobox.List className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain data-empty:p-0">
               {(option: PostOption) => (
                 <Combobox.Item
                   key={option.value}

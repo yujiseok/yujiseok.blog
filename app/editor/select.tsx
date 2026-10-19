@@ -95,12 +95,7 @@ export function EditorSelect<Value extends string>({
               "max-h-[var(--available-height)] min-w-[var(--anchor-width)] overflow-x-hidden p-1",
             )}
           >
-            {/* 루트 레이아웃의 Lenis가 전역에서 wheel을 가로채 이 안의 스크롤을
-                먹는다. data-lenis-prevent로 이 컨테이너만 빼 준다. */}
-            <Select.List
-              data-lenis-prevent
-              className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain"
-            >
+            <Select.List className="max-h-[min(20rem,var(--available-height))] overflow-y-auto overscroll-contain">
               {options.map((option) => (
                 <Select.Item
                   key={option.value}
