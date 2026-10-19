@@ -33,9 +33,12 @@ const nextConfig: NextConfig = {
       },
     ]),
   cacheComponents: true,
+  reactCompiler: true,
   experimental: {
     typedEnv: true,
     agentUpgrade: "latest",
+    // Babel을 거치지 않고 Turbopack 안에서 컴파일러를 돌린다
+    turbopackRustReactCompiler: true,
   },
 };
 
