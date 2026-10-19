@@ -33,6 +33,7 @@ import {
 import { CaretDownIcon } from "./icons";
 import { MdxBlock } from "./mdx-block";
 import { SlashCommand } from "./slash-command";
+import { TabTrap } from "./tab-trap";
 import { TableNodes } from "./table-node";
 import { EditorToastViewport, useSaveToast } from "./toast";
 import { EditorToolbar } from "./toolbar";
@@ -134,6 +135,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       // 한 벌이다.
       ...DetailsNodes,
       SlashCommand,
+      TabTrap,
     ],
     content: draft.doc,
   });
