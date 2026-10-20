@@ -3,7 +3,13 @@ import path from "node:path";
 
 import { isValidSlug } from "@/lib/content/document";
 
-const IMAGES_DIR = path.join(process.cwd(), "public", "images");
+// public/images는 287MB라 함수에 넣으면 Vercel 250MB 한도를 넘는다.
+// 이 라우트는 개발 서버에서만 새 파일을 쓰므로, 있는 그림을 번들에 담지 않는다.
+const IMAGES_DIR = path.join(
+  /* turbopackIgnore: true */ process.cwd(),
+  "public",
+  "images",
+);
 
 /** 스크린샷 한 장이 이걸 넘길 일은 없다. 실수로 원본 RAW를 고르는 걸 막는 선 */
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -72,13 +78,15 @@ async function writeWithoutOverwrite(
   for (const name of names) {
     // 정규화를 통과한 이름이라도 디스크에 닿기 직전 최종 경로를 다시 확인한다.
     // 검증 규칙이 나중에 느슨해져도 이 검사는 남는다.
-    const filePath = path.resolve(dir, name);
+    const filePath = path.resolve(/* turbopackIgnore: true */ dir, name);
     if (path.dirname(filePath) !== dir) {
       throw new Error("허용되지 않은 경로입니다.");
     }
 
     try {
-      await fs.writeFile(filePath, data, { flag: "wx" });
+      await fs.writeFile(/* turbopackIgnore: true */ filePath, data, {
+        flag: "wx",
+      });
       return name;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
@@ -131,13 +139,13 @@ export async function POST(request: Request) {
 
   // isValidSlug 통과만으로 끝내지 않고, resolve된 디렉터리가 실제로 IMAGES_DIR
   // 바로 아래인지 다시 검사한다(actions.ts의 resolvePostPath와 같은 방식).
-  const dir = path.resolve(IMAGES_DIR, slug);
+  const dir = path.resolve(/* turbopackIgnore: true */ IMAGES_DIR, slug);
   if (path.dirname(dir) !== IMAGES_DIR) {
     return fail(400, "허용되지 않은 경로입니다.");
   }
 
   try {
-    await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(/* turbopackIgnore: true */ dir, { recursive: true });
     const name = await writeWithoutOverwrite(
       dir,
       candidateNames(normalized.base, normalized.ext),

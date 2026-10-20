@@ -8,9 +8,10 @@ import { readImageSize } from "@/lib/image-size";
  * 적는 방식은 손이 가는 쪽이 늘 뒤처져서, 파일은 있는데 화면엔 없는 상태를
  * 만든다. 대신 디렉터리 구조 자체를 데이터로 읽는다 — 하위 폴더명이 작가다.
  */
-export const GALLERY_DIR = path.join(process.cwd(), "public/images/gallery");
-
 const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+
+export const isGalleryFile = (file: string) =>
+  IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase());
 
 export interface Artist {
   name: string;
@@ -141,6 +142,18 @@ const toArtist = (folder: string): Artist =>
     url: `https://www.instagram.com/${folder}`,
   };
 
+export const buildGalleryImage = (
+  folder: string,
+  file: string,
+  size: { width?: number; height?: number } | undefined,
+): GalleryImage => ({
+  src: `/images/gallery/${folder}/${file}`,
+  folder,
+  artist: toArtist(folder),
+  ...parseCaption(file),
+  ...size,
+});
+
 /*
  * 폴더 순서나 파일명으로 세우면 같은 작가가 줄줄이 붙어 벽이 단조로워진다.
  * 그렇다고 Math.random()을 쓰면 빌드마다, 심지어 요청마다 배치가 달라져
@@ -159,14 +172,16 @@ const hash = (value: string) => {
 };
 
 /*
- * "use cache"는 vitest에서 동작하지 않으므로 캐시 래퍼와 실제 수집을 나눈다.
- * lib/content/repository.ts의 readAllContent와 같은 구조다.
+ * 경로를 인자로 받으면 추적이 public/images 전체로 넓어진다. 그 폴더는 287MB라
+ * 함수가 Vercel 250MB 한도를 넘긴다. process.cwd() 아래 갤러리 폴더를 리터럴로
+ * 적어야 그 폴더만 함수에 들어간다. 임시 디렉터리로 읽는 테스트는
+ * lib/gallery-read.ts를 쓴다.
  */
-export const readGallery = async (
-  dir: string = GALLERY_DIR,
-): Promise<GalleryImage[]> => {
+const readInstalledGallery = async (): Promise<GalleryImage[]> => {
   const entries = await fs
-    .readdir(dir, { withFileTypes: true })
+    .readdir(path.join(process.cwd(), "public", "images", "gallery"), {
+      withFileTypes: true,
+    })
     // 폴더를 아직 만들지 않았어도 빌드는 지나가야 한다
     .catch(() => []);
 
@@ -176,27 +191,39 @@ export const readGallery = async (
 
   const images = await Promise.all(
     folders.map(async (folder) => {
-      const files = await fs.readdir(path.join(dir, folder)).catch(() => []);
-
-      const images = files.filter((file) =>
-        IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase()),
-      );
+      const files = await fs
+        .readdir(
+          path.join(process.cwd(), "public", "images", "gallery", folder),
+        )
+        .catch(() => []);
 
       return Promise.all(
-        images.map(async (file) => ({
-          src: `/images/gallery/${folder}/${file}`,
-          folder,
-          artist: toArtist(folder),
-          ...parseCaption(file),
-          // 파일 앞부분만 읽는다. "use cache" 안이라 빌드/캐시당 한 번이다
-          ...(await readImageSize(path.join(dir, folder, file))),
-        })),
+        files.filter(isGalleryFile).map(async (file) =>
+          buildGalleryImage(
+            folder,
+            file,
+            // 파일 앞부분만 읽는다. "use cache" 안이라 빌드/캐시당 한 번이다
+            await readImageSize(
+              path.join(
+                process.cwd(),
+                "public",
+                "images",
+                "gallery",
+                folder,
+                file,
+              ),
+            ),
+          ),
+        ),
       );
     }),
   );
 
-  return images.flat().sort((a, b) => hash(a.src) - hash(b.src));
+  return images.flat().sort(compareGallerySrc);
 };
+
+export const compareGallerySrc = (a: GalleryImage, b: GalleryImage) =>
+  hash(a.src) - hash(b.src);
 
 /*
  * 접근할 때마다 벽의 배치가 달라진다. 순서를 캐시 안에서 만들면 캐시가 살아 있는
@@ -217,5 +244,5 @@ export const shuffle = <T>(items: readonly T[]): T[] => {
 export const getGallery = async () => {
   "use cache";
 
-  return readGallery();
+  return readInstalledGallery();
 };
