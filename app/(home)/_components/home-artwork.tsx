@@ -10,9 +10,8 @@ import universe from "@/public/images/home/universe.jpg";
  * 절반이 한 폭이라, 1:2 자리에 object-left로 붙이면 잘라 낸 게 아니라
  * 온전한 한 폭이 선다 — 이미지 파일은 손대지 않는다.
  *
- * priority를 주지 않는다. 좁은 화면에서는 부모가 display:none이라 지연 로딩이
- * 아예 발동하지 않아 내려받지 않고, 넓은 화면에서는 첫 화면 안이라 어차피
- * 바로 받는다.
+ * priority로 미리 받는다. 넓은 화면에서 이 그림이 첫 화면의 가장 큰
+ * 그림이라, 글 목록보다 늦게 오면 자리가 빈다.
  */
 const HomeArtwork = () => (
   // self-start가 없으면 그리드의 기본 stretch가 높이를 가져가 aspect가 무시된다.
@@ -21,6 +20,7 @@ const HomeArtwork = () => (
       src={universe}
       alt="김환기, 05-IV-71 #200"
       fill
+      priority
       // 자리 폭(384px)이 아니라 높이(768px)에 맞춘 값이다. 정사각형이 높이를
       // 채우도록 커지면서 가로 절반이 자리 밖으로 나가고, 남는 절반이 한 폭이다.
       sizes="768px"
