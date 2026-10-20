@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
       },
     ]),
   cacheComponents: true,
+  // 링크는 경로당 App Shell만 미리 받는다. false는 Cache Components를
+  // Partial Prefetching 이전에 켠 앱이 옛 prefetch를 유지할 때만 쓴다.
+  partialPrefetching: true,
   reactCompiler: true,
   experimental: {
     typedEnv: true,

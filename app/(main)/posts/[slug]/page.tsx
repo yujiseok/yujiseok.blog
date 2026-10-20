@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import {
   getAllWritings,
   getWritingBySlug,
@@ -55,7 +56,17 @@ export async function generateMetadata(props: {
   };
 }
 
-const Post = async (props: { params: Promise<{ slug: string }> }) => {
+const Post = (props: { params: Promise<{ slug: string }> }) => {
+  // slug는 링크마다 달라 경로 공통 껍데기에 넣을 수 없다. 본문을 Suspense
+  // 안에서 읽어야 이동이 그 값을 기다리며 막히지 않는다.
+  return (
+    <Suspense fallback={null}>
+      <PostContent params={props.params} />
+    </Suspense>
+  );
+};
+
+const PostContent = async (props: { params: Promise<{ slug: string }> }) => {
   const params = await props.params;
   const writing = await getWritingBySlug(params.slug);
   if (!writing) {
