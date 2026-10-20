@@ -113,6 +113,9 @@ function ToastList() {
             <Toast.Description className="truncate text-xs text-neutral-500 dark:text-neutral-400" />
             {slug && (
               <Toast.Action
+                // 글 페이지로 가는 링크다. 기본값은 <button>이라 그대로 두면
+                // Base UI가 네이티브 버튼이 아니라고 경고한다.
+                nativeButton={false}
                 className="mt-1 w-fit text-xs underline decoration-dashed underline-offset-2"
                 render={<Link href={`/posts/${slug}`} />}
               >
