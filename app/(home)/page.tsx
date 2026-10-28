@@ -13,6 +13,24 @@ export default async function Home() {
     // 이 페이지 main의 폭이라 두 칸이 딱 맞아떨어진다.
     <div className="grid gap-12 xl:grid-cols-[42rem_24rem]">
       <BlurContainer className="gap-10 self-start break-keep">
+        <nav className="flex items-center gap-3 text-neutral-600 md:text-sm dark:text-neutral-400">
+          <Link href="/music" className="underline underline-offset-2">
+            Music
+          </Link>
+          <Link href="/resume" className="underline underline-offset-2">
+            Resume
+          </Link>
+          {/* 로컬 글쓰기 도구. 프로덕션에선 /editor 자체가 404라 링크도 감춘다 */}
+          {process.env.NODE_ENV === "development" && (
+            <Link
+              href="/editor"
+              className="underline decoration-dashed underline-offset-2"
+            >
+              Editor
+            </Link>
+          )}
+        </nav>
+
         <header>
           <h1 className="text-lg font-medium">유지석</h1>
           <p className="text-neutral-600 dark:text-neutral-400">

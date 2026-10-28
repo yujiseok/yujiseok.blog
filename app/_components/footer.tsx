@@ -8,9 +8,9 @@ function Footer() {
           <Link href="/music" className="underline underline-offset-2">
             Music
           </Link>
-          <Link href="/gallery" className="underline underline-offset-2">
+          {/* <Link href="/gallery" className="underline underline-offset-2">
             Gallery
-          </Link>
+          </Link> */}
           <Link href="/resume" className="underline underline-offset-2">
             Resume
           </Link>
