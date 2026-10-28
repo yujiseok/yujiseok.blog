@@ -1,7 +1,7 @@
 export const resumeData = {
   profile: {
     name: "유지석",
-    title: "Frontend Engineer",
+    title: "Frontend Developer",
     introduction: [
       "사용성과 심미성의 균형을 고민하며, 기능적으로 뛰어나고 아름다운 UI 구현을 추구합니다.",
       '"왜?"라는 질문으로 문제의 본질을 파악하고, 이를 바탕으로 개선책을 설계·구현하는 과정을 즐깁니다. 이런 과정에서 SSR로 강제되던 서비스 구조를 SSG, SSR, ISR 혼합 전략으로 개선하고, Next.js 캐시를 적용해 서버 응답 시간을 최대 75% 단축한 경험이 있습니다.',
@@ -15,6 +15,17 @@ export const resumeData = {
       url: "https://coloso.co.kr",
       color: "#ffb200",
       projects: [
+        {
+          title: "크리에이터 멤버십 신규 구축 및 운영",
+          achievements: [
+            "고객 서비스 20개 화면과 파트너 어드민 34개 화면의 프론트엔드 개발을 담당해 카드 심사 일정에 맞춰 동시 출시",
+            "구독형·단건 구매형 상품의 결제·환불 흐름을 구현하고, 결제 직전 정원 재조회와 결제 요청 결과에 따른 화면 처리 구성",
+            "기획 정리·QA 대응·PR·릴리즈 준비 등 반복 절차를 Claude Code 스킬로 구성하고, 테스트 통과 조건과 결제·공용 코드 변경 시 직접 검토하는 기준 설정",
+            "AI 에이전트를 활용해 QA가 작성한 테스트 케이스를 Vitest·Playwright로 검증하고, 브라우저 조작과 테스트 데이터 삽입으로 상태별 동작 확인",
+          ],
+          link: "",
+          linkText: "",
+        },
         {
           title:
             "Next.js 렌더링 전략 개선을 통한 서비스 성능 및 인프라 효율 최적화",
@@ -30,8 +41,8 @@ export const resumeData = {
           title: "Turborepo 기반 모노레포 전환 및 CI 빌드 성능 최적화",
           achievements: [
             "Turborepo 도입 및 tsdown 중심의 빌드 체계를 구축하여 패키지 간 의존성 관리 효율화",
-            "GitHub Actions 캐시의 한계를 파악하고, GCS 기반 Turborepo Remote Cache를 자체 구축하여 CI 빌드 재사용성 극대화",
-            "FULL TURBO 시 빌드 소요 시간 최대 99.6% 단축 (146s → 0.6s)",
+            "기존 GitHub Actions의 커밋 SHA 기반 캐시 키와 브랜치 간 캐시 공유 제약을 개선하기 위해, GCS 기반 Turborepo Remote Cache 구축",
+            "전체 캐시 적중(FULL TURBO) 시 빌드 시간 96% 단축 (146초 → 6초)",
           ],
           link: "https://yujiseok.blog/posts/turborepo",
           linkText: "Turborepo Remote Cache 적용기",
@@ -39,10 +50,8 @@ export const resumeData = {
         {
           title: "콜로소 서비스 디자인 시스템 기반 설계 및 구축",
           achievements: [
-            "variants 기반 시스템 아키텍처 설계 및 패키지 구조화",
-            "KR/JP/INTL 글로벌 서비스 내 핵심 컴포넌트 통합으로 UI 일관성 확보",
-            "Figma MCP 기반 디자인 토큰 추출 자동화로 수동 작업 효율 개선",
-            "Storybook 및 Vitest 도입으로 협업 기준 정립 및 컴포넌트 안정성 확보",
+            "variants 기반 아키텍처 설계 및 KR/JP/INTL 글로벌 서비스 컴포넌트 통합으로 UI 일관성 확보",
+            "Figma MCP 기반 디자인 토큰 자동화, Storybook 기반 컴포넌트 문서화 및 Vitest 기반 테스트 환경 구축",
           ],
           link: "",
           linkText: "",
@@ -51,7 +60,7 @@ export const resumeData = {
           title: "포트폴리오 서비스 개발 및 성능 고도화",
           achievements: [
             "Masonry 레이아웃을 구현하여 콘텐츠의 시각적 다양성 및 정보 밀도를 극대화하고 성장 기여",
-            "무한 스크롤 환경의 최적화를 위한 가상 스크롤 도입, 렌더링 비용 46% 및 롱태스크 시간을 40.7% 감소시켜 UX 개선",
+            "무한 스크롤 환경의 최적화를 위한 가상 스크롤 도입, 렌더링 비용 46% 및 롱태스크 시간 40.7% 감소",
             "리렌더링 방지를 위한 메모이제이션 적용, 스크롤 시 발생하는 스크립트 실행 시간 42.3% 단축",
           ],
           link: "https://yujiseok.blog/posts/how-to-implement-portfolio",
@@ -61,7 +70,7 @@ export const resumeData = {
           title: "클라이언트 사이드 네비게이션 전환",
           achievements: [
             "동적 HTML 렌더 시 불필요한 서버 사이드 네비게이션을 방지하는 라우팅 인터셉트 훅 구현",
-            "20줄 미만의 코드로 불필요 페이지 로드 제거, 스크립트 실행 시간 78% 단축 및 UX 극대화 (총 실행 시간 46.2% ↓)",
+            "불필요한 페이지 로드 제거로 스크립트 실행 시간 78%, 총 실행 시간 46.2% 단축",
           ],
           link: "https://yujiseok.blog/posts/improve-navigation",
           linkText: "서비스 서버 사이드 네비게이션 개선기",
@@ -105,12 +114,9 @@ export const resumeData = {
       title: "김민태의 데브 캠프 멘토",
       period: "2024.05 - 2025.01",
       description:
-        "패스트캠퍼스 데브 캠프에서 2기에 걸쳐 40회 이상의 실시간 멘토링 진행",
+        "2개 기수에서 40회 이상 실시간 멘토링 진행 및 React 프로젝트 코드 리뷰·기술 피드백 제공",
       color: "#fc1c49",
-      details: [
-        "멘티들에게 기술적 조언 및 피드백 제공",
-        "리액트를 활용한 프로젝트 코드 리뷰 수행",
-      ],
+      details: [],
     },
   ],
   contact: {
