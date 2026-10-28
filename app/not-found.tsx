@@ -2,19 +2,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import BlurContainer from "@/app/_components/blur-container";
 import PostRow from "@/app/(main)/_components/post-row";
-import Footer from "@/app/_components/footer";
 import { getAllWritings } from "@/lib/content/repository";
 
 export const metadata: Metadata = { title: "404" };
 
 // 루트의 not-found는 app/(main)/layout.tsx를 타지 않는다 — 그 레이아웃 밖에
-// 있는 라우트라 Footer를 여기서 직접 그려야 같은 틀 안에 있는 것처럼 보인다.
+// 있는 라우트라 main의 여백을 여기서 직접 맞춰야 같은 틀 안에 있는 것처럼 보인다.
 export default async function NotFound() {
   const writings = (await getAllWritings()).slice(0, 5);
 
   return (
     <>
-      <main id="content" className="mx-auto mt-24 w-full max-w-2xl sm:mt-28">
+      <main
+        id="content"
+        className="mx-auto mt-24 mb-16 w-full max-w-2xl sm:mt-28"
+      >
         <BlurContainer className="gap-10">
           <header className="flex flex-col gap-2">
             <h1 className="text-lg font-semibold">404</h1>
@@ -41,7 +43,6 @@ export default async function NotFound() {
           </div>
         </BlurContainer>
       </main>
-      <Footer />
     </>
   );
 }

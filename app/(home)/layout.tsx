@@ -1,5 +1,3 @@
-import Footer from "@/app/_components/footer";
-
 /*
  * 홈만 글 목록 오른쪽에 그림이 한 판 더 붙어 다른 라우트보다 넓다.
  *
@@ -15,11 +13,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <>
       <main
         id="content"
-        className="mx-auto mt-24 w-full max-w-[69rem] sm:mt-28"
+        className="mx-auto mt-24 mb-16 w-full max-w-[69rem] sm:mt-28"
       >
         {children}
       </main>
-      <Footer />
     </>
   );
 };
