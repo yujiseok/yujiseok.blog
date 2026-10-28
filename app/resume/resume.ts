@@ -23,8 +23,8 @@ export const resumeData = {
             "기획 정리·QA 대응·PR·릴리즈 준비 등 반복 절차를 Claude Code 스킬로 구성하고, 테스트 통과 조건과 결제·공용 코드 변경 시 직접 검토하는 기준 설정",
             "AI 에이전트를 활용해 QA가 작성한 테스트 케이스를 Vitest·Playwright로 검증하고, 브라우저 조작과 테스트 데이터 삽입으로 상태별 동작 확인",
           ],
-          link: "",
-          linkText: "",
+          link: "https://yujiseok.blog/posts/delegate-to-agents",
+          linkText: "에이전트에게 일 맡겨보기",
         },
         {
           title:
