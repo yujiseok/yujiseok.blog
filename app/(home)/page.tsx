@@ -34,7 +34,7 @@ export default async function Home() {
         <header>
           <h1 className="text-lg font-medium">유지석</h1>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Frontend Engineer
+            Frontend Developer
           </p>
         </header>
 
