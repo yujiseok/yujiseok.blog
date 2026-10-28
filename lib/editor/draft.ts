@@ -85,7 +85,7 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
         slugTouched: true,
         slug: action.slug,
         title: action.metadata.title,
-        summary: action.metadata.summary,
+        summary: action.metadata.summary ?? "",
         publishedAt: action.metadata.publishedAt,
         published: isPublished(action.metadata),
         doc: action.doc,
@@ -121,6 +121,15 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
   }
 };
 
+// 요약은 선택이다. 비었으면 빈 문자열을 남기지 않고 키를 뺀다.
+// 순서를 건드리지 않으려고 entries를 걸러서 다시 만든다.
+const withoutBlankSummary = (metadata: PostMetadata): PostMetadata =>
+  Object.fromEntries(
+    Object.entries(metadata).filter(
+      ([key, value]) => key !== "summary" || String(value).trim() !== "",
+    ),
+  ) as PostMetadata;
+
 /**
  * 저장할 메타데이터. 기존 글은 원본 위에 편집한 값만 덮어쓴다 — 새로 조립하면
  * image처럼 에디터가 다루지 않는 키가 날아가고 키 순서도 바뀌어,
@@ -128,20 +137,22 @@ export const draftReducer = (draft: Draft, action: DraftAction): Draft => {
  * content/writing의 관례인 title·publishedAt·summary 순으로 만든다.
  */
 export const draftMetadata = (draft: Draft): PostMetadata =>
-  draft.loaded
-    ? {
-        ...draft.loaded.metadata,
-        title: draft.title,
-        summary: draft.summary,
-        publishedAt: draft.publishedAt,
-        published: draft.published,
-      }
-    : {
-        title: draft.title,
-        publishedAt: draft.publishedAt,
-        summary: draft.summary,
-        published: draft.published,
-      };
+  withoutBlankSummary(
+    draft.loaded
+      ? {
+          ...draft.loaded.metadata,
+          title: draft.title,
+          summary: draft.summary,
+          publishedAt: draft.publishedAt,
+          published: draft.published,
+        }
+      : {
+          title: draft.title,
+          publishedAt: draft.publishedAt,
+          summary: draft.summary,
+          published: draft.published,
+        },
+  );
 
 /** 불러온 그 파일을 고쳐 쓰는 중일 때만 덮어쓰기를 허용한다 */
 export const isOverwrite = (draft: Draft): boolean =>
@@ -161,7 +172,4 @@ export const slugNeedsManualInput = (draft: Draft): boolean =>
   draft.slug.length === 0;
 
 export const canSave = (draft: Draft): boolean =>
-  !isLossy(draft) &&
-  isValidSlug(draft.slug) &&
-  draft.title.trim().length > 0 &&
-  draft.summary.trim().length > 0;
+  !isLossy(draft) && isValidSlug(draft.slug) && draft.title.trim().length > 0;

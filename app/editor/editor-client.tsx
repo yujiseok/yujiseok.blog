@@ -273,10 +273,11 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
           </label>
 
           <label className="grid gap-1 text-sm">
-            <span className="font-medium">요약</span>
+            <span className="font-medium">요약 (선택)</span>
             {/* 한 줄짜리다. serializePost가 JSON.stringify로 프론트매터를 한 줄에
                 쓰는 데다, 이 값은 meta description·RSS·og로 그대로 나가서
-                줄바꿈이 들어갈 자리가 없다. input이면 아예 못 넣는다. */}
+                줄바꿈이 들어갈 자리가 없다. input이면 아예 못 넣는다.
+                비우면 키를 빼고, 상세 페이지·RSS·llms.txt에서도 생략된다. */}
             <input
               type="text"
               value={draft.summary}

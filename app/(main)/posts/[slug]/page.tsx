@@ -133,9 +133,11 @@ const PostContent = async (props: { params: Promise<{ slug: string }> }) => {
 
         <hr className="mx-auto max-w-2xl border-neutral-200 dark:border-neutral-800" />
 
-        <p className="mx-auto mt-8 max-w-2xl text-[17px] leading-7 tracking-[-0.01em] break-keep text-neutral-600 dark:text-neutral-400">
-          {writing.metadata.summary}
-        </p>
+        {writing.metadata.summary && (
+          <p className="mx-auto mt-8 max-w-2xl text-[17px] leading-7 tracking-[-0.01em] break-keep text-neutral-600 dark:text-neutral-400">
+            {writing.metadata.summary}
+          </p>
+        )}
 
         {/* scroll-mt는 해시 이동 시 제목이 화면 맨 위에 붙지 않게 한다.
             tableOfContents.tsx의 SCROLL_OFFSET(-32px)과 같은 값이다. */}

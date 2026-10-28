@@ -87,6 +87,32 @@ describe("저장할 메타데이터", () => {
     ]);
   });
 
+  it("요약이 비면 summary 키를 내지 않는다", () => {
+    const draft = apply(blank(), { type: "title", value: "New Post" });
+    expect(Object.keys(draftMetadata(draft))).toEqual([
+      "title",
+      "publishedAt",
+      "published",
+    ]);
+  });
+
+  it("기존 글의 요약을 비우면 summary 키가 빠진다", () => {
+    const draft = apply(blank(), loadedAction({ title: "원래 제목" }), {
+      type: "field",
+      field: "summary",
+      value: "",
+    });
+    expect("summary" in draftMetadata(draft)).toBe(false);
+  });
+
+  it("요약이 없는 기존 글을 불러와도 요약 칸은 빈 문자열이다", () => {
+    const draft = apply(blank(), {
+      ...loadedAction({ title: "글" }),
+      metadata: { title: "글", publishedAt: "2025-01-02", published: true },
+    });
+    expect(draft.summary).toBe("");
+  });
+
   it("기존 글의 키 순서를 그대로 보존한다", () => {
     // atelier 글은 title·summary·publishedAt·image 순이라, 새로 조립하면
     // 저장만 해도 파일이 변형된다
@@ -178,13 +204,21 @@ describe("저장 가능 여부", () => {
       { type: "field", field: "summary", value: "요약" },
     );
 
-  it("제목·요약·슬러그가 모두 있으면 저장할 수 있다", () => {
+  it("제목·슬러그가 있으면 저장할 수 있다", () => {
     expect(canSave(complete())).toBe(true);
+  });
+
+  it("요약은 비어 있어도 저장할 수 있다", () => {
+    const draft = apply(complete(), {
+      type: "field",
+      field: "summary",
+      value: " ",
+    });
+    expect(canSave(draft)).toBe(true);
   });
 
   it.each([
     ["제목", { type: "title", value: "  " } as DraftAction],
-    ["요약", { type: "field", field: "summary", value: " " } as DraftAction],
     ["슬러그", { type: "slug", value: "" } as DraftAction],
   ])("%s가 비면 저장할 수 없다", (_, action) => {
     expect(canSave(apply(complete(), action))).toBe(false);

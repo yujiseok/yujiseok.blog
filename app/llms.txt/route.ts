@@ -2,6 +2,8 @@ import { getAllWritings, getAllAtelier } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 import { getGallery } from "@/lib/gallery";
 
+const describe = (summary?: string) => (summary ? `: ${summary}` : "");
+
 export async function GET() {
   const [writings, ateliers, gallery] = await Promise.all([
     getAllWritings(),
@@ -12,14 +14,14 @@ export async function GET() {
   const writingList = writings
     .map(
       (post) =>
-        `- [${post.metadata.title}](${SITE_URL}/posts/${post.slug}): ${post.metadata.summary}`,
+        `- [${post.metadata.title}](${SITE_URL}/posts/${post.slug})${describe(post.metadata.summary)}`,
     )
     .join("\n");
 
   const atelierList = ateliers
     .map(
       (item) =>
-        `- [${item.metadata.title}](${SITE_URL}/atelier/${item.slug}): ${item.metadata.summary}`,
+        `- [${item.metadata.title}](${SITE_URL}/atelier/${item.slug})${describe(item.metadata.summary)}`,
     )
     .join("\n");
 

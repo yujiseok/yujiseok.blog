@@ -50,9 +50,6 @@ function assertValidMetadata(metadata: PostMetadata) {
   if (!metadata.title.trim()) {
     throw new Error("제목을 입력하세요.");
   }
-  if (!metadata.summary.trim()) {
-    throw new Error("요약을 입력하세요.");
-  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.publishedAt)) {
     throw new Error("발행일은 YYYY-MM-DD 형식이어야 합니다.");
   }

@@ -132,9 +132,19 @@ describe("savePost", () => {
     ).toContain('"title": "고친 제목"');
   });
 
+  it("요약 없이도 저장하고 파일에 summary 키를 남기지 않는다", async () => {
+    const { savePost } = await loadActions();
+    const { summary: _summary, ...withoutSummary } = METADATA;
+
+    await savePost({ slug: "no-summary", metadata: withoutSummary, doc: DOC });
+
+    expect(
+      fs.readFileSync(path.join(writingDir, "no-summary.mdx"), "utf8"),
+    ).not.toContain("summary");
+  });
+
   it.each([
     ["빈 제목", { ...METADATA, title: "  " }],
-    ["빈 요약", { ...METADATA, summary: "" }],
     ["잘못된 날짜", { ...METADATA, publishedAt: "2026/09/09" }],
   ])("잘못된 메타데이터를 거부한다: %s", async (_label, metadata) => {
     const { savePost } = await loadActions();

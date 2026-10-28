@@ -38,6 +38,16 @@ describe("serializePost", () => {
     expect(out).toBe(CANONICAL);
   });
 
+  it("summary 는 있을 때만 내보낸다", () => {
+    const out = serializePost({
+      metadata: { title: "t", publishedAt: "2026-01-01", published: true },
+      body: "본문",
+    });
+
+    expect(out).not.toContain("summary");
+    expect(parsePost(out).metadata.summary).toBeUndefined();
+  });
+
   it("image 는 있을 때만 내보낸다", () => {
     const without = serializePost({
       metadata: {

@@ -1,7 +1,7 @@
 export interface PostMetadata {
   title: string;
   publishedAt: string;
-  summary: string;
+  summary?: string;
   image?: string;
   /** 글을 공개할지. 프로덕션 빌드는 이 값이 true 인 글만 내보낸다 */
   published: boolean;

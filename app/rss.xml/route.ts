@@ -26,7 +26,7 @@ export async function GET() {
             301 리다이렉트로는 막을 수 없다 — 리더는 guid로 식별한다.
           -->
           <guid isPermaLink="false">${baseURL}/writing/${post.slug}</guid>
-          <description>${escapeXml(post.metadata.summary)}</description>
+          ${post.metadata.summary ? `<description>${escapeXml(post.metadata.summary)}</description>` : ""}
           <author>yujiseok</author>
           <pubDate>${new Date(post.metadata.publishedAt).toUTCString()}</pubDate>
         </item>`,
