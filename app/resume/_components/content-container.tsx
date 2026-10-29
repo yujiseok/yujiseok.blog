@@ -3,8 +3,8 @@ const ContentContainer = ({
   children,
 }: {
   title:
-    | "Work Experience"
-    | "Open Source Contribution"
+    | "Experience"
+    | "Open Source Contributions"
     | "Education"
     | "Other Experience"
     | "Contact";

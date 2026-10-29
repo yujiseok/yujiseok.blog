@@ -70,7 +70,7 @@ const page = () => {
       <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
         <ResumeProfile profile={resumeData.profile} />
 
-        <ContentContainer title="Work Experience">
+        <ContentContainer title="Experience">
           <div className="grid gap-4">
             {resumeData.workExperience.map((career) => (
               <ResumeContent
@@ -124,7 +124,7 @@ const page = () => {
           </div>
         </ContentContainer>
 
-        <ContentContainer title="Open Source Contribution">
+        <ContentContainer title="Open Source Contributions">
           {resumeData.openSource.map((contribution) => (
             <ResumeContent
               key={contribution.title}

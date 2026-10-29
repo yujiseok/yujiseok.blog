@@ -16,10 +16,9 @@ export const resumeData = {
         {
           title: "크리에이터 멤버십 신규 구축 및 운영",
           achievements: [
-            "고객 서비스 20개 화면과 파트너 어드민 34개 화면의 프론트엔드 개발을 담당해 카드 심사 일정에 맞춰 동시 출시",
-            "구독형·단건 구매형 상품의 결제·환불 흐름을 구현하고, 결제 직전 정원 재조회와 결제 요청 결과에 따른 화면 처리 구성",
-            "기획 정리·QA 대응·PR·릴리즈 준비 등 반복 절차를 Claude Code 스킬로 구성하고, 테스트 통과 조건과 결제·공용 코드 변경 시 직접 검토하는 기준 설정",
-            "AI 에이전트를 활용해 QA가 작성한 테스트 케이스를 Vitest·Playwright로 검증하고, 브라우저 조작과 테스트 데이터 삽입으로 상태별 동작 확인",
+            "에이전트 기반 워크플로우를 설계해 기획 확인부터 구현·QA·릴리즈까지 진행, 고객 서비스 20개·어드민 34개 화면을 근무일 약 75일 만에 일정 내 동시 출시",
+            "반복 절차는 Claude Code 스킬 8종으로 자동화하고, 결제·정원·환불 등 금전·정합성 영역 하네스 설계",
+            "QA의 TC 기대 결과를 QA 진입 전 Vitest·Playwright로 사전 검증해, 이전 프로젝트(포트폴리오 서비스) 대비 코드 규모 2.5배에서도 1차 QA Defect 밀도 약 56% 감소 (천 줄당 8.5건 → 3.7건)",
           ],
           link: "https://yujiseok.blog/posts/delegate-to-agents",
           linkText: "에이전트에게 일 맡겨보기",
@@ -28,9 +27,9 @@ export const resumeData = {
           title:
             "Next.js 렌더링 전략 개선을 통한 서비스 성능 및 인프라 효율 최적화",
           achievements: [
-            "강제 SSR 구조를 개선하여 SSG • SSR • ISR 혼합 전략 및 Next.js 캐시 도입",
-            "캐싱 도입으로 응답 시간 최대 75% 단축 (800ms → 200ms)",
-            "네트워크 트래픽 80% 및 활성 컨테이너 수 60% 절감하여 GCP 인프라 비용 절감 기여",
+            "전 페이지에 강제되던 SSR 구조를 페이지 특성별 SSG·SSR·ISR 혼합 전략으로 전환하고 Next.js 캐시 도입",
+            "캐싱 도입으로 응답 시간 75% 단축 (800ms → 200ms)",
+            "네트워크 트래픽 80%, 활성 컨테이너 수 60% 절감으로 GCP 인프라 비용 절감",
           ],
           link: "https://yujiseok.blog/posts/nextjs-rendering-optimization",
           linkText: "Next.js 렌더링 전략 개선기",
@@ -38,9 +37,9 @@ export const resumeData = {
         {
           title: "Turborepo 기반 모노레포 전환 및 CI 빌드 성능 최적화",
           achievements: [
-            "Turborepo 도입 및 tsdown 중심의 빌드 체계를 구축하여 패키지 간 의존성 관리 효율화",
-            "기존 GitHub Actions의 커밋 SHA 기반 캐시 키와 브랜치 간 캐시 공유 제약을 개선하기 위해, GCS 기반 Turborepo Remote Cache 구축",
-            "전체 캐시 적중(FULL TURBO) 시 빌드 시간 96% 단축 (146초 → 6초)",
+            "Turborepo 도입 및 tsdown 중심 빌드 체계 구축으로 패키지 간 의존성 관리 효율화",
+            "GitHub Actions 캐시의 커밋 SHA 기반 키와 브랜치 간 공유 제약을 해결하기 위해 GCS 기반 Turborepo Remote Cache 구축",
+            "전체 캐시 적중(FULL TURBO) 시 CI 빌드 시간 96% 단축 (146초 → 6초)",
           ],
           link: "https://yujiseok.blog/posts/turborepo",
           linkText: "Turborepo Remote Cache 적용기",
@@ -48,8 +47,8 @@ export const resumeData = {
         {
           title: "콜로소 서비스 디자인 시스템 기반 설계 및 구축",
           achievements: [
-            "variants 기반 아키텍처 설계 및 KR/JP/INTL 글로벌 서비스 컴포넌트 통합으로 UI 일관성 확보",
-            "Figma MCP 기반 디자인 토큰 자동화, Storybook 기반 컴포넌트 문서화 및 Vitest 기반 테스트 환경 구축",
+            "variants 기반 아키텍처를 설계하고 KR/JP/INTL 서비스별로 나뉘어 있던 컴포넌트를 통합해 UI 일관성 확보",
+            "Figma MCP 기반 디자인 토큰 자동화, Storybook 컴포넌트 문서화, Vitest 테스트 환경 구축",
           ],
           link: "",
           linkText: "",
@@ -57,9 +56,9 @@ export const resumeData = {
         {
           title: "포트폴리오 서비스 개발 및 성능 고도화",
           achievements: [
-            "Masonry 레이아웃을 구현하여 콘텐츠의 시각적 다양성 및 정보 밀도를 극대화하고 성장 기여",
-            "무한 스크롤 환경의 최적화를 위한 가상 스크롤 도입, 렌더링 비용 46% 및 롱태스크 시간 40.7% 감소",
-            "리렌더링 방지를 위한 메모이제이션 적용, 스크롤 시 발생하는 스크립트 실행 시간 42.3% 단축",
+            "Masonry 레이아웃 구현으로 콘텐츠의 시각적 다양성과 정보 밀도 향상",
+            "무한 스크롤 환경에 가상 스크롤을 도입해 렌더링 시간 46%, 롱태스크 시간 41% 감소",
+            "메모이제이션으로 불필요한 리렌더링을 방지해 스크롤 중 스크립트 실행 시간 42% 단축",
           ],
           link: "https://yujiseok.blog/posts/how-to-implement-portfolio",
           linkText: "서비스 Masonry 레이아웃 구현 회고",
@@ -67,8 +66,8 @@ export const resumeData = {
         {
           title: "클라이언트 사이드 네비게이션 전환",
           achievements: [
-            "동적 HTML 렌더 시 불필요한 서버 사이드 네비게이션을 방지하는 라우팅 인터셉트 훅 구현",
-            "불필요한 페이지 로드 제거로 스크립트 실행 시간 78%, 총 실행 시간 46.2% 단축",
+            "동적으로 렌더링된 HTML 내부 링크가 풀 페이지 리로드(서버 사이드 네비게이션)를 일으키던 문제를 해결하기 위해, 링크 클릭을 가로채 클라이언트 라우팅으로 전환하는 인터셉트 훅 구현",
+            "불필요한 페이지 로드 제거로 스크립트 실행 시간 78%, 총 실행 시간 46% 단축",
           ],
           link: "https://yujiseok.blog/posts/improve-navigation",
           linkText: "서비스 서버 사이드 네비게이션 개선기",
@@ -77,7 +76,7 @@ export const resumeData = {
           title: "GENCON 컨퍼런스 랜딩 페이지 개발",
           achievements: [
             "스크롤 기반 애니메이션, 타입라이터 효과 등 인터랙션을 통한 사용자 몰입 경험 제공",
-            "랜딩 페이지와 설문 기능을 통해 약 1,000명의 컨퍼런스 참여자 모객 및 비즈니스 목표 달성",
+            "랜딩 페이지와 설문 기능으로 컨퍼런스 참여자 약 1,000명 모객에 기여",
           ],
           link: "https://yujiseok.blog/posts/2024-gencon",
           linkText: "젠콘 랜딩 페이지 개발 회고",
