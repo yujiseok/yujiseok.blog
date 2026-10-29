@@ -45,15 +45,6 @@ export const resumeData = {
           linkText: "Turborepo Remote Cache 적용기",
         },
         {
-          title: "콜로소 서비스 디자인 시스템 기반 설계 및 구축",
-          achievements: [
-            "variants 기반 아키텍처를 설계하고 KR/JP/INTL 서비스별로 나뉘어 있던 컴포넌트를 통합해 UI 일관성 확보",
-            "Figma MCP 기반 디자인 토큰 자동화, Storybook 컴포넌트 문서화, Vitest 테스트 환경 구축",
-          ],
-          link: "",
-          linkText: "",
-        },
-        {
           title: "포트폴리오 서비스 개발 및 성능 고도화",
           achievements: [
             "Masonry 레이아웃 구현으로 콘텐츠의 시각적 다양성과 정보 밀도 향상",
@@ -71,6 +62,15 @@ export const resumeData = {
           ],
           link: "https://yujiseok.blog/posts/improve-navigation",
           linkText: "서비스 서버 사이드 네비게이션 개선기",
+        },
+        {
+          title: "콜로소 서비스 디자인 시스템 기반 설계 및 구축",
+          achievements: [
+            "variants 기반 아키텍처를 설계하고 KR/JP/INTL 서비스별로 나뉘어 있던 컴포넌트를 통합해 UI 일관성 확보",
+            "Figma MCP 기반 디자인 토큰 자동화, Storybook 컴포넌트 문서화, Vitest 테스트 환경 구축",
+          ],
+          link: "",
+          linkText: "",
         },
         {
           title: "GENCON 컨퍼런스 랜딩 페이지 개발",
