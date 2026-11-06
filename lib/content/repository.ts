@@ -2,7 +2,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { ComponentType } from "react";
 
+import { SITE_URL } from "@/lib/constants";
+
 import { isPublished, parsePost, type PostMetadata } from "./document";
+import { toMarkdown } from "./markdown";
 
 type ContentType = "writing" | "atelier";
 
@@ -74,6 +77,29 @@ export const getAllWritings = () => getAllContent("writing");
 
 export const getWritingBySlug = async (slug: string) =>
   (await getAllWritings()).find((writing) => writing.slug === slug);
+
+/*
+ * 에이전트용 마크다운 원문(/posts/<slug>.md, /llms-full.txt). 목록에 있는 slug만
+ * 읽으므로 초안 필터와 slug 검증을 getAllWritings에 그대로 맡긴다.
+ */
+export const getWritingMarkdown = async (slug: string) => {
+  const writing = await getWritingBySlug(slug);
+
+  if (!writing) {
+    return;
+  }
+
+  const source = await fs.readFile(
+    path.join(ROOT_DIR, "writing", `${writing.slug}.mdx`),
+    "utf8",
+  );
+
+  return toMarkdown({
+    ...writing.metadata,
+    url: `${SITE_URL}/posts/${writing.slug}`,
+    body: parsePost(source).body,
+  });
+};
 
 export const getAllAtelier = () => getAllContent("atelier");
 

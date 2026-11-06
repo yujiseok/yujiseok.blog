@@ -44,7 +44,14 @@ export async function generateMetadata(props: {
   return {
     title,
     description,
-    alternates: alternates(`/posts/${writing.slug}`),
+    alternates: {
+      ...alternates(`/posts/${writing.slug}`),
+      // 에이전트가 HTML 대신 원문을 찾아가도록 <link rel="alternate">로 알린다
+      types: {
+        ...alternates("").types,
+        "text/markdown": `/posts/${writing.slug}.md`,
+      },
+    },
     openGraph: {
       title: { absolute: title },
       description,
@@ -89,11 +96,16 @@ const PostContent = async (props: { params: Promise<{ slug: string }> }) => {
     headline: writing.metadata.title,
     description: writing.metadata.summary,
     datePublished: writing.metadata.publishedAt,
+    // 수정일을 따로 기록하지 않는다. 비워 두면 구글이 경고하므로 발행일로 채운다
+    dateModified: writing.metadata.publishedAt,
+    inLanguage: "ko",
     url: `${SITE_URL}/posts/${params.slug}`,
+    mainEntityOfPage: `${SITE_URL}/posts/${params.slug}`,
     author: {
       "@type": "Person",
       name: "유지석",
       url: SITE_URL,
+      sameAs: ["https://github.com/yujiseok"],
     },
   };
 

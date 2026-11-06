@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
     ]),
+  // 에이전트용 마크다운 원문. 글 페이지 [slug]가 "x.md"를 slug로 받아 404를
+  // 내기 전에 route handler로 돌린다.
+  rewrites: async () => ({
+    beforeFiles: [
+      { source: "/posts/:slug.md", destination: "/md/posts/:slug" },
+    ],
+  }),
   cacheComponents: true,
   // 링크는 경로당 App Shell만 미리 받는다. false는 Cache Components를
   // Partial Prefetching 이전에 켠 앱이 옛 prefetch를 유지할 때만 쓴다.

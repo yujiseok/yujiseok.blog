@@ -14,7 +14,8 @@ export async function GET() {
   const writingList = writings
     .map(
       (post) =>
-        `- [${post.metadata.title}](${SITE_URL}/posts/${post.slug})${describe(post.metadata.summary)}`,
+        // llms.txt 관례대로 HTML 대신 마크다운 원문을 가리킨다
+        `- [${post.metadata.title}](${SITE_URL}/posts/${post.slug}.md)${describe(post.metadata.summary)}`,
     )
     .join("\n");
 
@@ -57,6 +58,7 @@ ${galleryList}
 
 ## Links
 
+- [Full text of all posts](${SITE_URL}/llms-full.txt)
 - [RSS Feed](${SITE_URL}/rss.xml)
 - [GitHub](https://github.com/yujiseok)
 - [Resume](${SITE_URL}/resume)
