@@ -1,0 +1,184 @@
+/*
+ * content/writing/*.mdx → *.en.mdx 번역. 사용법:
+ *   bun run translate [--only <slug>] [--force]
+ * VERCEL·CI 에서는 번역하지 않고 오래된/없는 번역만 경고한다(종료 코드 0).
+ */
+import fs from "node:fs/promises";
+import path from "node:path";
+
+import { isPublished, parsePost } from "@/lib/content/document";
+import { translatePost } from "@/lib/i18n/translate-post";
+import {
+  hashSource,
+  translationStatus,
+  type TranslationLock,
+} from "@/lib/i18n/translation-lock";
+
+import { callClaude } from "./claude";
+
+const CONTENT_DIR = path.join(process.cwd(), "content");
+const LOCK_PATH = path.join(CONTENT_DIR, ".translations.json");
+// 번역 대상은 writing 만이다. atelier 는 번역하지 않는다
+const TYPES = ["writing"] as const;
+const CONCURRENCY = 3;
+
+interface Target {
+  key: string;
+  slug: string;
+  sourcePath: string;
+  outPath: string;
+}
+
+const parseArgs = (argv: string[]) => {
+  const onlyIndex = argv.indexOf("--only");
+  return {
+    force: argv.includes("--force"),
+    only: onlyIndex === -1 ? undefined : argv[onlyIndex + 1],
+  };
+};
+
+const readLock = async (): Promise<TranslationLock> => {
+  try {
+    return JSON.parse(await fs.readFile(LOCK_PATH, "utf8")) as TranslationLock;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw error;
+  }
+};
+
+const writeLock = async (lock: TranslationLock) => {
+  const sorted = Object.fromEntries(
+    Object.entries(lock).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  await fs.writeFile(LOCK_PATH, `${JSON.stringify(sorted, null, 2)}\n`);
+};
+
+const exists = (p: string) =>
+  fs.access(p).then(
+    () => true,
+    () => false,
+  );
+
+const collectTargets = async (only?: string): Promise<Target[]> => {
+  const targets: Target[] = [];
+  for (const type of TYPES) {
+    const dir = path.join(CONTENT_DIR, type);
+    const files = (await fs.readdir(dir)).filter(
+      (f) => f.endsWith(".mdx") && !f.endsWith(".en.mdx"),
+    );
+    for (const file of files.sort()) {
+      const slug = file.slice(0, -".mdx".length);
+      if (only && slug !== only) continue;
+      const sourcePath = path.join(dir, file);
+      try {
+        const { metadata } = parsePost(await fs.readFile(sourcePath, "utf8"));
+        if (!isPublished(metadata)) continue;
+      } catch (error) {
+        console.warn(`건너뜀 ${type}/${file}: ${(error as Error).message}`);
+        continue;
+      }
+      targets.push({
+        key: `${type}/${slug}`,
+        slug,
+        sourcePath,
+        outPath: path.join(dir, `${slug}.en.mdx`),
+      });
+    }
+  }
+  return targets;
+};
+
+const runPool = async <T>(
+  items: T[],
+  size: number,
+  fn: (item: T) => Promise<void>,
+) => {
+  const queue = [...items];
+  await Promise.all(
+    Array.from({ length: Math.min(size, queue.length) }, async () => {
+      for (let item = queue.shift(); item; item = queue.shift()) await fn(item);
+    }),
+  );
+};
+
+const main = async () => {
+  const { force, only } = parseArgs(process.argv.slice(2));
+  const targets = await collectTargets(only);
+  if (only && targets.length === 0) {
+    console.error(`발행된 글 중 slug "${only}" 를 찾지 못했습니다`);
+    process.exit(1);
+  }
+
+  const lock = await readLock();
+  const pending: (Target & { hash: string; source: string })[] = [];
+  for (const target of targets) {
+    const source = await fs.readFile(target.sourcePath, "utf8");
+    const hash = hashSource(source);
+    const status = translationStatus({
+      key: target.key,
+      hash,
+      exists: await exists(target.outPath),
+      lock,
+    });
+    if (status !== "fresh" || force) pending.push({ ...target, hash, source });
+  }
+
+  if (process.env.VERCEL || process.env.CI) {
+    for (const t of pending) {
+      console.warn(
+        `경고: ${t.key} 의 영어 번역이 없거나 원문과 어긋나 있습니다`,
+      );
+    }
+    console.log(`번역 건너뜀(CI/Vercel). 확인 필요 ${pending.length}편`);
+    return;
+  }
+
+  if (pending.length === 0) {
+    console.log(`번역할 글이 없습니다 (대상 ${targets.length}편, 모두 최신)`);
+    return;
+  }
+  console.log(`번역 ${pending.length}편 시작 (동시 ${CONCURRENCY})`);
+
+  const written: string[] = [];
+  const failures: { key: string; issues: string[] }[] = [];
+
+  await runPool(pending, CONCURRENCY, async (t) => {
+    const started = Date.now();
+    try {
+      const result = await translatePost(t.source, { claude: callClaude });
+      const seconds = Math.round((Date.now() - started) / 1000);
+      if (!result.ok) {
+        failures.push({ key: t.key, issues: result.issues });
+        console.error(`실패 ${t.key} (${seconds}s)`);
+        return;
+      }
+      await fs.writeFile(t.outPath, result.translation);
+      lock[t.key] = t.hash;
+      await writeLock(lock);
+      written.push(path.relative(process.cwd(), t.outPath));
+      console.log(`완료 ${t.key} (리뷰 ${result.score}/5, ${seconds}s)`);
+    } catch (error) {
+      failures.push({ key: t.key, issues: [(error as Error).message] });
+      console.error(`오류 ${t.key}: ${(error as Error).message}`);
+    }
+  });
+
+  if (written.length > 0) {
+    console.log("\n커밋할 파일:");
+    for (const f of written.sort()) console.log(`  ${f}`);
+    console.log("  content/.translations.json");
+  }
+  if (failures.length > 0) {
+    console.error("\n실패 목록 (기존 번역은 그대로 둡니다):");
+    for (const f of failures) {
+      console.error(`- ${f.key}`);
+      for (const issue of f.issues) console.error(`    ${issue}`);
+    }
+    process.exit(1);
+  }
+};
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
