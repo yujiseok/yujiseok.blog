@@ -3,7 +3,11 @@
  * 글 링크는 URL이 아니라 slug로 적는다 — 언어별 주소와 번역 유무는 page.tsx가 정한다.
  */
 export interface Resume {
-  profile: { name: string; title: string; introduction: readonly string[] };
+  profile: {
+    name: string;
+    title: string;
+    introduction: readonly string[];
+  };
   workExperience: readonly {
     company: string;
     period: string;
@@ -11,6 +15,8 @@ export interface Resume {
     color: string;
     projects: readonly {
       title: string;
+      /** 왜 한 일인지 한 줄. 없으면 첫 성과가 그 역할을 한다 */
+      summary?: string;
       achievements: readonly string[];
       postSlug?: string;
       linkText?: string;
@@ -40,7 +46,7 @@ export const resumeData = {
     name: "유지석",
     title: "Frontend Developer",
     introduction: [
-      "콜로소에서 글로벌 커머스 서비스와 크리에이터 멤버십의 프론트엔드 개발을 담당하고 있습니다.",
+      "콜로소에서 글로벌 커머스의 프론트엔드를 개발하고 있습니다. 에이전트를 활용해 생산성을 높이면서, 품질을 어떻게 지킬지에 관심이 많습니다.",
     ],
   },
   workExperience: [
@@ -52,10 +58,12 @@ export const resumeData = {
       projects: [
         {
           title: "크리에이터 멤버십 신규 구축 및 운영",
+          summary:
+            "카드 결제 심사 일정에 맞춰, 구독·단건 결제와 환불까지 처음부터 만들어야 했던 서비스",
           achievements: [
             "에이전트 기반 워크플로우를 설계해 기획 확인부터 구현·QA·릴리즈까지 진행, 고객 서비스 20개·어드민 34개 화면을 근무일 약 75일 만에 일정 내 동시 출시",
-            "반복 절차는 Claude Code 스킬 8종으로 자동화하고, 결제·정원·환불 등 금전·정합성 영역 하네스 설계",
             "QA의 TC 기대 결과를 QA 진입 전 Vitest·Playwright로 사전 검증해, 이전 프로젝트(포트폴리오 서비스) 대비 코드 규모 2.5배에서도 1차 QA Defect 밀도 약 56% 감소 (천 줄당 8.5건 → 3.7건)",
+            "반복 절차는 Claude Code 스킬 8종으로 자동화하고, 결제·정원·환불 등 금전·정합성 영역 하네스 설계",
           ],
           postSlug: "delegate-to-agents",
           linkText: "에이전트에게 일 맡겨보기",
@@ -63,9 +71,11 @@ export const resumeData = {
         {
           title:
             "Next.js 렌더링 전략 개선을 통한 서비스 성능 및 인프라 효율 최적화",
+          summary:
+            "force-dynamic 옵션 때문에 모든 페이지가 요청마다 SSR로 렌더링되어 서버 부하가 컸던 문제",
           achievements: [
             "전 페이지에 강제되던 SSR 구조를 페이지 특성별 SSG·SSR·ISR 혼합 전략으로 전환하고 Next.js 캐시 도입",
-            "캐싱 도입으로 응답 시간 75% 단축 (800ms → 200ms)",
+            "캐싱 도입으로 p95 응답 시간 75% 단축 (800ms → 200ms)",
             "네트워크 트래픽 80%, 활성 컨테이너 수 60% 절감으로 GCP 인프라 비용 절감",
           ],
           postSlug: "nextjs-rendering-optimization",
@@ -73,6 +83,8 @@ export const resumeData = {
         },
         {
           title: "Turborepo 기반 모노레포 전환 및 CI 빌드 성능 최적화",
+          summary:
+            "패키지가 늘수록 CI가 느려졌지만, rebase만 해도 캐시가 깨지고 브랜치 간에 공유되지 않던 문제",
           achievements: [
             "Turborepo 도입 및 tsdown 중심 빌드 체계 구축으로 패키지 간 의존성 관리 효율화",
             "GitHub Actions 캐시의 커밋 SHA 기반 키와 브랜치 간 공유 제약을 해결하기 위해 GCS 기반 Turborepo Remote Cache 구축",
@@ -83,8 +95,9 @@ export const resumeData = {
         },
         {
           title: "포트폴리오 서비스 개발 및 성능 고도화",
+          summary:
+            "크기가 제각각인 포트폴리오를 Masonry로 쌓으면서 무한 스크롤 성능도 지켜야 했던 프로젝트",
           achievements: [
-            "Masonry 레이아웃 구현으로 콘텐츠의 시각적 다양성과 정보 밀도 향상",
             "무한 스크롤 환경에 가상 스크롤을 도입해 렌더링 시간 46%, 롱태스크 시간 41% 감소",
             "메모이제이션으로 불필요한 리렌더링을 방지해 스크롤 중 스크립트 실행 시간 42% 단축",
           ],
@@ -110,8 +123,7 @@ export const resumeData = {
         {
           title: "GENCON 컨퍼런스 랜딩 페이지 개발",
           achievements: [
-            "스크롤 기반 애니메이션, 타입라이터 효과 등 인터랙션을 통한 사용자 몰입 경험 제공",
-            "랜딩 페이지와 설문 기능으로 컨퍼런스 참여자 약 1,000명 모객에 기여",
+            "스크롤 애니메이션과 타입라이터 인터랙션, 설문 기능을 구현해 컨퍼런스 참여자 약 1,000명 모객에 기여",
           ],
           postSlug: "2024-gencon",
           linkText: "젠콘 랜딩 페이지 개발 회고",

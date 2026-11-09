@@ -6,8 +6,7 @@ const ContentContainer = ({
     | "Experience"
     | "Open Source Contributions"
     | "Education"
-    | "Other Experience"
-    | "Contact";
+    | "Other Experience";
   children: React.ReactNode;
 }) => {
   return (

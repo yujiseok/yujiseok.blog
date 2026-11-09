@@ -1,4 +1,4 @@
-import ArrowUpRight from "@/app/_components/arrow-up-right";
+import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
 import BlurContainer from "@/app/_components/blur-container";
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
@@ -84,11 +84,14 @@ const page = async ({ params }: LocaleParams) => {
     `${SITE_URL}${localizedPath(locale === "en" && !translated.has(slug) ? "ko" : locale, `/posts/${slug}`)}`;
 
   return (
-    // body의 좌우 패딩을 자기 음수 마진으로 상쇄한다. html:has()로 body를 바꾸면
-    // Activity가 숨겨 둔 이 페이지 때문에 다른 라우트의 패딩까지 사라진다.
-    <main className="-mx-4 py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12">
-      <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
-        <ResumeProfile profile={resumeData.profile} />
+    <main
+      className={`text-sm leading-6 break-keep print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
+    >
+      <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-4 sm:p-8 dark:border-neutral-200/20">
+        <ResumeProfile
+          profile={resumeData.profile}
+          contact={resumeData.contact}
+        />
 
         <ContentContainer title="Experience">
           <div className="grid gap-4">
@@ -116,22 +119,27 @@ const page = async ({ params }: LocaleParams) => {
                     <ul className="flex flex-col gap-4">
                       {career.projects.map((project, projectIndex) => (
                         <li key={projectIndex}>
-                          <strong>{project.title}</strong>
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                            <strong>{project.title}</strong>
+                            {project.postSlug && (
+                              <ExternalLink
+                                href={postHref(project.postSlug)}
+                                className="text-xs text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
+                              >
+                                {project.linkText}
+                              </ExternalLink>
+                            )}
+                          </div>
+                          {project.summary && (
+                            <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                              {project.summary}
+                            </p>
+                          )}
                           <ul className="mt-1 list-disc space-y-1 pl-8">
                             {project.achievements.map(
                               (achievement, achievementIndex) => (
                                 <li key={achievementIndex}>{achievement}</li>
                               ),
-                            )}
-                            {project.postSlug && (
-                              <li>
-                                <ExternalLink
-                                  href={postHref(project.postSlug)}
-                                  className="underline underline-offset-2"
-                                >
-                                  {project.linkText}
-                                </ExternalLink>
-                              </li>
                             )}
                           </ul>
                         </li>
@@ -154,30 +162,28 @@ const page = async ({ params }: LocaleParams) => {
                 </time>
               }
               rightContent={
-                <div className="grid gap-2">
-                  <div>
-                    <h4 className="mb-1">
-                      {contribution.title}{" "}
+                <p>
+                  <strong>{contribution.title}</strong>{" "}
+                  {contribution.description} (
+                  <ExternalLink
+                    href={contribution.link}
+                    className="underline underline-offset-2"
+                  >
+                    {resume.contribution}
+                  </ExternalLink>
+                  {contribution.blogSlug && (
+                    <>
+                      {" · "}
                       <ExternalLink
-                        href={contribution.link}
+                        href={postHref(contribution.blogSlug)}
                         className="underline underline-offset-2"
                       >
-                        {resume.contribution}
+                        {contribution.blogLinkText}
                       </ExternalLink>
-                    </h4>
-                    <p>{contribution.description}</p>
-                    {contribution.blogSlug && (
-                      <p>
-                        <ExternalLink
-                          href={postHref(contribution.blogSlug)}
-                          className="underline underline-offset-2"
-                        >
-                          {contribution.blogLinkText}
-                        </ExternalLink>
-                      </p>
-                    )}
-                  </div>
-                </div>
+                    </>
+                  )}
+                  )
+                </p>
               }
             />
           ))}
@@ -209,45 +215,6 @@ const page = async ({ params }: LocaleParams) => {
               }
             />
           ))}
-        </ContentContainer>
-
-        <ContentContainer title="Contact">
-          <ResumeContent
-            leftContent="Email"
-            rightContent={
-              <ExternalLink
-                href={`mailto:${resumeData.contact.email}`}
-                className="group inline-flex hover:underline"
-              >
-                {resumeData.contact.email}
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-          <ResumeContent
-            leftContent="GitHub"
-            rightContent={
-              <ExternalLink
-                href={resumeData.contact.github}
-                className="group inline-flex hover:underline"
-              >
-                yujiseok
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
-          <ResumeContent
-            leftContent="Blog"
-            rightContent={
-              <ExternalLink
-                href={resumeData.contact.blog}
-                className="group inline-flex hover:underline"
-              >
-                yujiseok.blog
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
         </ContentContainer>
 
         <ContentContainer title="Education">

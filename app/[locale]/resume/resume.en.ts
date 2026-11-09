@@ -7,7 +7,7 @@ export const resumeData = {
     name: "Yu Jiseok",
     title: "Frontend Developer",
     introduction: [
-      "I work on frontend development for Coloso's global commerce service and creator membership.",
+      "I build the frontend for Coloso's global commerce service. I use agents to raise productivity, and I care about how to keep quality high while doing it.",
     ],
   },
   workExperience: [
@@ -19,10 +19,12 @@ export const resumeData = {
       projects: [
         {
           title: "Built and operated the new Creator Membership",
+          summary:
+            "A service built from scratch, including subscription and one-time payments and refunds, on a deadline set by the card payment review",
           achievements: [
             "Designed an agent-based workflow that carried work from requirements review through implementation, QA, and release, and shipped 20 customer-facing screens and 34 admin screens together, on schedule, in about 75 working days",
-            "Automated recurring procedures with 8 Claude Code skills and designed a harness for areas where money and data consistency matter, such as payments, capacity, and refunds",
             "Verified QA's expected test-case results with Vitest and Playwright before QA began, which cut first-round QA defect density by about 56% (8.5 to 3.7 per 1,000 lines) even though the codebase was 2.5x the size of the previous project (the portfolio service)",
+            "Automated recurring procedures with 8 Claude Code skills and designed a harness for areas where money and data consistency matter, such as payments, capacity, and refunds",
           ],
           postSlug: "delegate-to-agents",
           linkText: "Trying Out Delegating Work to Agents",
@@ -30,9 +32,11 @@ export const resumeData = {
         {
           title:
             "Optimized service performance and infrastructure efficiency by improving the Next.js rendering strategy",
+          summary:
+            "force-dynamic made every page render through SSR on each request, which put heavy load on the servers",
           achievements: [
             "Replaced the SSR-for-every-page setup with a mixed SSG/SSR/ISR strategy chosen per page, and introduced the Next.js cache",
-            "Cut response time by 75% with caching (800ms to 200ms)",
+            "Cut p95 response time by 75% with caching (800ms to 200ms)",
             "Reduced GCP infrastructure costs by cutting network traffic by 80% and active containers by 60%",
           ],
           postSlug: "nextjs-rendering-optimization",
@@ -41,6 +45,8 @@ export const resumeData = {
         {
           title:
             "Migrated to a Turborepo monorepo and optimized CI build performance",
+          summary:
+            "CI slowed down as packages grew, while the cache broke on every rebase and couldn't be shared across branches",
           achievements: [
             "Introduced Turborepo and a tsdown-based build setup to manage dependencies between packages more efficiently",
             "Built a Turborepo Remote Cache on GCS to get around the GitHub Actions cache limits (keys tied to the commit SHA, and restrictions on sharing across branches)",
@@ -51,8 +57,9 @@ export const resumeData = {
         },
         {
           title: "Portfolio service development and performance tuning",
+          summary:
+            "Stacking portfolios of different sizes in a masonry layout while keeping infinite scroll fast",
           achievements: [
-            "Implemented a masonry layout to improve the visual variety and information density of the content",
             "Added virtual scrolling to the infinite-scroll view, reducing rendering time by 46% and long-task time by 41%",
             "Prevented unnecessary re-renders with memoization, cutting script execution time while scrolling by 42%",
           ],
@@ -78,8 +85,7 @@ export const resumeData = {
         {
           title: "GENCON conference landing page",
           achievements: [
-            "Built an immersive experience with interactions such as scroll-based animation and a typewriter effect",
-            "Contributed to recruiting about 1,000 conference attendees through the landing page and its survey feature",
+            "Built scroll animation, typewriter interactions, and a survey, contributing to recruiting about 1,000 conference attendees",
           ],
           postSlug: "2024-gencon",
           linkText: "Looking Back on the GENCON Landing Page",
