@@ -88,10 +88,9 @@ const page = async ({ params }: ResumeParams) => {
     `${SITE_URL}${localizedPath(locale === "en" && !translated.has(slug) ? "ko" : locale, `/posts/${slug}`)}`;
 
   return (
-    <main
-      data-resume-page="true"
-      className="py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12"
-    >
+    // body의 좌우 패딩을 자기 음수 마진으로 상쇄한다. html:has()로 body를 바꾸면
+    // Activity가 숨겨 둔 이 페이지 때문에 다른 라우트의 패딩까지 사라진다.
+    <main className="-mx-4 py-4 text-sm leading-6 break-keep sm:px-4 sm:py-12">
       <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-6 sm:p-8 dark:border-neutral-200/20">
         <ResumeProfile profile={resumeData.profile} />
 
