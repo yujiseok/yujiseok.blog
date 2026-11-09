@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "bun run translate",
     "build": "next build",
     "start": "next start",
     "translate": "bun scripts/translate/index.ts",
