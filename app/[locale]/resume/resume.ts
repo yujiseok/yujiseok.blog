@@ -46,7 +46,7 @@ export const resumeData = {
     name: "유지석",
     title: "Frontend Developer",
     introduction: [
-      "콜로소에서 글로벌 커머스의 프론트엔드를 개발하고 있습니다. 에이전트를 활용해 생산성을 높이면서, 품질을 어떻게 지킬지에 관심이 많습니다.",
+      "콜로소에서 글로벌 커머스의 프론트엔드를 개발하고 있습니다. 에이전트를 활용해 생산성을 높이면서, 품질을 어떻게 지킬지 고민합니다.",
     ],
   },
   workExperience: [

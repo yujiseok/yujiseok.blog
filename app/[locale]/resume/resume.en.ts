@@ -7,7 +7,7 @@ export const resumeData = {
     name: "Yu Jiseok",
     title: "Frontend Developer",
     introduction: [
-      "I build the frontend for Coloso's global commerce service. I use agents to raise productivity, and I care about how to keep quality high while doing it.",
+      "I build the frontend for Coloso's global commerce service. I use agents to raise productivity, and I think a lot about how to keep quality high while doing it.",
     ],
   },
   workExperience: [
