@@ -1,0 +1,722 @@
+export const metadata = {
+  "title": "Wanted Pre-Onboarding Frontend Internship Retrospective",
+  "publishedAt": "2023-04-12",
+  "summary": "A look back at my experience in the Pre-Onboarding program.",
+  "published": true
+}
+
+## Overview
+
+This post covers the Wanted Pre-Onboarding Frontend program and my retrospective on it.
+
+## Program Introduction and Pre-Assignment
+
+### Program Introduction
+
+The program I took part in was the [February Frontend course](https://www.wanted.co.kr/events/pre_ob_fe_9), which ran for four weeks, from February 20 to March 17.
+Each week had two lecture sessions and one company assignment that we worked on as a team.
+Our team had 8 members, and I served as the team leader.
+
+For the company assignments, we didn't form a team and split the work **1/N** by role.
+Instead, one team member took on <strong>100%</strong> of the assignment, and we then picked the **Best Practice** from among those results.
+When I first heard about this approach, it was a peer-learning method I'd never encountered, and I had no idea how to go about it.
+Time was already tight just to implement the features and finish the assignment, so having to produce the best possible result on top of that put me under a lot of pressure.
+Time isn't unlimited, and to make matters worse, the project at the bootcamp I was attending at the same time overlapped with this period, so the time pressure was even heavier.
+
+Still, I stayed positive and resolved that since I was doing both anyway, I'd do both properly.
+
+> On top of that, I was also taking the [Pre-Onboarding Frontend Challenge March](https://www.wanted.co.kr/events/pre_challenge_fe_7) at the same time, so I remember being pretty busy. 😱
+
+### Pre-Assignment
+
+The [pre-assignment](https://github.com/walking-sunset/selection-task) was to build a todo app with authentication,
+and it had a total of 10 requirements.
+
+Here are the ones I remember most.
+
+**1. Validating the email and password on the sign-up and login pages**
+
+The validation conditions were very simple: the email had to include `@`, and the password had to be `at least 8 characters`. But once I actually sat down to write the validation, I remember feeling quite lost. I first considered using a regular expression.
+I'm not on great terms with regular expressions, and I did feel like using this chance to get a bit more friendly with them, but since the conditions were so simple, I decided to avoid them.
+
+For the email, I decided to use the `includes()` method from the `String` prototype,
+and for the password, I'd validate with `length`, a property of `String` objects. I also used a `focus` state so that the error message would render once the field had been focused.
+
+```jsx {9-11, 17-19}
+const [user, setUser] = useState({
+  email: "",
+  password: "",
+});
+
+// ...
+
+{
+  !user.email.includes("@") && focus.email ? (
+    <ErrorMessage>@를 포함한 이메일을 입력하세요.</ErrorMessage>
+  ) : null;
+}
+
+// ...
+
+{
+  user.password.length < 8 && focus.password ? (
+    <ErrorMessage>8자 이상의 비밀번호를 입력하세요.</ErrorMessage>
+  ) : null;
+}
+```
+
+This way, I could validate based on the `user` info without using a regular expression at all.
+
+**2. Handling the user depending on whether there's a JWT**
+
+JWT is one of those things that you think you've gotten close to, and then it drifts far away again. While working on this assignment, I felt like I got one step closer to tokens.
+There were two pieces of token-related logic to handle:
+
+- **Saving the token to local storage on successful login**
+
+  While thinking about how best to save the token to local storage on login,
+  I realized I'd also need to handle redirects depending on whether a token exists, so I figured `Context API` plus `useReducer` would be a good fit.
+
+  ```jsx title="AuthProvider.jsx"
+  import { createContext, useMemo, useReducer } from "react";
+
+  export const authContext = createContext();
+
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case AUTH_ACTION.SET_TOKEN:
+        localStorage.setItem("accessToken", action.token);
+        return { ...state, token: action.token };
+      case AUTH_ACTION.RESET_TOKEN:
+        localStorage.removeItem("accessToken");
+        return { ...state, token: "" };
+      default:
+        return state;
+    }
+  };
+
+  const AuthProvider = ({ children }) => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    const value = useMemo(() => ({ state, dispatch }), [state, dispatch]);
+    return (
+      <authContext.Provider value={value}>{children}</authContext.Provider>
+    );
+  };
+  export default AuthProvider;
+  ```
+
+  I created a `reducer` that stores the token locally on login and logout, and I pass the `state` and `dispatch` created by `useReducer`
+  down through `context`. This let me avoid **Props Drilling**.
+
+- **Handling redirects depending on whether there's a token**
+
+  Pages that need a token get it with the `useContext` hook.
+  I handled the redirect with the `useEffect` hook, like this:
+
+  ```jsx title="Todo/index.jsx"
+  const {
+    state: { token },
+    dispatch: authDispatch,
+  } = useContext(authContext);
+
+  // ...
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/signin");
+    }
+  }, [token]);
+  ```
+
+- **Authenticating users with axios interceptors**
+  Most API endpoints required user authentication via the token. To avoid the repetition of adding the token on every API call,
+  I used `axios` `interceptors` so that if a token exists, it gets put into `Authorization`.
+
+  ```js
+  client.interceptors.request.use((config) => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (accessToken !== null) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  });
+  ```
+
+The remaining requirements were about implementing CRUD features. After submitting the assignment, I got the internship acceptance text on February 17!
+
+> You can check out my pre-assignment code in my [repository](https://github.com/yujiseok/wanted-pre-onboarding-frontend)! 😄
+
+## Week 1
+
+The Week 1 assignment was to pick the **Best Practice** for the todo app from the pre-assignment.
+To find the best result among the 8 submissions, our team chose to pick the best of the 8 existing results and then improve on it.
+
+My result was selected first, so we decided to improve my todo app.
+We found the areas to improve through a team meeting, and they were as follows.
+
+**1. Handle the redirect with `Router` instead of the existing `useEffect`**
+
+When I was working on the pre-assignment, I actually considered building `PrivateRouter` and `PublicRouter` to handle routing based on authentication,
+but the project was small, so I handled it with an effect. However, handling it in an effect means adding logic to every page that requires authentication, which can hurt the component's readability. And since the effect runs after the component mounts,
+users can experience a screen **flicker**, which isn't UX-friendly. For these reasons, I decided to handle the redirect with `Router`.
+
+```jsx title="Router.jsx"
+// ...
+
+<Route
+  path="/"
+  exact
+  element={token ? <Navigate to="/todo" replace /> : <SignIn />}
+/>
+```
+
+Depending on the token we get from `useContext`, the `Navigate` component handles the redirect.
+Done this way, the redirect happens before the page loads.
+
+**2. Error handling with `interceptors`**
+
+I added an `interceptors` for responses, so that if an error occurs, an `alert` is shown globally.
+I first came across `interceptors` while working on the pre-assignment, and I learned that you can intercept requests and responses to conveniently add whatever logic you need.
+
+As in the code below, when a response fails and an error occurs, an `alert` pops up globally to show the error message.
+The nice part is that you don't have to handle errors individually.
+
+```js title="instance.js"
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const { response } = error;
+    if (response.status === 401) return Promise.reject(error);
+    if (response) alert(response.data.message);
+    return Promise.reject(error);
+  }
+);
+```
+
+I had always developed while only thinking about the success case, and reading my teammates' code made me realize how lacking I was when it came to exception handling.
+
+While discussing with my teammates, a few questions came up, and I got advice from an [instructor](https://github.com/jaewonhimnae) in another program to resolve them.
+The questions were as follows.
+
+1. Is using `useReducer` in a todo app over-spec?
+
+- Most of my teammates said that using `useReducer` in such a simple app actually increases complexity,
+  but as someone who implemented it with `useReducer`, I felt it actually made the code more readable because it let me separate the logic.  
+  → The instructor also replied that I'd made good use of `useReducer`.
+
+2. Managing server state and client state together inside `Context API` vs. separating them
+
+- One teammate had also built the todo app with `Context API`, but the difference was that they handled both server state and client state. I felt that managing everything in one place meant too much logic and hurt readability,
+  so I argued for managing only client state, but I didn't know the clear difference between the two approaches.  
+  → The answer I got was that handling server logic there doesn't make any performance difference, but too much logic can hurt **readability**, so as long as you address that, either approach is fine.
+
+3. Updating state when an async request succeeds
+
+- Here's an example of the question above:
+
+  ```jsx
+  // 기존 상태를 복사하여 변경 하는 방식
+  const res = await createTodo(todoTitle);
+  if (res.status === 201) {
+    dispatch({ type: TODO_ACTION_TYPE.POST, todo: res.data });
+    setTodoTitle("");
+  }
+  case TODO_ACTION_TYPE.POST:
+    return [...state, action.todo];
+
+
+  // GET 요청후 응답 데이터로 상태 변경 하는 방식
+  const handleUpdate = (id, todo, isCompleted) => {
+  updateTodo(id, todo, isCompleted).then(() => {
+   getTodos().then((response) => setTodos(response.data))
+   });
+  }
+  ```
+
+  In other words, the difference is whether you copy the existing state with the **spread operator** and modify it, or replace it with fresh data from a `GET` request.  
+  → The answer I got was that updating state with data fetched from the server is much safer, because you have to consider the case where the request never actually reached the server.
+
+Week 1 flew by in the blink of an eye.
+
+> You can check out the Week 1 result [here](https://github.com/wanted-pre-7/wanted-pre-onboarding-frontend)!
+
+## Week 2
+
+Week 2 was when the first company assignment took place. The task was to build a site where you can browse a list of travel products from given data and save them to a cart.
+Since it was the first company assignment, I was on edge until it was announced.
+When I first saw the assignment, what worried me most was [**Chakra-UI**](https://chakra-ui.com/).
+I had to implement features and also do the styling with a library I'd never used before, and I got scared before even starting.
+
+Not just me but my teammates too knew there were problems with how we'd run the previous assignment, so we decided to try a new way of doing peer learning. The method our team adopted was GitHub `issue`s.
+We wrote each requirement as an `issue` and linked them to commits so that they'd be easy to trace when a PR was created. We also connected Slack with our GitHub repository so we could check right away whenever a PR was opened.
+
+> We kept this approach going through Week 4! ✨
+
+For the assignment, we used **React, TypeScript, React-Query, Redux-Toolkit**, and so on.
+
+The hardest part of implementing the features was **filtering**. The requirement was to implement filtering of the travel product list by price and location, supporting both individual and multiple filtering.
+I remember we discussed it with the team because the meaning of "individual" and "multiple" wasn't clear.
+In the end, we concluded that we'd filter by price and location at the same time.
+
+Here's how I implemented the filtering.
+
+```tsx title="Main.tsx"
+// ...
+const [[minPrice, maxPrice], setPrice] = useState<number[]>([
+  MIN_VALUE,
+  MAX_VALUE,
+]);
+const [spaceCategory, setSpaceCategory] = useState<string[]>([]);
+
+const filteredProducts = products?.filter(
+  (product) =>
+    [...spaceCategory].includes(product.spaceCategory) &&
+    product.price >= minPrice &&
+    product.price <= maxPrice
+);
+```
+
+After fetching all the data with **React-Query**, I filter it using the `Array` method `filter`.
+Since multiple filtering was required, for the location `spaceCategory` I use the `Array` method `includes` to check whether the location is in the current array.
+For the price values `minPrice` and `maxPrice`, I compare prices using comparison operators.
+Then I render the filtered data on screen with the `map` method.
+
+The filtering I implemented this way had a few problems.
+
+1. Filtering isn't preserved on refresh
+
+- Since I was filtering with `state`, the filters got reset on refresh. Filters not persisting like this
+  isn't user-friendly. To fix this, you need to implement filtering with a `Query string`.
+  You can do it easily with **React-router-dom**'s [**useSearchParams**](https://reactrouter.com/en/main/hooks/use-search-params).
+  Even though I use **React-router-dom** a lot, I had no idea this hook existed, so I was glad to pick up something new through the program.
+
+  ```tsx
+  import { useSearchParams } from "react-router-dom";
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const spaceCategory = searchParams.get("spaceCategory");
+  const price = searchParams.get("price");
+
+  // ex
+  const handleSpace = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setSearchParams({
+      spaceCategory: e.target.value,
+    });
+  ```
+
+  With `setSearchParams` like this, a `Query` such as `?spaceCategory` is automatically added to the URL.
+  In other words, the URL stays the same on refresh, so the filtering doesn't get reset.
+
+2. There was imperative code instead of declarative code
+
+- To put the selected locations into an array, I used the following logic:
+
+  ```tsx
+  useEffect(() => {
+    const idArr: string[] = [];
+    SPACE_VALUE.map((el) => idArr.push(el));
+    setSpaces(idArr);
+  }, []);
+
+  const handleAllCheck = (checked: boolean) => {
+    if (checked) {
+      const idArr: string[] = [];
+      SPACE_VALUE.map((el) => idArr.push(el));
+      setSpaces(idArr);
+    } else setSpaces([]);
+  };
+  ```
+
+  The logic above is imperative code. Imperative code is about what to do and how to do it.
+  If you write it like this instead, you can turn it into **declarative** code, which fits the philosophy of **React**.
+
+  ```tsx
+  useEffect(() => {
+    setSpaces([...SPACE_VALUE]);
+  }, []);
+
+  const handleAllCheck = (checked: boolean) => {
+    if (checked) {
+      setSpaces([...SPACE_VALUE]);
+    } else setSpaces([]);
+  };
+  ```
+
+  I'd honestly never really encountered the terms imperative and declarative code, so I felt I needed to study this area.
+
+  3. Telling ternary operators and if statements apart
+
+  Another problem was code where I hadn't distinguished between a ternary operator and an if statement.
+
+  ```tsx
+  const handleAllCheck = (checked: boolean) => {
+    if (checked) {
+      setSpaces([...SPACE_VALUE]);
+    } else setSpaces([]);
+  };
+  ```
+
+  You can refactor the code above like this:
+
+  ```tsx
+  const handleAllCheck = (checked: boolean) => {
+    setSpaces(checked ? [...SPACE_VALUE] : []);
+  };
+  ```
+
+  It gave me a chance to think about whether what I need right now is code that branches on a condition or just a **value**.
+
+As for **Chakra-UI**, which I'd been so worried about at first, it turned out to be really easy to build UI with, and I had a fun time developing with it.
+
+> You can check out the Week 2 result [here](https://github.com/wanted-pre-7/pre-onboarding-9th-2-7)!
+
+## Week 3
+
+The Week 3 assignment was to build a time-series chart from given data. Time-series chart 📊 was a really unfamiliar term to me. Honestly, charts themselves were unfamiliar to me.
+Because the terminology was so foreign, the assignment felt incredibly hard. There was no time to feel discouraged, so I started by looking up what a time-series chart even is.
+A **time-series chart** is a graph of activity over time. Once I had the terms straight, I moved on to implementing the features. In short, the theme of the Week 3 assignment was building a graph in chronological order.
+
+Unlike the previous assignments,
+the tech stack wasn't fixed. Instead, we each picked from three chart libraries (**recharts, chart.js, apexCharts**) and developed with it.
+I built my features with [recharts](https://recharts.org/), the most **React**-like library. Building a chart was itself a first for me, so using the library was a first too.
+Like in Week 2, I think I got scared just because it was my first time.
+But contrary to those worries, what I felt while using **recharts** was that it's really easy to use and the official docs are very friendly.
+
+There were a couple of tricky parts while implementing the features: refining object data into array data, and highlighting a specific data region on click.
+
+1. Refining object data into an array
+
+   To build a chart with **recharts**, you need array data. But the data we were given was an object. I remember being flustered when I saw that the data was an object.
+   Here's what I tried first to turn it into an array:
+
+   ```ts title="useChartData.ts"
+   // ...
+
+   const chartArray: IChart[] = [];
+
+   for (const key in data) {
+     chartArray.push({
+       time: new Date(key).toLocaleTimeString().replace("오후 ", ""),
+       value_time: key,
+       ...data[key],
+     });
+   }
+   ```
+
+   Writing the code like this, I realized once again that I'd written it imperatively.
+
+   To turn the code above into declarative code, I refactored it like this:
+
+   ```ts title="useChartData.ts"
+   // ...
+
+   const arrData: IChart[] = Object.entries(data).map(([time, item]) => ({
+     time: new Date(time).toLocaleTimeString(),
+     ...item,
+   }));
+   ```
+
+   First, I use the `Object.entries` method to turn the object into an array of `[key, value]` pairs. Then I use the `Array` object's `map()` method to turn that array into a new array.
+   Since we need the time to build a time-series chart, I added a new `key` and returned it. With declarative code, I was able to write code that's much more concise and readable than before.
+
+2. Highlighting a data region when it's clicked
+
+   For the [bar chart](https://recharts.org/en-US/api/Cell), I could handle highlighting without much trouble using the `<Cell />` component, but the problem was highlighting in the **area chart**.
+   No matter how hard I tried, there didn't seem to be a way to implement highlighting. Then a thought suddenly struck me: I could use the [dots](https://recharts.org/en-US/api/Area#dot) that appear when you `hover` over the area chart to highlight a region.
+
+   ```tsx title="CustomTooltip.tsx"
+   const CustomToolTip = ({ active, payload, setDot, category }: Props) => {
+     useEffect(() => {
+       if (payload && payload.length) setDot(payload[0].payload.id);
+     }, [payload]);
+     //...
+   };
+   ```
+
+   First, to store the state of the dots, I pass `setDot` down to the tooltip component as a prop. Whenever the `payload` value changes, I save the **id (district)** value of the `payload` as state.
+   This way, I can store the **id** value whenever the mouse hovers. In other words, even at click time, I can have the value from the mouse hover as state.
+
+   ```tsx title="Chart.tsx" {16-22}
+   // ...
+   const district = searchParams.get("district") as string;
+   const handleClickDistrict = (district: string) => {
+     setSearchParams({ category, district });
+   };
+
+   <Area
+     type="monotone"
+     dataKey="value_area"
+     fill="#82ca9d"
+     stroke="#82ca9d"
+     yAxisId="left"
+     onClick={() => {
+       handleClickDistrict(dot);
+     }}
+     dot={
+       <CustomizedDot
+         cx={0}
+         cy={0}
+         stroke="#86d3a4"
+         district={district}
+         payload={{ id: "", time: "", value_area: 0, value_bar: 0 }}
+       />
+     }
+   />;
+   ```
+
+   I attach a function that can set the district based on the `dot` state value as an `onClick` event. When the area chart is clicked, `district` is compared with the payload
+   prop of the `<CustomizedDot>` component, and the dots get rendered accordingly. I also used the `useSearchParams` hook I learned about in Week 2 so the highlight doesn't reset on refresh.
+
+   ```tsx title="CustomizedDot.tsx"
+   const CustomizedDot = ({ cx, cy, stroke, payload, district }: Props) => {
+     if (payload.id === district) {
+       return (
+         <svg x={cx - 3} y={cy - 3} fill="white">
+           <g transform="translate(4 4)">
+             <circle r="4" fill={stroke} />
+             <circle r="2" fill={stroke} />
+           </g>
+         </svg>
+       );
+     }
+
+     return null;
+   };
+   ```
+
+During Week 3, a hot topic in our team meetings was the definition of a **custom hook**. I'd made a hook called [**useChartData**](https://github.com/wanted-pre-7/pre-onboarding-9th-3-7/blob/main/src/hooks/useChartData.ts) that converts the object data we received into an array and sets it as state,
+but another teammate argued that this function isn't a hook but a `util` function.
+Here's why:
+
+- "A hook should return data and a function that can control that data, like `useState`. This function only returns data and can't change it, so it's not a hook."
+
+My view, along with that of other teammates who thought it was a hook, was as follows:
+
+- "It uses the `useState` and `useEffect` hooks, so it is a hook."
+
+```ts title="useChartData.ts"
+import { useEffect, useState } from "react";
+import { getChartData } from "../api";
+import type { IChart, IResponse } from "../types/chart";
+
+const useChartData = () => {
+  const [chartData, setChartData] = useState<IChart[]>([]);
+  useEffect(() => {
+    const getChart = async () => {
+      const data: IResponse = await getChartData();
+
+      const arrData: IChart[] = Object.entries(data).map(([time, item]) => ({
+        time: new Date(time).toLocaleTimeString(),
+
+        ...item,
+      }));
+
+      setChartData(arrData);
+    };
+
+    getChart();
+  }, []);
+
+  const chartDistrict = [...new Set(chartData.map((data) => data.id))].sort();
+
+  return { data: chartData, chartDistrict };
+};
+
+export default useChartData;
+```
+
+The discussion didn't lead to a clear conclusion, so we asked the session mentor for [advice](https://github.com/walking-sunset/wanted-preonboarding-qna-9th/issues/5).
+
+The answer was, "The criterion for telling a custom hook from a regular function is whether it **calls existing hooks** inside the function."
+The boundary between custom hooks and regular functions had honestly been blurry for me, and this helped make the concept of a custom hook much clearer. I thought it would've been hard to get this kind of insight without peer learning.
+
+> With the implementation above, my work was selected as the `Best Practice` for Week 3 and submitted. ✨
+> You can check out the Week 3 result [here](https://github.com/wanted-pre-7/pre-onboarding-9th-3-7)!
+
+## Week 4
+
+And finally, the big Week 4. The Week 4 company assignment was to build an order list page using the given data. On top of that, we had to write **test code** for the components.
+Every week I'd been thrown off by things I was seeing for the **first time**, but test code? This assignment left me feeling truly lost.
+I decided to work through the other requirements first and then move on to the tests.
+
+The trickiest requirements were **sorting and filtering**. We had to sort by order number and by transaction date & time in both descending and ascending order, filter by order status, and implement a customer name search.
+For this assignment too, rather than using state, I used `useSearchParams` for a more UX-friendly implementation. But with sorting and filtering across multiple conditions, the code ended up with way too many conditionals.
+
+```tsx title="Home.tsx"
+// ...
+
+if (order === "desc") {
+  transactions = [...transactions].sort((a, b) => b.id - a.id);
+} else if (order === "asce") {
+  transactions = [...transactions].sort((a, b) => a.id - b.id);
+}
+
+if (time === "desc") {
+  transactions = [...transactions].sort(
+    (a, b) =>
+      new Date(b.transaction_time).getTime() -
+      new Date(a.transaction_time).getTime()
+  );
+} else if (time === "asce") {
+  transactions = [...transactions].sort(
+    (a, b) =>
+      new Date(a.transaction_time).getTime() -
+      new Date(b.transaction_time).getTime()
+  );
+} else transactions;
+
+if (status === "true") {
+  transactions = [...transactions].filter(
+    (transaction) => transaction.status === true
+  );
+} else if (status === "false") {
+  transactions = [...transactions].filter(
+    (transaction) => transaction.status === false
+  );
+} else transactions;
+
+if (name === value) {
+  transactions = [...transactions].filter((transaction) =>
+    trimValue(transaction.customer_name).includes(trimValue(name))
+  );
+}
+```
+
+You can tell at a glance that this code is hard to read, let alone maintain. It also keeps creating new arrays, and since each conditional is independent, the conditions can end up being applied in any order.
+After the program ended, I decided to refactor the `if-else` statements into `switch` statements to improve readability.
+
+```tsx title="Home.tsx"
+// ...
+
+switch (status) {
+  case "true":
+    transactions = transactions.filter(
+      (transaction) => transaction.status === true
+    );
+    break;
+  case "false":
+    transactions = transactions.filter(
+      (transaction) => transaction.status === false
+    );
+    break;
+}
+
+if (name === value) {
+  transactions = transactions.filter((transaction) =>
+    trimValue(transaction.customer_name).includes(trimValue(name))
+  );
+}
+
+switch (time) {
+  case "desc":
+    transactions = transactions.sort(
+      (a, b) =>
+        new Date(b.transaction_time).getTime() -
+        new Date(a.transaction_time).getTime()
+    );
+    break;
+  case "asce":
+    transactions = transactions.sort(
+      (a, b) =>
+        new Date(a.transaction_time).getTime() -
+        new Date(b.transaction_time).getTime()
+    );
+    break;
+}
+
+switch (order) {
+  case "desc":
+    transactions = transactions.sort((a, b) => b.id - a.id);
+    break;
+  case "asce":
+    transactions = transactions.sort((a, b) => a.id - b.id);
+    break;
+}
+```
+
+Once I'd refactored to `switch` statements, it definitely felt more readable than `if-else`, but the code was hard to reuse and the logic still felt too messy. So I tried refactoring it into functions.
+
+```ts title="filterTransactions.ts"
+const filterTransactions = (
+  transactions: ITransaction[],
+  options: IOptions
+): ITransaction[] => {
+  const { status, name, time, order, value } = options;
+
+  const filterByStatus = (
+    transactions: ITransaction[],
+    filteredStatus: boolean
+  ): ITransaction[] =>
+    transactions.filter((transaction) => transaction.status === filteredStatus);
+
+  const filterByName = (
+    transactions: ITransaction[],
+    name: string
+  ): ITransaction[] =>
+    transactions.filter((transaction) =>
+      trimValue(transaction.customer_name).includes(trimValue(name))
+    );
+
+  const sortByTime = (
+    transactions: ITransaction[],
+    time: string
+  ): ITransaction[] =>
+    transactions.sort((a, b) => {
+      const timeA = new Date(a.transaction_time).getTime();
+      const timeB = new Date(b.transaction_time).getTime();
+      return time === "desc" ? timeB - timeA : timeA - timeB;
+    });
+
+  const sortByOrder = (
+    transactions: ITransaction[],
+    order: string
+  ): ITransaction[] =>
+    transactions.sort((a, b) => (order === "desc" ? b.id - a.id : a.id - b.id));
+
+  if (status !== "default") {
+    const filteredStatus = status === "true";
+    transactions = filterByStatus(transactions, filteredStatus);
+  }
+
+  if (name === value) {
+    transactions = filterByName(transactions, name);
+  }
+
+  if (time !== "default") {
+    transactions = sortByTime(transactions, time);
+  }
+
+  if (order !== "default") {
+    transactions = sortByOrder(transactions, order);
+  }
+
+  return transactions;
+};
+```
+
+First, I create a function for each condition. Then I use `if` statements to run the function that matches the condition and return the order list data. Splitting things out into functions like this cut down the logic in the component that uses them, which made it much more readable.
+It also became easy to reuse in other components that need filtering.
+
+Implementing the requirements took more time than I expected, so I wasn't able to write the test code, and that's something I regret.
+I definitely want to study how to write test code later on.
+
+> You can check out the Week 4 result [here](https://github.com/wanted-pre-7/pre-onboarding-9th-4-7)!
+
+## Reflecting on the Program ✨
+
+When I first started the program, my thoughts were dominated by worries like "Can I actually do this?" and "What if taking on two programs at once leaves me with nothing to show for either?"
+But once the program was over, I couldn't help thinking, "Worrying is **useless**, after all." I gained so much that all those worries seemed pointless, and I was inspired by how many peers like me are out there working hard.
+Reading my teammates' code in particular, I learned that the same feature can be written in so many different ways.
+It was really fascinating that code has personality, just like people do, and seeing my teammates' code broadened my perspective. Through discussions and reviews with my teammates, I also got to improve my communication skills.
+
+That said, there are things I regret. The biggest one is that communication with my teammates wasn't more active.
+Of course I led the meetings and tried to communicate as much as I could, but some people didn't show up, and some attended without saying a single word,
+and I don't think I handled those situations wisely. Going forward, I need to remember that while technical ability is important, I shouldn't neglect communication either.
+
+I picked up a lot of new knowledge and insights through the program, and learning new things is always a joy for me and seems to be what keeps me going.
+I also experienced plenty of the **"knowing that you don't know"** (the paradox of ignorance) moments.  
+I want to tell myself, "Good job," for working hard through the program. I'll use this as a stepping stone and keep charging ahead even harder. I'd also like to thank the teammates who went through the program with me.
+
+Thanks for reading this long post! 😊

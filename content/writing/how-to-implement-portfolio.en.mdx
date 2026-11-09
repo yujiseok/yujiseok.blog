@@ -1,0 +1,1056 @@
+export const metadata = {
+  "title": "Retrospective on Implementing a Masonry Layout for Our Service",
+  "publishedAt": "2025-07-24",
+  "summary": "Let's neatly stack portfolios of all different sizes.",
+  "published": true
+}
+
+## Overview
+
+[Portfolio](https://coloso.co.kr/portfolio) is a showcase service that gathers creators' portfolios and career histories in one place.
+Its main goals were to spend marketing budget efficiently and to draw in more potential customers.
+To get there, it wasn't enough to simply display works. We needed to bring out each creator's brand value and strengthen the UI so customers could reach content easily.
+
+Because visual variety and information density matter so much for this kind of service, one of the key requirements was to adopt a Masonry layout to maximize the user experience.
+In this post, I'll go over how I actually implemented the Masonry layout in the Portfolio service, along with the thoughts I had along the way.
+
+## What is Masonry?
+
+<div className="flex flex-col items-center">
+  <Image
+    src="/images/how-to-implement-portfolio/pinterest.png"
+    width={680}
+    height={1024}
+    alt="Pinterest Masonry layout"
+  />
+  <small>Pinterest's Masonry layout</small>
+</div>
+
+Before building the UI, I did a bit of research on the Masonry layout.
+
+**Masonry** is defined as follows:
+
+- A structure built by stacking individual units such as bricks or stones
+- It means "**bricklaying**" or "**stonework**", referring to the craft of stacking bricks or stones, or the result of it
+
+Borrowing this structural idea, a layout on the web where multiple elements (cards, images, etc.) are stacked naturally with no gaps, like bricks, is called a "**Masonry layout**".
+
+## Strengths of the Masonry Layout
+
+So what are the characteristics of a Masonry layout, and what do we gain from it?
+
+### 1. Maximized use of space
+
+- Items of irregular size (images, cards, etc.) are placed with no gaps, minimizing unused space on the screen
+- In large-scale image/portfolio services, it maximizes scroll efficiency and information density
+
+### 2. Visual variety and dynamic expression
+
+- Each element stacks freely, giving the screen rhythm and vitality
+- Unlike a rigid grid, Masonry offers a fresh experience through an irregular yet flexible arrangement
+
+### 3. Responsiveness and scalability
+
+- A Masonry layout can automatically adjust the number of columns and the placement as the screen size changes, guaranteeing a consistent UX on every device, whether mobile, tablet, or desktop
+- Even when content is added or removed dynamically, the layout rearranges itself naturally, making it a good fit for real-time feeds and infinite-scroll environments
+
+### 4. Adaptability to image sizes
+
+- Images with irregular heights can still be stacked naturally, which is ideal for displaying portfolios/works/images of various sizes
+- It preserves each image's own ratio and size while achieving both space efficiency and visual polish
+
+### 5. UX and business impact
+
+- First impression: Masonry exposes a wide variety of content at a glance, boosting user interest and time spent
+- Browsing efficiency: Users can explore more content quickly, which improves conversion and return visits
+- Brand differentiation: It offers a visual style distinct from a card grid, improving brand recognition and trust
+
+Thanks to these strengths, the Masonry layout was the most effective way to meet the visual requirements of the portfolio service,
+and I designed the overall screen structure around it.
+
+## Initial Implementation
+
+In the early stage, I had a vague feeling that I could just do this with CSS.
+I had a [past experience](https://www.yujiseok.blog/music/playlists) of building something with pure CSS on my blog, so this time too I wanted to try the grid layout system and implement it with pure CSS.
+
+> I somehow got stubborn about proving CSS could do it..🤣
+
+### Trying it with grid
+
+Grid is a layout system that lets you build two-dimensional layouts, placing items in rows and columns.
+Here, you can use grid's `grid-row` property to specify an item's row position.
+This property lets an individual item span multiple rows, and you can use span to set how many rows it takes up.
+
+<GridMasonry />
+
+For simple layouts with no policies, there were no real problems,
+but once detailed policies came into play, such as **the number of columns per viewport**, **item sizes**, and **gaps**, the limits of a CSS implementation became clear.
+
+<GridMasonry item1={2} item2={1} text="A layout with mismatched heights" />
+
+### Why is the grid-row approach alone not enough for a Masonry layout?
+
+1. The limits of row-based placement
+
+   - With grid-row, you can only place things in units of "**rows (a sum of rows)**".
+     → Even if each card has a different height, it always has to share rows with the cards next to it
+     → As a result, some cards end up with unintended empty space, and Masonry's signature "**naturally interlocking stack**" becomes impossible.
+
+2. Item height is determined automatically
+
+   - If the row heights in a grid container are explicitly defined, each item's actual height is determined automatically by them.
+   - ```css title="grid-row.css"
+     .container {
+       display: grid;
+       grid-template-rows: 100px 200px 150px;
+     }
+
+     .item {
+       grid-row: span 2; /* 2 row 걸쳐 배치 */
+     }
+     ```
+
+     (With an explicit grid definition like the `CSS` code above, the height of `.item` is determined as the sum of 2 rows, `100px + 200px = 300px`.)
+
+     > An explicit grid is one where the developer clearly specifies the rows and columns, while an implicit grid is one where the browser decides the rows and columns automatically.
+
+3. No fine-grained control over individual item heights
+
+   - Even if you set a desired height on each item, the grid system's row heights and span rules take priority, so the actual placement can differ from what you intended.
+   - For example, if the height of the 3rd item in the misaligned layout above is set to `476px`, that entire row gets fixed to `476px`. Because of this, even if the 2nd item is set to `274px`, empty space appears and the layout goes out of alignment.
+
+For a simple demo or prototype stage, it was good enough to roughly imitate a Masonry layout, but it fell short of meeting the complex requirements of a real production service.
+So I accepted that building a Masonry-style layout with pure CSS alone was unrealistic, and reset my direction for the actual implementation.
+
+## What I Needed Before Implementing
+
+### Example policy
+
+<table>
+  <thead>
+    <tr>
+      <th>Viewport</th>
+      <th>{'~719px'}</th>
+      <th>{'720px~959px'}</th>
+      <th>{'960px~1279px'}</th>
+      <th>{'1280px~1727px'}</th>
+      <th>...</th>
+    </tr>
+
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Grid columns</b></td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td><b>Grid max-width</b></td>
+      <td></td>
+      <td>1120px</td>
+      <td>1120px</td>
+      <td>1688px</td>
+    </tr>
+    <tr>
+      <td><b>Grid min-width</b></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>1120px</td>
+    </tr>
+    <tr>
+      <td><b>Container min-width</b></td>
+      <td>320px</td>
+      <td>680px</td>
+      <td>890px</td>
+      <td>1120px</td>
+    </tr>
+    <tr>
+      <td><b>Container max-width</b></td>
+      <td>679px</td>
+      <td>889px</td>
+      <td>1119px</td>
+      <td>1495px</td>
+    </tr>
+    <tr>
+      <td><b>Grid gap x</b></td>
+      <td>12px</td>
+      <td>16px</td>
+      <td>16px</td>
+      <td>16px</td>
+    </tr>
+    <tr>
+      <td><b>Grid gap y</b></td>
+      <td>16px</td>
+      <td>18px</td>
+      <td>18px</td>
+      <td>20px</td>
+    </tr>
+    <tr>
+      <td><b>Item min-width</b></td>
+      <td>154px</td>
+      <td>216px</td>
+      <td>210.5px</td>
+      <td>240px</td>
+    </tr>
+    <tr>
+      <td><b>Item max-width</b></td>
+      <td></td>
+      <td>268px</td>
+      <td>268px</td>
+      <td>268px</td>
+    </tr>
+    <tr>
+      <td><b>Item min-height</b></td>
+      <td>60px</td>
+      <td>145px</td>
+      <td>145px</td>
+      <td>145px</td>
+    </tr>
+    <tr>
+      <td><b>Item max-height</b></td>
+      <td>274px</td>
+      <td>476px</td>
+      <td>476px</td>
+      <td>448px</td>
+    </tr>
+  </tbody>
+</table>
+
+In the real service, as the table above shows, complex policies are required: the number of columns per viewport, container width, item width, item height, and so on.
+
+### Finding a reference
+
+While researching references for implementing the Masonry layout policy, I judged that the structure of [Pinterest](https://www.pinterest.com) fit the service's requirements best, so I decided to build on it.
+
+<div className="flex flex-col items-center">
+  <Image
+    src="/images/how-to-implement-portfolio/pinterest-html.png"
+    width={680}
+    height={1024}
+    alt="Pinterest Masonry layout"
+  />
+  <small>Pinterest's HTML structure</small>
+</div>
+
+Pinterest calculates the x and y coordinates of each list item and places them dynamically using the CSS `transform` property.
+Our portfolio items also have to be placed according to their width and height, so I decided this was a good model to follow.
+
+After that, I listed out the values needed for placement.
+
+- **viewport**: The full browser width of the current user
+- **containerWidth**: The width of the parent container where the masonry sits
+- **pageType**: Likes page / Creator page / Main page
+- **policy**: A policy object per viewport
+- **columnWidth**: The width of a single column as actually rendered
+- **columnHeights**: The accumulated height of each column (used for placement)
+- **imageWidth/Height**: The original size of the image in a card
+- **centerOffset**: A value for centering the whole layout
+- **masonryContainerHeight**: The final height of the wrapper div
+
+Now that everything needed for the implementation is settled, let's write the logic for the actual layout placement.
+
+## The Actual Implementation
+
+### 1. Policy function (getPolicy)
+
+First, let's write the most important function, the one that decides which policy fits the current screen.
+
+```ts
+/**
+ * 현재 컨테이너 너비와 옵션에 따라 정책 반환
+ *
+ * @returns Masonry 정책
+ */
+const getPolicy = ({
+  viewport,
+  containerWidth,
+  isLikePage,
+  isCreatorPage,
+  isMobile,
+}: GetPolicyParams): MasonryPolicy => {
+  if (isLikePage && !isMobile) return MASONRY_POLICIES_LIKE.at(-1)!;
+
+  const policies = isLikePage ? MASONRY_POLICIES_LIKE : MASONRY_POLICIES;
+
+  // isCreatorPage면 containerWidth 기준
+  if (isCreatorPage && containerWidth) {
+    const matched = policies.find(
+      (policy) => containerWidth >= policy.containerMin && containerWidth <= policy.containerMax,
+    );
+    return matched || policies[0];
+  }
+
+  // 그 외에는 viewport 기준
+  const matched = policies.find((policy) => viewport <= policy.maxViewport);
+  return matched || policies.at(-1)!;
+};
+```
+
+This function returns a policy based on the page type and the container width.
+Since Masonry needs a different policy on each page (main, likes, creator detail), I made it return a policy depending on the conditions.
+
+1. **On the likes page**: On a desktop viewport (960px or more), return the last likes policy
+2. **On the creator page**: Find the policy based on the Masonry container width (`policy.containerMin ≤ containerWidth ≤ policy.containerMax`)
+3. **Otherwise, return the policy by viewport**: `viewport ≤ policy.maxViewport`
+
+### 2. Function for a single Masonry column width (getColumnWidth)
+
+Once the policy is decided, we calculate the width of an individual column according to that policy.
+
+```ts
+/**
+ * 정책과 컨테이너 너비로 컬럼 너비 계산
+ *
+ * @returns 개별 Masonry 아이템 컬럼 너비
+ */
+const getColumnWidth = ({ policy, containerWidth }: GetColumnWidthParams): number => {
+  const baseWidth = Math.min(containerWidth, policy.maxWidth);
+  const totalGap = policy.gapX * (policy.columns - 1);
+  const rawColumnWidth = (baseWidth - totalGap) / policy.columns;
+
+  return Math.min(Math.max(rawColumnWidth, policy.itemMinWidth), policy.itemMaxWidth);
+};
+
+```
+
+This function calculates the column width in the following order:
+
+1. **Base width**: Pick the smaller of the container width and the policy's max width
+2. **Gap space**: Calculate the total gap space between columns (`gapX × (columns - 1)`)
+   - Why the `- 1` on columns -> the last column has no gap after it
+3. **Raw column width**: (base width - total gap space) / number of columns
+4. **Final column width**: Clamp the raw width within the min/max width range
+
+### 3. Function for a single Masonry item height (getItemHeight)
+
+Once the column width is decided, we calculate each item's height from its image ratio.
+
+```ts
+/**
+ * 아이템의 첫 번째 asset의 이미지 비율로 높이 계산
+ *
+ * @returns 개별 Masonry 아이템 높이
+ */
+const getItemHeight = ({ item, policy, columnWidth }: GetItemHeightParams<TypePortfolio>): number => {
+  const firstAsset = item.items[0]?.asset;
+  const imageWidth = firstAsset?.imageWidth;
+  const imageHeight = firstAsset?.imageHeight;
+
+  if (!imageWidth || !imageHeight) return policy.itemMinHeight;
+
+  const scaledHeight = (imageHeight / imageWidth) * columnWidth;
+  return Math.max(policy.itemMinHeight, Math.min(scaledHeight, policy.itemMaxHeight));
+};
+```
+
+This function keeps the image's original ratio while calculating a height that fits the column width:
+
+1. **Extract the image size**: Get the image's original width and height from the first asset
+2. **Calculate the ratio**: Divide the image height by the width (aspect ratio), then multiply by the column width to get the new height
+   - Original width : original height = column width : X (the height we want)
+   - Example) 1000 : 800 = 200 : X → X = (800 × 200) / 1000 = 160
+3. **Clamp the range**: Cap the calculated height at the policy's max height, then compare it with the policy's min height and return the larger one
+
+### 4. Masonry layout calculation function (getMasonryLayout)
+
+Now we calculate the position and size of every item to produce the actual layout.
+
+```ts
+/**
+ * Masonry 레이아웃 계산
+ *
+ * @returns Masonry 레이아웃
+ */
+const getMasonryLayout = ({
+  items,
+  policy,
+  columnWidth,
+}: {
+  items: TypePortfolio[];
+  policy: MasonryPolicy;
+  columnWidth: number;
+}) => {
+  const { columns, gapX, gapY } = policy;
+  const columnHeights = Array(columns).fill(0);
+  const layoutItems: TypePortfolioMasonryItem<TypePortfolio>[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const height = getItemHeight({ item, policy, columnWidth });
+    const column = i % columns;
+    const top = columnHeights[column];
+    const left = column * (columnWidth + gapX);
+
+    layoutItems.push({
+      item,
+      masonry: { top, left, width: columnWidth, height, column },
+    });
+
+    columnHeights[column] += height + gapY;
+  }
+
+  const containerHeight = Math.max(...columnHeights) - gapY;
+  return { layoutItems, containerHeight };
+};
+```
+
+This function calculates the layout through the following steps:
+
+1. **Initialization**: Read the column count and gaps from the policy, and create an array to track each column's height and an array for the layout items
+2. **Iterate over items**: Go through each item and calculate its individual height (using the `getItemHeight` function above)
+3. **Position calculation**:
+   - Work out which column it goes in (`i % columns` places items in sequence)
+   - Use the column's current height as the top position
+   - Multiply the column index by the column width plus the x-axis gap to get the left position
+4. **Save layout info**: Store the calculated position and size on the layout item
+5. **Update column height**: Add the item's height and the y-axis gap to that column's height
+6. **Container height**: Return the tallest column height minus the y-axis gap as the height of the whole container
+
+### 5. Masonry layout options function (getMasonryOptions)
+
+Finally, we combine all the calculations and return the final Masonry options.
+
+```ts
+/**
+ * Masonry 옵션 반환
+ *
+ * @returns Masonry 레이아웃 옵션 (아이템 레이아웃, 컨테이너 높이, 컬럼 너비, 중앙 오프셋, 정책)
+ */
+export const getMasonryOptions = ({
+  containerWidth,
+  items,
+  listType,
+  isMobile,
+  viewport,
+}: MasonryOptionsParams<TypePortfolio>) => {
+  const isLikePage = listType === 'like';
+  const isCreatorPage = listType === 'creator';
+
+  const policy = getPolicy({
+    viewport,
+    containerWidth,
+    isLikePage,
+    isCreatorPage,
+    isMobile,
+  });
+
+  const columnWidth = getColumnWidth({ policy, containerWidth });
+  const totalGridWidth = policy.columns * columnWidth + policy.gapX * (policy.columns - 1);
+  const centerOffset = Math.max(0, (containerWidth - totalGridWidth) / 2);
+
+  const { layoutItems: masonryItems, containerHeight: masonryContainerHeight } = getMasonryLayout({
+    items,
+    policy,
+    columnWidth,
+  });
+
+  return {
+    masonryItems,
+    masonryContainerHeight,
+    columnWidth,
+    centerOffset,
+    policy,
+  };
+};
+```
+
+1. Check the page type
+2. Get the policy
+3. Calculate the column width
+4. Total grid width = (number of columns × column width) + (gap between columns × (number of columns - 1))
+5. Calculate the centering offset
+   - Take the difference between the container width and the total grid width, and halve it
+   - That gives the margin (offset) that puts the grid in the center
+6. Build the layout and return it
+
+Each function does its own job independently, yet they connect with one another to form the whole layout system.  
+In other words, if you call them in the order policy (getPolicy) → column width (getColumnWidth) → item height (getItemHeight) → layout (getMasonryLayout) → final options (getMasonryOptions),
+you get a flexible and scalable Masonry layout that handles complex per-viewport policies and images of all sizes.
+
+## Applying It to the Actual Component
+
+```tsx title="Masonry.tsx" {3-9}
+// ...
+const Masonry = ({ items, renderItem, className, listType = 'main', isMobile }: MasonryProps) => {
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = getMasonryOptions({
+    containerWidth,
+    items,
+    listType,
+    isMobile,
+    viewport,
+  });
+
+  return (
+    <div ref={containerRef} className={clsx(styles.container, className)} style={{ height: masonryContainerHeight }}>
+      {visibleItems.map(({ item, masonry }, index) => {
+        const style: React.CSSProperties = {
+          width: columnWidth,
+          height: Math.max(policy.itemMinHeight, Math.min(masonry.height, policy.itemMaxHeight)),
+          transform: `translate3d(${centerOffset + masonry.left}px, ${masonry.top}px, 0)`,
+        };
+        return renderItem({ item, masonry }, index, style);
+      })}
+    </div>
+  );
+};
+
+export default Masonry;
+```
+
+I use the values returned from `getMasonryOptions` to place the items in the actual Masonry component. I used the render prop pattern so the component can focus purely on layout placement.
+To position the items, I used the `translate3d` property.
+
+### Why did I use translate3d?
+
+`translate3d`, unlike the regular `translate` property, forcibly enables hardware acceleration. This brings the following performance benefits:
+
+1. **GPU-accelerated rendering**
+
+   - The browser promotes the element to its own layer and handles it directly on the GPU
+   - It uses the GPU's parallel processing power instead of the CPU for faster rendering
+
+2. **Minimized reflow**
+
+   - `translate3d` is a transform that doesn't affect layout
+   - Only that element moves, with no recalculation of other elements' positions
+
+3. **Smooth animation**
+
+   - Guarantees smooth 60fps animation
+   - Especially helpful in a Masonry layout where many items move at once
+   - Improves scroll performance
+
+4. **Memory efficiency**
+   - Stored as a texture in GPU memory, which reduces CPU memory usage
+   - Keeps performance consistent even in complex layouts
+
+In a Masonry layout, hundreds of items are each placed at a different position, so this kind of performance optimization directly affects the user experience.
+The finished component looks like this on screen:
+
+<Image
+  src="/images/how-to-implement-portfolio/main.png"
+  alt="Masonry Layout"
+  width={1000}
+  height={1000}
+/>
+
+> We now have a layout that's a perfect fit for showing off creators' portfolios. 🎨
+
+## Refactoring
+
+After the actual implementation, I found a few things to improve and went through a refactoring.
+
+### 1. Adding styles for image placement
+
+I added styles to handle the image positioning that the policy called for.
+The requirements were as follows:
+
+- Pinned to the top
+  - Since there are lots of images like illustrations, the starting point could end up placed too high
+  - For character illustrations, the head could get cut off
+- Centered
+- Crop the bottom
+  - If the image is taller than the existing policy's maxHeight, crop the bottom
+
+I wondered how best to handle this kind of image placement policy, and it turned out I could implement it simply with the `object-position` property.
+The object-position property lets you specify where the image is positioned.
+
+```css
+object-position: center top;
+```
+
+Applying this style to the image prevents heads from getting cut off.
+
+<div>
+  <div className="text-center">
+    <Image
+      src="/images/how-to-implement-portfolio/not-apply-position.png"
+      alt="not apply position"
+      width={1000}
+      height={1000}
+    />
+    <small>Head cut off before applying object-position</small>
+  </div>
+  <div className="text-center">
+    <Image
+      src="/images/how-to-implement-portfolio/apply-position.png"
+      alt="apply position"
+      width={1000}
+      height={1000}
+    />
+    <small>Head intact after applying object-position</small>
+  </div>
+</div>
+
+> Without that style, we might have ended up with a pretty gruesome portfolio service..? 🫣
+
+### 2. Applying virtual scrolling
+
+Virtual scrolling (windowing) is a performance optimization technique for efficiently rendering large amounts of data.
+The core idea is to render only the items within the screen the user is looking at (the viewport) in the DOM, and remove items that have scrolled out of view from the DOM.
+
+I had virtual scrolling in mind early in development, but at that point there wasn't much data, and I judged that building other features mattered more than adding virtual scrolling.
+Later, as the amount of data kept growing, I decided virtual scrolling was necessary and applied it.
+
+Rendering endlessly growing data entirely in the DOM causes performance degradation.
+For example, with 10,000 items, rendering all of them in the DOM actually creates 10,000 DOM elements.
+The more items there are, the more DOM nodes grow linearly, which can seriously hurt the browser's rendering performance and memory load.
+
+#### Required work and values
+
+Before applying virtual scrolling, I thought about how to approach the work and proceeded in the following steps.
+
+- Calculate the latest `scrollY` value and the **viewport height** as the scroll position changes
+- Based on that information, filter the array of items that should be shown on screen
+
+To carry out the work above smoothly, a few values are needed.
+
+1. `scrollY`
+
+   - The current window scroll position (window.scrollY)
+   - The basis for calculating which region to show the user
+
+2. `viewportHeight`
+
+   - The current viewport height (window.innerHeight)
+   - The actual height of the screen the user can see
+
+3. `bufferSize`
+
+   - Extra room to render above and below the screen
+   - To improve the experience during fast scrolling, it pre-renders items that haven't entered the screen yet
+   - Without a buffer, content might suddenly pop into view while scrolling
+
+4. `masonryItems`
+
+   - An array of layout info for all the items to actually draw on screen
+   - Info on where (top) each item sits and how much height it takes up
+
+5. Render range (`start`, `end`)
+
+   - The min/max region to actually render from the virtual list
+   - start = scrollY - bufferSize -> the start of the range of items to show, including the area just before what the user sees
+   - end = scrollY + viewportHeight + bufferSize -> the end of the range of items to show, including the buffer below the screen
+
+Based on these values, we go through the item array, and if an item's actual position (itemTop, itemBottom) falls within the range, we render it.
+
+<Image
+  src="/images/how-to-implement-portfolio/windowing.png"
+  alt="windowing layout items"
+  width={1000}
+  height={500}
+/>
+
+#### Implementing the functions
+
+Now let's look at the functions that do the actual work.
+
+```ts title="useWindowing.ts"
+import { useEffect, useRef, useState } from 'react';
+
+const useWindowing = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const viewportHeight = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      setScrollY(window.scrollY);
+      viewportHeight.current = window.innerHeight;
+      rafId.current = null;
+    };
+
+    const handleEvent = () => {
+      if (rafId.current === null) {
+        rafId.current = window.requestAnimationFrame(update);
+      }
+    };
+
+    update();
+
+    window.addEventListener('scroll', handleEvent, { passive: true });
+    window.addEventListener('resize', handleEvent);
+
+    return () => {
+      window.removeEventListener('scroll', handleEvent);
+      window.removeEventListener('resize', handleEvent);
+
+      if (rafId.current !== null) {
+        window.cancelAnimationFrame(rafId.current);
+      }
+    };
+  }, []);
+
+  return { scrollY, viewportHeight: viewportHeight.current, bufferSize: viewportHeight.current / 2 };
+};
+
+export default useWindowing;
+```
+
+What `useWindowing` does is update `scrollY` to its latest value on scroll events and calculate the viewport height.
+It returns `scrollY`, `viewportHeight`, and `bufferSize`, the values needed for virtual scrolling.
+
+The function that uses those values to filter the items to show on screen and calculate the render range looks like this.
+
+```ts
+const windowingLayoutItems = ({ masonryItems, scrollY, viewportHeight, bufferSize }: WindowingLayoutOptions) => {
+  const start = scrollY - bufferSize; // 앞 영역을 포함해 보여줄 아이템의 시작 범위
+  const end = scrollY + viewportHeight + bufferSize; // 아래 영역을 포함해 보여줄 아이템의 끝 범위
+
+  return masonryItems.filter((layout) => {
+    const itemTop = layout.masonry.top;
+    const itemBottom = itemTop + layout.masonry.height;
+    return itemBottom >= start && itemTop <= end;
+  });
+};
+```
+
+The `windowingLayoutItems` function filters items by their position info and returns the ones included in rendering.
+Here it uses the position info (top, height) that was already computed during the Masonry layout calculation.
+
+- `itemBottom >= start` -> the item's bottom is below the start of the screen range
+- `itemTop <= end` -> the item's top is above the end of the screen range
+
+If both conditions are true, we can treat the item as falling within the render range.
+Based on the range calculated this way, we go through masonryItems and return, as an array, the items whose actual position (itemTop, itemBottom) falls within the start~end range.
+
+```tsx title="Masonry.tsx"
+'use client';
+
+const Masonry = ({ items, renderItem, className, listType = 'main', isMobile }: MasonryProps) => {
+  // ... 생략
+
+  const viewport = useElementWidth();
+  const { scrollY, viewportHeight, bufferSize } = useWindowing();
+
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = getMasonryOptions({ containerWidth, items, listType, isMobile, viewport });
+
+  const visibleItems = windowingLayoutItems({ masonryItems, scrollY, viewportHeight, bufferSize });
+
+  return (
+    <div ref={containerRef} className={clsx(styles.container, className)} style={{ height: masonryContainerHeight }}>
+      {visibleItems.map(({ item, masonry }, index) => {
+        const style: React.CSSProperties = {
+          width: columnWidth,
+          height: Math.max(policy.itemMinHeight, Math.min(masonry.height, policy.itemMaxHeight)),
+          transform: `translate3d(${centerOffset + masonry.left}px, ${masonry.top}px, 0)`,
+        };
+        return renderItem({ item, masonry }, index, style);
+      })}
+    </div>
+  );
+};
+
+```
+
+With virtual scrolling applied like this, instead of rendering as many items in the DOM as there is data, we now render only the items visible in the viewport (60-70 on average).
+
+> Because each item's top value was already worked out in the Masonry layout calculation step,
+> I could pick out the items to show in the viewport efficiently by reusing that value,
+> with no extra position calculation when implementing virtual scrolling. ✌️
+
+#### Performance after the improvement
+
+<div className="text-center">
+  <Image
+    src="/images/how-to-implement-portfolio/vna.png"
+    alt="windowing performance"
+    width={1000}
+    height={1000}
+  />
+  <small>Without virtual scrolling</small>
+</div>
+<div className="text-center">
+  <Image
+    src="/images/how-to-implement-portfolio/va.png"
+    alt="windowing performance"
+    width={1000}
+    height={1000}
+  />
+  <small>With virtual scrolling</small>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Without virtual scrolling</th>
+      <th>With virtual scrolling</th>
+      <th>Reduction</th>
+      <th>Effect</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>Scripting</b>
+      </td>
+      <td>3.550ms</td>
+      <td>2.797ms</td>
+      <td>21.2%</td>
+      <td>Shorter JavaScript execution time</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Rendering</b>
+      </td>
+      <td>0.864ms</td>
+      <td>0.460ms</td>
+      <td>46.8%</td>
+      <td>Rendering cost cut dramatically</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Painting</b>
+      </td>
+      <td>0.339ms</td>
+      <td>0.174ms</td>
+      <td>48.7%</td>
+      <td>Painting load significantly reduced</td>
+    </tr>
+    <tr>
+      <td>
+        <b>System</b>
+      </td>
+      <td>1.804ms</td>
+      <td>1.217ms</td>
+      <td>32.5%</td>
+      <td>Better system-level performance</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Main Thread Time</b>
+      </td>
+      <td>8.839ms</td>
+      <td>7.737ms</td>
+      <td>12.5%</td>
+      <td>Lower main thread load</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>Long task metric</th>
+      <th>Without virtual scrolling</th>
+      <th>With virtual scrolling</th>
+      <th>Reduction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>Task duration</b>
+      </td>
+      <td>1.28s (self 36μs)</td>
+      <td>759.23ms (self 37μs)</td>
+      <td>40.7%</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Browser blocking time</b>
+      </td>
+      <td>1.23s</td>
+      <td>709.23ms</td>
+      <td>42.3%</td>
+    </tr>
+  </tbody>
+</table>
+
+By applying virtual scrolling like this, we avoid performance degradation even as the data grows, and can deliver a smooth user experience.
+
+### 3. Memoization
+
+Memoization is a technique that stores previously computed results and reuses them when the same input comes in again.
+This lets you avoid repeating the same calculation and improve performance.
+
+After applying virtual scrolling, the scrollY state changes on every scroll movement,
+which caused component rendering and the Masonry layout calculation to happen very frequently.
+To minimize the unnecessary computation and rendering this caused, I introduced memoization to optimize performance.
+
+#### Memoizing the `MasonryItem` component
+
+First, I used React's `memo` function to reduce how often the component renders.
+MasonryItem is the component that renders an individual item. It receives layout info as props and renders it.
+
+```tsx title="MasonryItem.tsx"
+import { memo } from 'react';
+
+const MasonryItem = memo(
+  ({ item, index, style, href, showLikeButton = true }) => {
+    // ...생략
+  },
+  (prev, next) =>
+    prev.item.id === next.item.id &&
+    prev.index === next.index &&
+    prev.href === next.href &&
+    prev.style.height === next.style.height &&
+    prev.style.width === next.style.width &&
+    prev.style.transform === next.style.transform
+);
+
+MasonryItem.displayName = 'MasonryItem';
+```
+
+After wrapping MasonryItem with React.memo, I customized the props comparison function (`arePropsEqual`) so that it only re-renders when the key properties (item.id, index, href, style) change.
+
+Applying memoization this way let me reduce the number of component renders. In numbers, it looks like this:
+
+<table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Before (ms)</th>
+      <th>After (ms)</th>
+      <th>Reduction (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Total measured range</td>
+      <td>12,795ms</td>
+      <td>12,079ms</td>
+      <td>5.6%</td>
+    </tr>
+    <tr>
+      <td>Experience</td>
+      <td>8,327ms</td>
+      <td>6,439ms</td>
+      <td>22.7%</td>
+    </tr>
+    <tr>
+      <td>System</td>
+      <td>1,966ms</td>
+      <td>1,212ms</td>
+      <td>38.4%</td>
+    </tr>
+    <tr>
+      <td>Scripting</td>
+      <td>998ms</td>
+      <td>576ms</td>
+      <td>42.3%</td>
+    </tr>
+    <tr>
+      <td>Main thread time</td>
+      <td>8,225.2ms</td>
+      <td>7,450.0ms</td>
+      <td>9.4%</td>
+    </tr>
+  </tbody>
+</table>
+
+With fewer unnecessary re-renders, JavaScript execution time (scripting) and main thread load (main thread time) both went down.
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/not-apply-memo-c.mp4" />
+  </video>
+  <figcaption className="text-center">Before memoization</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/apply-memo-c.mp4" />
+  </video>
+  <figcaption className="text-center">After memoization</figcaption>
+</figure>
+
+> You can see the render count drop by about 20 compared to without memoization. 🔁
+
+#### Memoizing the `getMasonryOptions` function
+
+The getMasonryOptions function plays the key role of deciding each item's position and the layout options when implementing the Masonry layout.
+The problem was that this function was being called inside the component every time the user scrolled (in other words, pointlessly often).
+
+In a Masonry layout, most options stay the same unless the horizontal width changes.
+But in the existing code, the getMasonryOptions function was called over and over whenever the scroll value (scrollY) changed, so layout calculations kept happening for no reason.
+Since this function iterates over the entire array to calculate layout options, the computation cost grows significantly as the data grows.
+For example, with 1,000 items, that meant 1,000 calculations repeated on every single scroll.
+
+To improve this, I applied memoization.
+
+```tsx title="Masonry.tsx"
+  const { masonryItems, masonryContainerHeight, columnWidth, centerOffset, policy } = useMemo(
+    () =>
+      getMasonryOptions({
+        containerWidth,
+        items,
+        listType,
+        isMobile,
+        viewport,
+      }),
+    [containerWidth, items, listType, isMobile, viewport],
+  );
+
+```
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/option-no.mp4" />
+  </video>
+  <figcaption className="text-center">Before memoization</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/option-memo.mp4" />
+  </video>
+  <figcaption className="text-center">After memoization</figcaption>
+</figure>
+
+Now the unnecessary recalculation caused by vertical scroll state changes is gone completely. The function only runs when the options actually change, which prevents wasted computation.
+
+### 4. Prefetching data with root margin
+
+To implement the Masonry layout, I applied infinite scroll using `IntersectionObserver`.
+Unlike a regular list, Masonry items stack in an irregular way.
+Because of this, if you put the observer target element at the very bottom to detect the intersection, each column stacks to a different height, which leaves empty gaps.
+To the user, this looks like the data is cut off, which can hurt the user experience.
+
+To solve this, I used the `rootMargin` property to prefetch data and load it ahead of time.
+I set rootMargin's bottom value high so that data is loaded in advance.
+
+```ts
+new IntersectionObserver(
+  (entries) => {
+    // ...생략
+  },
+  { rootMargin: '0px 0px 5000px 0px', threshold: 0.01 },
+);
+```
+
+This way, when the user scrolls down, the data is already loaded, which prevents the cut-off effect.
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/root-not.mp4" />
+  </video>
+  <figcaption className="text-center">Without rootMargin</figcaption>
+</figure>
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/how-to-implement-portfolio/root-apply.mp4" />
+  </video>
+  <figcaption className="text-center">With rootMargin</figcaption>
+</figure>
+
+## Wrapping Up
+
+Bringing a Masonry layout into the service myself was a continuous series of trial and error and deliberation, far more than I expected. I personally enjoy building UI and take pride in my UI implementation skills, but this Masonry layout was the most challenging and difficult task I've had.
+I had to think from many angles, from complex policy design to varied data to performance issues, and I learned a lot of new things through the trial and error.
+
+To respond effectively to different viewports and situations, going beyond a simple list, I kept trying various technical approaches,
+and as a result I was able to achieve improvements on many fronts: performance optimization, a better user experience, and better memory efficiency.
+In particular, the improvements were verified with actual numbers, which made the work all the more meaningful.
+
+This journey of adopting Masonry was a valuable experience where I could directly feel its benefits, not only in UI/UX differentiation but also in the service's scalability and maintainability.
+
+While developing, I was reminded once again that it's important not to stop at simply implementing features, but to think about improvements and act on them.
+Above all, as a developer, I realized how important it is to keep caring about the code I write, and to keep finding improvements and growing the code, like watering a plant.
+
+I also learned that it's right to optimize when there's a measurable performance problem, but that parts with a large structural impact should be considered at the initial design stage.

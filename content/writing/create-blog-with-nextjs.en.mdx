@@ -1,0 +1,437 @@
+export const metadata = {
+  "title": "Building a Personal Blog with Next.js",
+  "publishedAt": "2023-03-15",
+  "summary": "A walkthrough of how I built my blog with Next.",
+  "published": true
+}
+
+## Overview
+
+In my [previous post](https://www.yujiseok.blog/post/the-reason-why-i-made-my-own-blog), I wrote about why I built my own blog and the tech stack I chose.
+Building on that, I'd like to share my development experience and walk you through how I did it.
+
+## Process
+
+### 1. Creating a Next App
+
+The framework I chose for building the blog is **Next**.
+With **Static Rendering**, pages are `prerendered` on the server at build time, and I figured that would be a huge strength for a blog, so I went with it.
+
+> ✨ Beyond that, there are plenty of other **cool** perks any developer would love, like great SEO and file-system-based dynamic routing!
+
+When Next 13 was released, it added the `app` directory, which does a similar job to the existing `page` directory.
+The app directory works as a `Server Component` by default.
+
+I'm currently using version `13.2.4`. To use the app directory in Next 13, type the following command into your terminal.
+
+> As of 2023.12.20, I'm using version 14.0.3.
+
+```bash
+pnpm create next-app
+```
+
+Once the installation finishes, you'll end up with a directory structure like this.
+
+```bash
+📦app
+ ┣ 📂api
+ ┃ ┗ 📂hello
+ ┃ ┃ ┗ 📜route.ts
+ ┣ 📜favicon.ico
+ ┣ 📜globals.css
+ ┣ 📜layout.tsx
+ ┣ 📜page.module.css
+ ┗ 📜page.tsx
+```
+
+The files to pay attention to here are `layout.tsx` and `page.tsx`.
+
+- **layout.tsx**
+
+The layout file is in charge of the UI shared across routes.
+In other words, you can share the semantic tags needed to build a web page, like navbar, main, and footer, or apply common styles.
+
+> ✨ It's easiest to think of it as similar to sharing a layout through nested routing in react-router-dom!
+
+I use layout.tsx to draw the blog's basic layout. For styling, I used `TailwindCSS`.
+
+```tsx title="layout.tsx"
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="ko" className={`${pretendard.variable} font-sans`}>
+      <head />
+      <body className="mx-2 flex flex-col bg-slate-50 antialiased transition-colors delay-75 dark:bg-slate-800">
+        <ThemeProviders>
+          <Navbar />
+          <main className="mx-auto mt-14 w-full max-w-2xl px-4">
+            {children}
+          </main>
+          <Footer />
+        </ThemeProviders>
+        <AnalyticsWrapper />
+      </body>
+    </html>
+  );
+}
+```
+
+I add dark mode using the `ThemeProviders` component, implemented with the `next-themes` library.
+To use client hooks (useState, useEffect, etc.), you need to turn the ThemeProviders component into a `Client Component` with `"use client"`.
+
+```tsx title="components/providers"
+"use client";
+import { ThemeProvider } from "next-themes";
+
+function ThemeProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider enableSystem={true} attribute="class">
+      {children}
+    </ThemeProvider>
+  );
+}
+export default ThemeProviders;
+```
+
+- **page.tsx**
+
+The page file is in charge of the UI for a specific route.
+The `page.tsx` inside the app directory represents the main page UI.
+
+### 2. Managing content with contentlayer
+
+I decided not to use a separate database or a headless CMS, and to manage **mdx files** locally instead. To manage those mdx files efficiently, I use [contentlayer](https://www.contentlayer.dev/).
+`contentlayer` is an SDK that converts your content into **type-safe** JSON data and manages it for you.
+
+To use contentlayer, you need to set up a few things.
+
+1. Type the following command into your terminal to install contentlayer.
+
+```bash
+pnpm add contentlayer next-contentlayer
+```
+
+2. To use it with `next dev` or `next build`, modify your `next.config.js` file as follows.
+
+```js title="next.config.js"
+const { withContentlayer } = require("next-contentlayer");
+/** @type {import('next').NextConfig} */
+
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+};
+
+module.exports = withContentlayer(nextConfig);
+```
+
+3. To set up an alias for the directory where contentlayer generates its output, modify your `tsconfig.json` file as follows.
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "contentlayer/generated": ["./.contentlayer/generated"]
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.tsx", "**/*.ts", ".contentlayer/generated"]
+  //                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+```
+
+4. Set up the content schema.
+   Based on the schema you define, each piece of content is converted into its own data, and you can use that data inside your components.
+   Create a `contentlayer.config.ts` file and define the schema.
+
+Use the `defineDocumentType` API to define the properties and fields of an mdx file.
+
+```ts title="contentlayer.config.ts"
+import type { ComputedFields } from "contentlayer/source-files";
+import { defineDocumentType, makeSource } from "contentlayer/source-files";
+import readingTime from "reading-time";
+
+/** @type {import('contentlayer/source-files').ComputedFields} */
+const computedFields: ComputedFields = {
+  readingTime: { type: "json", resolve: (doc) => readingTime(doc.body.raw) },
+  slug: {
+    type: "string",
+    resolve: (doc) => doc._raw.flattenedPath,
+  },
+};
+
+export const Post = defineDocumentType(() => ({
+  name: "Post",
+  filePathPattern: `**/*.mdx`,
+  contentType: "mdx",
+  fields: {
+    title: {
+      type: "string",
+      required: true,
+    },
+    publishedAt: {
+      type: "string",
+      required: true,
+    },
+    summary: {
+      type: "string",
+      required: true,
+    },
+    image: {
+      type: "string",
+    },
+  },
+  computedFields,
+}));
+```
+
+- **name**: A required option. The type and data are represented by the name you define.
+- **filePathPattern**: Defines the path using glob patterns.
+- **contentType**: Defines the type of the content.
+- **computedFields**: A property for handling computed values.
+- **fields**: A property that defines the shape of a document's data, which means the `fronttmatter`.
+  Since title, publishedAt, and summary are essential, I set required to `true` for them.
+
+Use the `makeSource` API to hand the schema and settings over to contentlayer.
+
+```ts title="contentlayer.config.ts"
+// ...
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
+
+export default makeSource({
+  contentDirPath: "content",
+  documentTypes: [Post],
+  mdx: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypePrettyCode,
+        {
+          theme: "material-theme-palenight",
+        },
+      ],
+      [
+        rehypeAutolinkHeadings,
+        {
+          properties: {
+            className: ["anchor"],
+          },
+        },
+      ],
+    ],
+  },
+});
+```
+
+- **contentDirPath**: A required option. It's the root directory where your content lives.
+- **documentTypes**: A required option. It's the schema definition your project needs.
+  Pass in the `Post` we created above with defineDocumentType.
+- **mdx**: Add the plugins used to convert mdx files into `HTML`.
+  - **rehype-autolink-headings**: A plugin that automatically injects links into heading tags from `h1 ~ h6`.
+  - **rehype-slug**: A plugin that automatically adds an `id` to heading tags.
+  - **remark-gfm**: A plugin that converts content to follow GitHub Flavored Markdown syntax.
+  - **rehype-pretty-code**: A plugin for syntax highlighting.
+
+Through all of this, contentlayer automatically generates JSON data inside the `.contentlayer/generated` directory during build and dev.
+
+### 3. Using the JSON data generated by contentlayer
+
+#### Showing the list on the post page
+
+Next uses a bit of black magic called file-based routing. To create the post page, the route where you can browse the list of posts, first
+create a `post` folder inside the app directory. Then create a page.tsx inside that folder to handle the UI of the post page.
+
+```bash
+📦post
+ ┗ 📜page.tsx
+```
+
+Inside page.tsx, write the logic that renders each individual post.
+Here, you import the data (allPosts) of the documentTypes we defined under the name Post.
+
+allPosts is type-safe data typed as `Post[]`.
+
+```tsx
+import { allPosts } from "contentlayer/generated";
+
+/** Document types */
+export type Post = {
+  /** File path relative to `contentDirPath` */
+  _id: string;
+  _raw: Local.RawDocumentData;
+  type: "Post";
+  title: string;
+  publishedAt: string;
+  summary: string;
+  image?: string | undefined;
+  /** MDX file body */
+  body: MDX;
+  readingTime: json;
+  slug: string;
+};
+```
+
+> ✨ contentlayer declares the post type for you automatically.
+> It's an amazing convenience that takes the worry about types off your plate 😆
+
+I iterate over the imported data with the `.map` method and return `jsx`.
+To sort the posts newest first, I used the `.sort` method to sort in descending order.
+
+```tsx title="post/page.tsx"
+// ...
+
+function PostPage() {
+  return (
+    <section>
+      <h1 className="mb-6 text-3xl font-bold">Post</h1>
+
+      {allPosts
+        .sort((a, b) => {
+          if (new Date(a.publishedAt) > new Date(b.publishedAt)) return -1;
+
+          return 1;
+        })
+        .map((post) => (
+          <article key={post.slug} className="mb-6">
+            <Link href={`/post/${post.slug}`}>
+              <h2 className="text-xl font-semibold">{post.title}</h2>
+              <h6 className="font-light text-gray-500">{post.summary}</h6>
+              <p>
+                <small className="mr-2">{post.publishedAt}</small>
+              </p>
+            </Link>
+          </article>
+        ))}
+    </section>
+  );
+}
+export default PostPage;
+```
+
+#### Showing individual posts with dynamic routing
+
+For dynamic routing, create a `[slug]` folder inside the post folder.
+Then use the `generateStaticParams` API to get the params for routing.
+generateStaticParams returns an array of objects, and each object holds the info for an individual route.
+
+> ✨ generateStaticParams generates the routes at build time.
+
+The generated route params are passed down as `Props`.
+
+Use the `.find` method to look for the post in allPosts whose slug matches the slug received via Props.
+Then render the post you found on the screen.
+
+```tsx title="[slug]/page.tsx"
+export async function generateStaticParams() {
+  return allPosts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+const Post = ({ params }: { params: { slug: string } }) => {
+  const post = allPosts.find((post) => post.slug === params.slug);
+  if (!post) {
+    return false;
+  }
+
+  return (
+    <section>
+      <div className="mb-6">
+        <h1 className="mb-1 text-3xl font-semibold">
+          <Balancer>{post.title}</Balancer>
+        </h1>
+        <h4 className="font-light text-gray-700 dark:text-gray-400">
+          {post.summary}
+        </h4>
+        <p>
+          <small>{post.publishedAt}</small>{" "}
+          <small>{post.readingTime.text}</small>
+        </p>
+      </div>
+
+      <Mdx code={post.body.code} />
+    </section>
+  );
+};
+export default Post;
+```
+
+#### Rendering mdx with the useMDXComponent hook
+
+To render mdx, you need to use the `useMDXComponent` hook provided by contentlayer.
+
+It takes the `post.body.code` passed down from `[slug]/page.tsx` and lets you render the mdx.
+For the typography of the rendered mdx, I use `@tailwindcss/typography`, the [official plugin](https://tailwindcss.com/docs/typography-plugin) for TailwindCSS.
+Add `prose` to the `article` tag wrapping the mdx.
+
+```tsx title="components/mdx.tsx"
+// tailwind.config.js
+module.exports = {
+  // ...
+  plugins: [require("@tailwindcss/typography")],
+};
+
+import { useMDXComponent } from "next-contentlayer/hooks";
+
+// ...
+
+export function Mdx({ code }: { code: string }) {
+  const Component = useMDXComponent(code);
+
+  return (
+    <article className="prose dark:prose-invert prose-h1:text-2xl prose-a:break-all break-keep">
+      <Component components={{ ...components }} />
+    </article>
+  );
+}
+```
+
+### 4. Deployment and domain registration
+
+Actually, when I started building the blog, I bought the domain first.
+
+> ✨ Buying the domain really did motivate me, and the development went a lot better 😆
+
+For deployment, I used `Vercel`.
+The default `.vercel.app` domain Vercel provides is perfectly fine,
+but since this is my own personal blog, I decided to buy a domain and register it myself.
+I bought mine through [hosting.kr](https://www.hosting.kr/).
+
+To register the domain with Vercel, just change the nameservers at hosting.kr as shown below.
+
+> ns1.hosting.co.kr -> ns1.vercel-dns.com  
+> ns2.hosting.co.kr -> ns2.vercel-dns.com
+
+Once the domain registration is done, you can finally see your blog live on your very own domain!
+
+You can check out the finished code [here](https://github.com/yujiseok/yujiseok.blog).
+
+## Reflections
+
+Finally getting around to something I'd put off again and again gave me a huge sense of accomplishment.
+Building a space just for myself with my own hands meant a lot to me.
+Feeling the thrill of the code I wrote showing up on the screen, I was reminded once more that I'm someone who needs to be creating things.
+
+While building the blog, I often thought how lucky I am to have found the world of development and to be enjoying it.
+When I look back at myself when I first started studying development, with so much to learn and feeling powerless, stuck in a swamp of not knowing anything, and compare that to who I am now, I still have a long way to go, but
+it was moving to see how much I've grown.
+
+I'm going to use the experience of building this blog as fuel to enjoy development even more and keep growing! 🥰
+
+---
+
+#### Sources
+
+- https://beta.nextjs.org/docs/
+- https://www.npmjs.com/package/next-themes
+- https://www.contentlayer.dev/docs
+- https://github.com/leerob/leerob.io

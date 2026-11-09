@@ -1,0 +1,559 @@
+export const metadata = {
+  "title": "Retrospective on the JobKok Project: Finding Talent Quickly and Easily",
+  "publishedAt": "2023-05-20",
+  "summary": "A retrospective on the final project I worked on during my bootcamp.",
+  "published": true
+}
+
+<Image src="/images/jobkok/jobkok.png" width={768} height={400} alt="JobKok" />
+
+## Overview
+
+This post covers the final project I did with a partner company during my bootcamp: an introduction to the project, how it unfolded, the features I implemented, and my retrospective.
+
+## Project Introduction
+
+The final project was done in direct partnership with a company: we analyzed the company's **RFP** (Request for Proposal) and developed what it required.
+A total of four different companies took part, and the topic of the company I joined was **developing a recruitment process service**.
+
+Here's why I chose the recruitment process service:
+
+1. The company's attractive RFP
+2. A wide range of features and requirements
+3. My interest in recruitment process services
+
+> 💀 I had no idea back then.. what great chaos that RFP was about to bring us!
+
+After choosing a topic, the teams were formed. The final project wasn't just a collaboration between frontend and backend; the UI/UX track joined in as well.
+The team had 11 members in total: 4 frontend, 4 backend, and 3 UI/UX.
+
+When it came time to name the team, our team number was 3, so we went with <b>SSAK3 (싹쓰리)</b>.
+With the team name settled, the next hurdle was naming the service. There were several candidates, but we settled on the easiest one to understand and remember: <b>JobKok (잡콕)</b>.
+It literally means "pick up (a job) with a poke!" 
+
+> 😌 This project really let me experience the saying that people live up to their names.  
+> It was selected as the best project, and our retrospective was also selected as the best team's, so we literally swept everything. 🌊
+
+Development ran from March 3, 2023 to April 10, 2023.
+I served as the frontend team lead.
+
+## Project Progress
+
+When the project first started in early March, I thought a project lasting over a month would be fairly relaxed.
+The project went in this order: sync-up meeting with the partner company's representative - planning and project setup - design presentation - final presentation. Thinking it would be relaxed was truly a miscalculation on my part.
+
+### Sync-up Meeting with the Company Representative
+
+The sync-up meeting was a meeting between the partner company's representative and the team carrying out the company's requirements, and it lasted about an hour.
+
+I'd chosen the recruitment service because its RFP document was the most detailed and had the most features to implement.
+But once we actually met with the representative, not just me but every team member fell into confusion.
+The reasons were that the features in the RFP document had already all been completed, and that the representative said any feature would be fine.
+On top of that, we were told to develop with minimal features, and since the representative didn't know the development side, we couldn't get a definite answer on which technologies to use, which only made the confusion worse.
+
+This confusion wasn't limited to our team. Including ours, there were three teams working on the same topic, and in the meetings with all three, the company wanted different, inconsistent topics and requirements, and showed an uncooperative attitude.
+As a result, one of the other teams even had members drop out.
+
+It was in this situation that we moved on to planning.
+
+### Planning and Project Setup
+
+After the sync-up meeting I could feel the team's motivation plummet, and of course mine did too.
+But we couldn't give up, so we had to make a choice. The options were 1. develop only minimal features based on the company's RFP, or 2. do new planning and development based on the company's topic, a recruitment process service.
+Our team chose option 2.
+
+Starting the planning from scratch, there was no end to what we had to do: target selection, user flows, wireframes, and more.
+Honestly, even at that point I still wondered what we were supposed to build. But through continuous meetings and communication with my teammates,
+we settled on a direction: building a **service that automates the hiring process so business owners can focus on their business rather than on recruiting**.
+
+Settling the plan and direction took a total of 17 [meetings](https://www.notion.so/a8f7335d197544c3b727eef266302fae), and with so many people involved and planning from the ground up, it seems to have taken longer than expected.
+The more meetings piled up and dragged on, the closer we got to running out of whatever motivation we had left.
+Still, as the plan and direction came together, I could feel the project moving forward.
+
+But even after the plan was set, we couldn't jump straight into development. There was no design yet, and the plan itself wasn't unified.
+As so much time went into planning, the time left for development shrank drastically, and we started feeling the pressure of time.
+For the parts of the plan that weren't unified, we communicated with the team through **Figma** and aligned them.
+
+> 🎨 Endless thanks to our UI/UX members who worked so hard on the planning.
+
+Meanwhile, I did the frontend [initial setup](https://www.notion.so/5903db0b66ea477abe4b99245b2810bd).
+
+For conventions, we decided on code and Git-related ones (commits, issues, PRs).
+We used issue and PR templates to cut down on repetitive work as much as possible.
+We also tried to make the most of GitHub's features, including its Projects feature, to boost productivity.
+
+For the branching strategy, we adopted a `Git Flow` strategy: fork the `upstream` repository and create `feature` branches to work on.
+We deployed ahead of time with `Netlify` so we could check a preview before merging.
+
+Our tech stack was as follows. (It's quite similar to the [mini project](/post/fc-mini-project).)
+
+- **React (vite)**
+  - `vite` is a build tool made with [esbuild](https://esbuild.github.io/). `esbuild` is written in `Go`, so it's insanely fast.
+    It's more than 100 times faster than `webpack`. Instead of bundling all the JavaScript, `vite` uses `ES Module` and only swaps out the modules that changed. For that reason, I chose `vite` as the toolchain for faster productivity.
+- **TypeScript**
+  - I chose it for static typing, the productivity boost from `IDE` IntelliSense support, and to get more comfortable with TypeScript.
+- **TailwindCSS**
+  - `TailwindCSS` is a utility-class-based CSS framework. I chose it because you don't have to agonize over class names, and because it comes with an already-built design system.
+- **Redux-Toolkit**
+  - For this project I wanted to try other state management libraries (`Recoil`, `Zustand`), but I chose `Redux-Toolkit` since both I and my teammates were familiar with it.
+- **React-Query**
+  - I'd had a satisfying development experience managing server state with `React-Query` in previous projects, so I chose it.
+- **React-Hook-Form**
+  - Building recruitment forms requires forms and lots of input fields, so I chose it to manage forms efficiently.
+- **Zod**
+  - I chose it to make form validation easy with TypeScript.
+
+Once the plan was more or less finalized, we wrote the specifications needed for the features. With the backend team, we used a variety of tools like **Notion**, **Slack**, and **Gather Town** to understand each other's requirements and communicate.
+We started real development once rough design drafts began to come out, and by then the end of the project was right around the corner.
+
+> 🕰 Time raced ahead of me, scarily fast.
+
+### Design Presentation
+
+We went over the **feature specification** the frontend wrote and the <b>API docs (Postman docs)</b> the backend wrote to understand each side's requirements.
+Analyzing requirements by checking each other's documents really let us step on the gas for the project.
+
+From this point on, we decided it was hard to have everyone attend every meeting, so we switched to communication between the people in charge of each feature to minimize wasted time.
+But with only a few people involved, agenda items weren't being shared with everyone, so we made sure to share things through Slack as much as possible. And we tried to document as much as we could.
+
+Through this active sharing of opinions and documentation, we were able to prepare the [design presentation materials](https://docs.google.com/presentation/d/1aLFZDSz8ahGDoR-JSEv8qAg-DK9tbH4KOpobxgLRotE/edit#slide=id.p1) without a hitch.
+One backend teammate and I gave the design presentation, and the company representative told us that even someone like them, a complete outsider to development, could follow it.
+
+After going through these steps, we finally got to the feature implementation we'd wanted for so long.
+
+## Feature Implementation
+
+For features, we decided that each member would take on the features they wanted to build, divided by page, based on the planning document and design drafts.
+The pages and features I was responsible for are as follows.
+
+### Pages
+
+#### Main Page (Talent Management)
+
+I wanted to do the main page because I could build UI elements, and because it's the key page of the service, I was confident I could do it well.
+
+The talent management page is the main page of JobKok. It's what the service's target customers, business owners, see after logging in,
+and it handles viewing recruitment forms, browsing talent through a slider, and changing hiring stages with a Kanban board (Drag & Drop).
+It also had to handle three conditions: when there's no recruitment form, when a form exists but no talent is registered, and finally when both a form and talent exist.
+
+It was the page that took the most time and was the hardest during feature development, and what stands out most are the **condition handling** and the **Kanban board**.
+
+When I first handled the **conditions**, I tried to treat all three conditions above as separate ones.
+That tangled up the logic, and I remember running into errors from breaking the rules of hooks (calling hooks inside conditionals, declaring hooks after a return, etc.).
+But I realized it could be reduced to two conditions depending on whether a form exists, and that let me resolve these errors.
+
+The **Kanban board** was the most fun and also the hardest feature, and the reason it was hard was that the data format I needed was different from the format the server responded with.
+For the library, I used `react-beautiful-dnd`, developed by [Atlassian](https://www.atlassian.com), famous for Jira.
+
+> The [reason](https://github.com/kdt-final-3/jobkok-fe/issues/14#issuecomment-1476105537) I chose this library
+
+The Kanban board has three hiring stages as columns: document submission, interview, and final coordination. It lets you see the status at a glance and change the hiring stage.
+The data format I needed was as follows.
+
+```ts
+const base: IKanbanBase[] = [
+  { title: "서류제출", applicant: [] },
+  { title: "면접", applicant: [] },
+  { title: "최종조율", applicant: [] },
+];
+```
+
+In other words, I needed data where talent is mapped to each stage.
+
+But the data coming from the server was a list of all talent, along with data on talent for each stage, like below.
+
+```ts
+[
+  {
+    applyId: "1",
+    applyName: "홍길동",
+    applyPhone: "010-1111-1111",
+    applyEmail: "applyTest@test.com",
+    resumeContent: "저는 홍길동 입니다 !",
+    applyPortfolio: "https://portfolio.portfolio",
+    // ...
+  },
+  // ...
+];
+```
+
+I discussed the data with the backend teammate in charge, and they said it would be hard to send the data in the format I wanted.
+So I thought about how I could reshape this data into the format I wanted, and as a result I created a utility function called `talentByProcedure`.
+
+```ts title="utils/talentByProcedure.ts"
+import type { IKanbanBase, IResponse, ITalent } from "@/types/talent";
+
+const talentToProcedure = (
+  talentData: IResponse<null> | IResponse<ITalent[]> | undefined
+) => {
+  const base: IKanbanBase[] = [
+    { title: "서류제출", applicant: [] },
+    { title: "면접", applicant: [] },
+    { title: "최종조율", applicant: [] },
+  ];
+
+  talentData?.data
+    ?.filter((talent) => talent.failApply !== true)
+    .forEach((applicant) => {
+      const { applyProcedure } = applicant;
+      const match = base.find((item) => item.title === applyProcedure);
+      if (match) {
+        match.applicant.push(applicant);
+      }
+    });
+
+  return base;
+};
+
+export default talentToProcedure;
+```
+
+`talentToProcedure` takes the data from the server, finds the talent who haven't been rejected with the `filter` method, loops over each one with `forEach`, and inside that uses the `find` method to
+locate the matching item whose `title` equals `applyProcedure`, then adds the talent to the `applicant` array with the `push` method.
+With this utility function, I was able to reshape the data into the format I wanted. Using this function, I could build the Kanban board like this.
+
+```tsx title="components/Talent/Kanban.tsx"
+const Kanban = ({
+  allTalent,
+  likeMutate,
+}: {
+  allTalent: IResponse<null> | IResponse<ITalent[]> | undefined;
+  likeMutate: UseMutateFunction<any, unknown, string, unknown>;
+}) => {
+  if (allTalent?.data === null || allTalent === undefined) return <></>;
+
+  const kanbanData: IKanbanBase[] = talentToProcedure(allTalent);
+  const { onDragEnd } = useDnD(kanbanData);
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="flex items-start justify-between gap-6">
+        {kanbanData.map((kanban) => (
+          <Droppable key={kanban.title} droppableId={kanban.title}>
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className={`bg-gray-0 flex-1 rounded-xl border border-gray-50 pl-8 pr-4 ${
+                  kanban.applicant.length ? "pb-12" : "pb-0"
+                }`}
+              >
+                <KanbanHeader kanban={kanban} />
+
+                <div className="flex max-h-[54.75rem] flex-col gap-4 overflow-y-auto overflow-x-hidden py-1 pr-3">
+                  {kanban.applicant.map((talent: ITalent, index: number) => (
+                    <KanbanBoard
+                      key={talent.applyId}
+                      talent={talent}
+                      index={index}
+                      likeMutate={likeMutate}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              </div>
+            )}
+          </Droppable>
+        ))}
+      </div>
+    </DragDropContext>
+  );
+};
+export default Kanban;
+```
+
+Honestly, I built the Kanban board with help from the library and by referring to various examples.
+So I remember writing it without fully understanding it myself.
+Since it was such a fun feature, I want to read through the code again, understand it properly, and try to apply it in other projects.
+Also, I originally managed the Kanban with state and made the `useDnD` hook, but it turned out state wasn't needed, and I regret not converting it into a utility function.
+
+> About a month after the project ended, I'm reading the code I wrote while writing this retrospective, and there are definitely some parts where the intent is hard to make out.
+
+#### Talent Status
+
+Like the main page, the talent status page lets you manage and edit status through a Kanban board. In addition, it has a table where you can view talent by stage.
+The features I implemented were viewing talent by stage, pagination, editing a talent's hiring stage, and the talent bookmark (like) feature.
+
+For features like paging and filtering on the talent status page, I made full use of the `useSearchParams` hook from `react-router-dom` that I learned in the earlier [Wanted Pre-Onboarding](https://www.yujiseok.blog/post/wanted-pre-onboarding) course.
+
+```tsx title="TalentStatus/index.tsx"
+const [searchParams, setSearchParams] = useSearchParams();
+const applyProcedure = searchParams.get("applyProcedure") ?? "전체";
+
+const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  setSearchParams({
+    applyProcedure: e.target.value,
+  });
+};
+```
+
+First I call the `useSearchParams` hook and initialize the hiring stage with `searchParams.get("applyProcedure")`.
+Then I attached an event handler to the select box so that choosing an option filters via the query string.
+
+For paging, I made a `usePagination` hook and reused it across several pages.
+
+```ts title="hooks/usePagination.ts"
+import { useSearchParams } from "react-router-dom";
+import { LIMIT } from "@/constants/pagination";
+
+type HandleClick = (page: string) => void;
+
+interface UsePagination {
+  page: number;
+  offset: number;
+  handleClick: HandleClick;
+}
+
+const usePagination = (): UsePagination => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page =
+    !searchParams.get("page") || 0 ? 0 : Number(searchParams.get("page"));
+  const applyProcedure = searchParams.get("applyProcedure") ?? "전체";
+
+  const handleClick: HandleClick = (page) =>
+    setSearchParams({
+      applyProcedure,
+      page,
+    });
+  const offset = (page - 1 + 1) * LIMIT; // page가 1부터 시작하기에 page에 1을 더함
+
+  return { page, offset, handleClick };
+};
+```
+
+Just like the hiring stage filtering above, it relies on `useSearchParams`.
+What `usePagination` returns is `page`, the current page, `offset`, the index of the first post on each page, and the `handleClick` function that controls the page.
+
+Editing the hiring stage lets you change the stage of up to 4 talents at once. I had to implement logic that adds a talent when you click on them, and I remember feeling lost at first.
+I used `useState` to manage the selected talent as state.
+
+```tsx title="TalentStatus/index.tsx"
+// ...
+
+const [talent, setTalent] = useState<ITalent[]>([]);
+
+const handleTalentChange = (
+  e: React.ChangeEvent<HTMLInputElement>,
+  item: ITalent
+) => {
+  if (e.target.checked && talent.length < 4) {
+    setTalent((prev) => [...prev, item]);
+  } else {
+    const newTalent = [...talent].filter(
+      (talent) => talent.applyId !== item.applyId
+    );
+    e.target.checked = false;
+    setTalent(newTalent);
+  }
+};
+
+// ...
+
+const multipleEdit = async () => {
+  for (let i = 0; i < talent.length; i++) {
+    try {
+      const res = await editTalentByProcedure(talent[i].applyId, applyStep);
+      if (res.state === 200) {
+        allTalentRefetch();
+        talentByProcedureRefetch();
+        setTalent([]);
+        // alert("채용 단계 수정이 성공하였습니다.");
+      }
+    } catch (error) {
+      alert("채용 단계 수정이 실패하였습니다.");
+      return;
+    }
+  }
+};
+```
+
+After initializing the state, I created an event handler called `handleTalentChange` and implemented logic that allows adding up to 4 talents. To preserve immutability, I used the spread operator and the `filter` method.
+To change the stage of the added talents, I needed each talent's id value, but the API didn't accept an array, so I handled each talent with a `for` loop.
+I discussed this part with the backend teammate in charge too, but it was changed to accept an array very close to the deadline, so I couldn't reflect it in the project, and I also regret not implementing it with `useMutation`.
+
+For the bookmark feature, I made and used a `useLikeMutate` hook.
+
+```ts title="hooks/useLikeMutate.ts"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { assortLikeTalent } from "@/api/talentDetail";
+
+const useLikeMutate = () => {
+  const queryClient = useQueryClient();
+  const { mutate: likeMutate, data: mutateData } = useMutation(
+    assortLikeTalent,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries();
+      },
+    }
+  );
+
+  return { likeMutate };
+};
+export default useLikeMutate;
+```
+
+#### Rejected Talent Archive
+
+The rejected talent archive is a page with a UI and features very similar to the talent status page, and it handles viewing rejected talent and bookmarking.
+The overall implementation, using `useSearchParams`, `useLikeMutate`, and so on, is also much like the talent status page.
+
+### Features
+
+Separate from the features I built per page, the features I implemented on their own are as follows.
+
+#### User State Management with Redux-toolkit • Redux-persist
+
+Since user information is needed globally in the app, I implemented state management with `Redux-toolkit`.
+On login, I take the data from the server's response as the `payload` and update the state, and on logout I reset the user's state.
+
+```ts title="features/authSlice.ts"
+export const authSlice = createSlice({
+  initialState,
+  name: "auth",
+  reducers: {
+    signIn: (state, action: PayloadAction<InitialState>) => {
+      return { ...state, ...action.payload };
+    },
+    signOut: () => initialState,
+  },
+});
+```
+
+#### Redirect Handling Based on Token Presence
+
+For redirects, in `Layout.tsx`, which handles the shared layout, I used `useEffect` and the `useAppSelector` hook to get the user's information and handle things depending on whether a token exists.
+
+```tsx title=""
+const { auth } = useAppSelector((state) => state);
+
+useEffect(() => {
+  if (!auth.accessToken) {
+    navigate("/sign-in");
+  }
+}, [auth.accessToken]);
+```
+
+#### Implementing Authentication Logic with axios interceptors
+
+Almost every API except login required authentication. So I judged that injecting the token into the header every time would be inefficient, and decided to use `interceptors`.
+
+**Request interceptors**
+
+```ts title="api/axios.ts" {6}
+client.interceptors.request.use((config) => {
+  const { accessToken } = JSON.parse(localStorage.getItem("token") || "{}");
+  if (!config.headers) return config;
+
+  if (accessToken !== null) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+```
+
+Before a request is processed, I implemented logic that takes the token stored in local storage and injects it into the header.
+
+But when the authentication expired, the `400` error set up on the server side was thrown and the app blew up. To handle the `400` error and automate extending authentication,
+I added a response `interceptors`.
+
+**Response interceptors**
+
+```ts title="api/axios.ts"
+client.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const { refreshToken } = JSON.parse(localStorage.getItem("token") || "{}");
+    const { config, response } = error;
+    const status = response.status;
+    const originalConfig = config;
+
+    if (status === 400) {
+      try {
+        const res = await axios({
+          method: "POST",
+          url: `${config.baseURL}/auth/reissue`,
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        });
+
+        if (res.status === 200) {
+          localStorage.setItem("token", JSON.stringify(res.data.data));
+          originalConfig.headers.Authorization = `Bearer ${res.data.data.accessToken}`;
+          return axios(originalConfig);
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          return Promise.reject(error.response?.data);
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
+
+When the error status is `400`, I use `axios` rather than the `client` instance I created to send a `POST` request to the `/auth/reissue` endpoint and get a new access token and refresh token.
+If a normal response comes back from the server, I store the token data from the response in local storage. Then I inject the newly issued access token into the header to extend the authentication.
+If an error occurs, I made it `reject` the promise.
+
+## Problems I Ran Into
+
+<Image
+  src="/images/jobkok/husky.png"
+  width={768}
+  height={400}
+  alt="husky error"
+/>
+
+I deployed early and kept working on the project, but an [error](https://github.com/kdt-final-3/jobkok-fe/issues/28) came up with `husky`, which I'd installed to automate linting. I tried three ways to fix it.
+
+1. **Adding is-ci**
+
+   This is the fix from the [official docs](https://typicode.github.io/husky/guide.html#with-is-ci): install is-ci and add it to the script.
+   You add the dependency with `npm install is-ci --save-dev` and add `"prepare": "is-ci || husky install"` to the scripts. But the deployment error still wasn't fixed.
+
+2. **Adding a script command**
+
+   The fix was to add the command `"prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""` to the scripts, but as expected, the error remained.
+
+3. **Changing the prepare command to postinstall**
+
+   On a teammate's suggestion, I changed the command to `postinstall`, but it still wasn't fixed.
+
+Neither the fixes I found by googling nor my teammate's suggestion could stop the error. Then I took a closer look at `package.json` and found that `husky` hadn't been properly installed in `devDependencies`.
+With a "surely not" feeling, I reinstalled it. And you wouldn't believe it.... the error vanished without a trace. It was a truly deflating moment.
+
+> This error made me resolve to build a habit of checking that packages are installed properly.  
+> [How I solved it](https://github.com/kdt-final-3/jobkok-fe/pull/29#issuecomment-1482907246)
+
+## Project Retrospective ✨
+
+<Image src="/images/jobkok/final.jpeg" width={768} height={400} alt="JobKok" />
+
+Maybe because this was a project where I worked as hard as I could to do my very best, I'm left with a lot of regrets.
+In particular, I regret that planning took so much time that we didn't have nearly enough time to develop, so some features went unimplemented, and that I wrote some code under time pressure without fully understanding it.
+Now that it's over, I don't want to blame anyone, but when preparing company-partnered projects, I really felt that not only the companies but also the bootcamp side should be more thorough and run a vetting process before selecting companies.
+I hope that from the next course on, they'll think a little more about the weight of the word **final**.
+
+During this project, I think I tried to adopt and get used to as many tools as possible: **Notion • Slack • Gather Town** for communication, **Figma • Zeplin** for checking design and planning, **Postman** for communicating with the backend, and GitHub's various features (Projects, issues, templates) for managing the project.
+Communication was also the most active I remember compared to other projects. The frontend members gathered every day at 1 PM for a 10–15 minute daily scrum to share each person's progress and questions, and we also communicated actively with the people in charge of each feature. I think all this communication is what let us be selected as the best project.
+Communicating among 11 people really isn't easy, and I want to applaud us for wrapping up the project without anyone getting upset with each other.
+Of course I didn't understand everything about every part, but spending a little over a month together, I think I learned how to communicate with teammates from other parts.
+I want to thank our teammates who didn't give up and worked hard until the very end.
+
+Technically I grew quite a bit: I created and used **custom hooks**, which I'd never tried before, used React's `Suspense` to handle async declaratively, and got a step closer to **TypeScript** and **authentication**.
+There's a lot I regret too, and the biggest is that I developed assuming only the optimistic scenario and handled errors poorly. It's something I always feel in projects and development: I don't think I think deeply enough about errors and edge cases.
+Isn't this basically a kind of safety complacency? I need to study more so I get used to handling exceptions.
+
+I think I learned and grew a lot through the final project. I came to realize that deploying a single service is much harder than I thought.
+Thinking about how many meetings and how much communication it takes to produce a single service, I newly feel how impressive the services senior developers have shipped are.
+
+I shouldn't stop here; I need to keep working harder to become a great senior developer.
+
+---
+
+- [Project repository](https://github.com/yujiseok/jobkok)
+- [Notion](https://www.notion.so/3-e6ecfb1d3143440f9afa58481929ab5a)

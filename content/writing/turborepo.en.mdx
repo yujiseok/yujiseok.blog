@@ -1,0 +1,331 @@
+export const metadata = {
+  "title": "Adopting Turborepo Remote Cache",
+  "publishedAt": "2026-03-10",
+  "summary": "Solving the limits of GitHub Actions caching with Remote Cache",
+  "published": true
+}
+
+## Overview
+
+CI builds in our monorepo had been getting slower and slower.
+As packages piled up and more apps were added, I spent more and more time zoning out waiting for the build to finish after opening a single PR.
+
+We were already using Turborepo, and we were using `actions/cache` to cache the `.turbo` directory.
+But the cache didn't work as well as I'd hoped. Even a rebase wiped it out, and branches couldn't share caches with each other.
+
+In the end I set up Turborepo's Remote Cache myself, and here's a write-up of how that went.
+
+---
+
+## A Quick Recap of Turborepo Caching
+
+The core idea of Turborepo is **never doing the same work twice**.
+It hashes each task's inputs (source files, environment variables, dependencies) to make a cache key, and if the inputs are identical, it skips execution and restores the previous output as-is.
+
+```
+turbo run build
+  → 해시 계산: abc123def
+  → 캐시 확인: .turbo/cache/abc123def.tar.zst
+  → HIT → 빌드 스킵, 결과물 복원 ✅
+```
+
+The hash is split into a **Global Hash** and a **Task Hash**, and if either one changes, it's a cache MISS.
+
+- **Global Hash** — `turbo.json` settings, the root lockfile, `globalDependencies`, `globalEnv`
+- **Task Hash** — the package's source files, `package.json`, `env` environment variables, and the hashes of dependent packages
+
+The important point here is that the hash is based on **the actual file contents**, not the commit SHA.
+You can make 100 commits, and if the code hasn't changed, it's still a cache HIT.
+
+Locally, `.turbo/cache` sticks around, so this caching works nicely.
+CI was the problem.
+
+---
+
+## Why actions/cache Wasn't Enough
+
+GitHub Actions runners start from a clean environment on every run.
+There's no `.turbo/cache` from the previous build, so everything has to be built from scratch each time.
+
+So we used `actions/cache` to cache the `.turbo` directory.
+
+```yaml title=".github/workflows/deploy.yml"
+- name: Cache turbo build setup
+  uses: actions/cache@v4
+  with:
+    path: .turbo
+    key: ${{ runner.os }}-turbo-${{ github.sha }}
+    restore-keys: |
+      ${{ runner.os }}-turbo-
+```
+
+When the cache key matches, `.turbo` gets restored and Turborepo uses it as a local cache.
+
+<Image
+  src="/images/turborepo/actions-cache-miss.png"
+  width={768}
+  height={100}
+  alt="actions/cache cache MISS"
+/>
+
+<Image
+  src="/images/turborepo/actions-cache-build.png"
+  width={768}
+  height={100}
+  alt="actions/cache cache HIT"
+/>
+
+At a glance it seemed to work fine, but in practice cache MISSes happened more often than I expected.
+When I dug into the cause, I found that `actions/cache` has some structural limitations.
+
+- **Cache key based on the commit SHA** — even if you don't change any code, just doing an `amend` or `rebase` changes the SHA and breaks the cache
+- **Isolated per branch** — the cache from feature branch A can't be used on feature branch B
+- **Size limit** — 10GB on GitHub's free tier, and entries are automatically deleted after 7 days without use
+
+Put together, you get this mismatch:
+
+```
+actions/cache:  f(runner.os, github.sha)       ← 커밋 ID 기반
+Turborepo 해시:  f(파일 내용, env, deps, config)  ← 실제 내용 기반
+```
+
+No matter how smartly Turborepo calculates its hash, it's pointless if the cache storage itself is isolated per commit.
+To fix this at the root, we needed Turborepo's **Remote Cache**.
+
+---
+
+## Switching to Remote Cache
+
+Remote Cache stores cache artifacts on a remote server, so anything with the same hash can be reused regardless of branch or environment.
+
+Turborepo officially offers Vercel Remote Cache, but we were already running our services on GCP.
+Rather than creating a new dependency on Vercel, I chose to self-host it inside our existing infrastructure.
+I could also put the cache server in the Seoul region (`asia-northeast3`), which keeps latency to the CI runners as low as possible.
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>`actions/cache`</th>
+      <th>Remote Cache</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>Cache scope</b>
+      </td>
+      <td>Isolated per branch</td>
+      <td>Shared across the whole team</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Cache key</b>
+      </td>
+      <td>Commit SHA (managed manually)</td>
+      <td>Source hash (calculated automatically)</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Sharing across teams</b>
+      </td>
+      <td>Not possible</td>
+      <td>Possible</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Local integration</b>
+      </td>
+      <td>Not possible</td>
+      <td>Possible</td>
+    </tr>
+    <tr>
+      <td>
+        <b>Setup complexity</b>
+      </td>
+      <td>Low</td>
+      <td>High (requires setting up infrastructure)</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## Implementation
+
+Turborepo's Remote Cache API is simpler than you might think.
+`GET /v8/artifacts/:hash` to download, `PUT /v8/artifacts/:hash` to upload.
+Every request includes an `Authorization: Bearer {TURBO_TOKEN}` header, and the server handles authentication with that token.
+
+Following this spec, I built the cache server myself on Cloud Run and stored the artifacts in a GCS bucket.
+
+```
+GitHub Actions (CI)
+    │  TURBO_TOKEN, TURBO_TEAM, TURBO_API
+    ▼
+Cloud Run (캐시 서버)
+    ▼
+GCS 버킷 (coloso-turbo-cache)
+```
+
+Here's a quick summary of the steps:
+
+1. Create a GCS bucket (Seoul region)
+2. Deploy the cache server to Cloud Run
+3. Set Cloud Run to public access — the Turbo CLI's token isn't an IAM token, so I opened up Cloud Run-level authentication and validate the token inside the server
+4. Add environment variables to the GitHub Actions workflow
+
+```yaml title=".github/workflows/deploy.yml"
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: my-team
+  TURBO_API: ${{ secrets.TURBO_REMOTE_CACHE_URL }}
+```
+
+<Callout>
+  The `TURBO_TOKEN` in GitHub Secrets and the authentication token on the Cloud
+  Run cache server must be exactly the same value.
+</Callout>
+
+Once you've set all this up, it switches to the `Remote caching enabled` state.
+
+<Image
+  src="/images/turborepo/remote-cache-hit.png"
+  width={768}
+  height={200}
+  alt="After applying Remote Cache — 5 cached, FULL TURBO in 6.5s"
+/>
+
+---
+
+## Troubleshooting
+
+The implementation itself wasn't hard, but a few unexpected things ate up some time.
+
+**Apple Silicon + Docker** — The Docker image I built locally spat out `exec format error` on Cloud Run. Apple Silicon builds for `linux/arm64` by default, but Cloud Run needs `linux/amd64`. Specifying `--platform linux/amd64` fixes it.
+
+**Cloud Run authentication** — Cloud Run has IAM authentication on by default. The `TURBO_TOKEN` sent by the Turbo CLI isn't an IAM token, so I got a 401. I gave `allUsers` the `roles/run.invoker` role to switch to public access, and handled security with token validation inside the server.
+
+**413 Payload Too Large** — This one threw me for a bit. Cloud Run's HTTP/1.1 has a 32MB limit per request, and the Next.js build output blew past it with ease. Enabling HTTP/2 with the `--use-http2` option fixed it right away.
+
+---
+
+## Boosting the Cache Hit Rate
+
+Attaching Remote Cache isn't the end of the story. How well you set up `turbo.json` makes a big difference in the hit rate.
+
+The change that paid off the most for us was **trimming down globalEnv**.
+We used to have 8 variables crammed into `globalEnv`, but only two, `NODE_ENV` and `D1_ENV`, were actually needed globally. The rest only affect the build, so I moved them into each task's `env`.
+
+```jsonc title="turbo.json"
+// 개선 전
+{
+  "globalEnv": [
+    "D1_ENV", "NODE_ENV", "ASSET_URL", "USE_DYNAMIC_PORTS",
+    "NEXT_PHASE", "FLIPT_URL", "FLIPT_API_TOKEN", "FEATURE_FLAG_SIDEBAR_ENABLED"
+  ]
+}
+
+// 개선 후
+{
+  "globalEnv": ["NODE_ENV", "D1_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": ["ASSET_URL", "USE_DYNAMIC_PORTS", "NEXT_PHASE"],
+      "inputs": ["src/**", "app/**", "components/**", "lib/**",
+                 "next.config.*", "tsconfig.json", "tailwind.config.*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx}", "eslint.config.*"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.*", "tsconfig.json"],
+      "outputs": []
+    }
+  }
+}
+```
+
+With this, the problem where changing just `ASSET_URL` blew away the lint/test caches too is gone.
+And thanks to specifying `inputs`, editing the README no longer triggers a build.
+
+Also, since a monorepo mixes packages with different build tools, I created a `turbo.json` per package and overrode `inputs`/`outputs`.
+
+```jsonc title="apps/my-app/turbo.json (Next.js)"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["app/**", "components/**", "hooks/**", "lib/**", "styles/**"],
+      "outputs": [".next/**", "!.next/cache/**"],
+    },
+  },
+}
+```
+
+```jsonc title="apps/backoffice/turbo.json (Vite)"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["client/**", "server/**", "scripts/**"],
+      "outputs": ["dist/**", "dist-api/**"],
+    },
+  },
+}
+```
+
+```jsonc title="packages/ui/turbo.json"
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["src/**", "tsconfig.json", "tsdown.config.ts"],
+      "outputs": ["dist/**"],
+    },
+  },
+}
+```
+
+If a Vite app has `.next/**` outputs configured, it just piles up meaningless cache, so getting even these details right noticeably improves the hit rate.
+
+---
+
+## You Can Use It Locally Too
+
+Remote Cache isn't just for CI.
+Put the server URL in `.turbo/config.json` and set only `TURBO_TOKEN`, and you can use the cache built in CI right on your local machine.
+
+```json title=".turbo/config.json"
+{ "teamId": "my-team", "apiUrl": "<TURBO_REMOTE_CACHE_URL>" }
+```
+
+A package cache built by teammate A can be reused by teammate B, and the `main` branch's CI cache can be used for local development on a feature branch.
+
+<Callout>
+  If the environment variables declared in `globalEnv` differ between CI and
+  local, the hash changes and you get a cache MISS.
+</Callout>
+
+---
+
+## Final Thoughts
+
+Since switching from `actions/cache` to Remote Cache, the problem of full builds running just because of a rebase has completely disappeared.
+After cleaning up `globalEnv`, specifying `inputs`, and adding per-package overrides, the cache hit rate shot up.
+
+There's a lot to configure, admittedly. Cloud Run, the GCS bucket, and authentication all need attention.
+But once it's set up, cache sharing across branches and teammates just happens automatically, so it was definitely a worthwhile investment.
+
+Until not long ago I was a bit skeptical, feeling like AI was taking the fun out of development, but lately my mind has changed. For this project too, I was able to move quickly with [Claude Code](https://claude.ai/claude-code), from analyzing the Remote Cache API spec to configuring Cloud Run and optimizing `turbo.json`. Something I'd have struggled with on my own, I can now get done faster, and I can really feel it.
+
+---
+
+References
+
+- [Turborepo official docs](https://turborepo.dev/docs)
+- [Setting up Remote Cache in GitHub Actions](https://turborepo.dev/docs/guides/ci-vendors/github-actions)

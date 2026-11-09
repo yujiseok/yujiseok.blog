@@ -1,0 +1,219 @@
+export const metadata = {
+  "title": "Building sitemap.xml and robots.txt with Next.js",
+  "publishedAt": "2023-09-12",
+  "summary": "It's really easy to make.",
+  "published": true
+}
+
+## Overview
+
+I'll show you how to use the APIs that Next provides to build the sitemap and robots files you need for search engine optimization, and it's really easy.
+
+## The old way
+
+### sitemap.xml
+
+For [my previous approach](https://yujiseok.blog/post/how-to-improve-seo#%EC%82%AC%EC%9D%B4%ED%8A%B8%EB%A7%B5), I wrote code that used the `fs` module from `node` to read the mdx files dynamically and generate the sitemap at build time.
+Since the code that generates the sitemap was written in TypeScript, I had to go through the hassle of installing the `ts-node` package and creating a `tsconfig.node.json` file just to run it in a `node` environment.
+
+```ts title="lib/sitemap.ts"
+import fs from "fs";
+
+const getDate = new Date().toISOString();
+
+function createSiteMap() {
+  const path = process.cwd();
+
+  const allPosts = fs.readdirSync(`${path}/content`);
+  const slugs = allPosts.map((post) => post.replace(".mdx", ""));
+
+  const postUrls = slugs
+    .map(
+      (slug) => `<url>
+        <loc>https://www.yujiseok.blog/post/${slug}</loc>
+        <lastmod>${getDate}</lastmod>
+      </url>`
+    )
+    .join("");
+
+  const generatedSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
+      http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+    >
+      <url>
+        <loc>https://www.yujiseok.blog/</loc>
+      </url>
+      <url>
+        <loc>https://www.yujiseok.blog/about</loc>
+      </url>
+      <url>
+        <loc>https://www.yujiseok.blog/post</loc>
+      </url>
+      ${postUrls}
+    </urlset> `;
+
+  fs.writeFileSync("public/sitemap.xml", generatedSitemap, "utf-8");
+}
+
+createSiteMap();
+```
+
+### robots.txt
+
+Unlike the dynamically generated sitemap, robots.txt could just be a static file placed inside the `public` folder.
+
+> 💡 Both of these approaches work just fine, of course. But I felt that using the [API](https://nextjs.org/docs/app/api-reference/file-conventions/metadata) that Next provides out of the box was simpler and more in line with how Next is meant to be used,
+> so I decided to apply it to my blog.
+
+## Building with the APIs Next provides
+
+> 💡 Note that every file has to live inside the `app` directory.
+
+### sitemap.xml
+
+Next gives you two ways to generate a sitemap.
+
+#### 1. Static `sitemap.xml`
+
+The static approach is exactly what it sounds like: you just create the file by hand, like this.
+
+```xml title="app/sitemap.xml"
+<urlset
+	xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url>
+		<loc>https://www.yujiseok.blog</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/post</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/about</loc>
+		<lastmod>2023-09-12</lastmod>
+	</url>
+	<url>
+		<loc>https://www.yujiseok.blog/post/create-blog-with-nextjs</loc>
+		<lastmod>2023-03-15</lastmod>
+	</url>
+  <!-- ... -->
+</urlset>
+```
+
+The downside of the static approach is that you have to add an entry by hand every time a new page is created.
+
+#### 2. Dynamic `sitemap.xml`
+
+To avoid adding entries by hand each time, add a `sitemap.ts` file and `export` a function that returns a `Sitemap`.
+
+```ts title="metadata-interface.d.ts"
+type Sitemap = Array<{
+  url: string;
+  lastModified?: string | Date;
+  changeFrequency?:
+    | "always"
+    | "hourly"
+    | "daily"
+    | "weekly"
+    | "monthly"
+    | "yearly"
+    | "never";
+  priority?: number;
+}>;
+```
+
+```ts title="app/sitemap.ts"
+import { allPosts } from "contentlayer/generated";
+import type { MetadataRoute } from "next";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const posts = allPosts.map((post) => ({
+    url: `https://www.yujiseok.blog/post/${post.slug}`,
+    lastModified: post.publishedAt,
+  }));
+
+  const routes = ["", "/post", "/about"].map((route) => ({
+    url: `https://www.yujiseok.blog${route}`,
+    lastModified: new Date().toISOString().split("T")[0],
+  }));
+
+  return [...routes, ...posts];
+}
+```
+
+I manage my mdx content with [contentlayer](https://contentlayer.dev), so I start by loading all the posts.
+Then I loop over them with the `map` method and build an array (`posts`) that matches the sitemap format and the `Sitemap` type.
+
+I also need sitemap entries for each route, so I create an array of routes and loop over it with `map` in the same way to build another array (`routes`).
+
+Finally, I merge the two new arrays into one with the spread operator and return it.
+
+> 👀 You can see at a glance that it's much more concise than the old approach.
+
+### robots.txt
+
+robots also comes with two approaches.
+
+#### 1. Static `robots.txt`
+
+```txt title="app/robots.txt"
+User-Agent: *
+Allow: /
+
+Host: https://yujiseok.blog
+Sitemap: https://yujiseok.blog/sitemap.xml
+```
+
+#### 2. Dynamic `robots.txt`
+
+To generate robots, add a `robots.ts` file and `export` a function that returns a `Robots` object.
+
+```ts title="metadata-interface.d.ts"
+type Robots = {
+  rules:
+    | {
+        userAgent?: string | string[];
+        allow?: string | string[];
+        disallow?: string | string[];
+        crawlDelay?: number;
+      }
+    | Array<{
+        userAgent: string | string[];
+        allow?: string | string[];
+        disallow?: string | string[];
+        crawlDelay?: number;
+      }>;
+  sitemap?: string | string[];
+  host?: string;
+};
+```
+
+```ts title="app/robots.ts"
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: "*",
+      allow: "/",
+    },
+    sitemap: "https://yujiseok.blog/sitemap.xml",
+    host: "https://yujiseok.blog",
+  };
+}
+```
+
+As you can see, with the APIs Next provides, you can generate the files you need for search engine optimization really easily.
+
+> https://www.yujiseok.blog/sitemap.xml  
+> https://www.yujiseok.blog/robots.txt  
+> You can check out the **sitemap.xml** and **robots.txt** at the links above.
+
+---
+
+#### Sources
+
+- https://nextjs.org/docs/app/api-reference/file-conventions/metadata

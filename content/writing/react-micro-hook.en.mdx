@@ -1,0 +1,256 @@
+export const metadata = {
+  "title": "Micro State Management with React Hooks",
+  "publishedAt": "2024-11-24",
+  "summary": "A write-up of what I learned from reading a book.",
+  "published": true
+}
+
+# Traditional State Management and React Hooks
+
+Traditional state management means using a state management framework (`Redux/toolkit`, `MobX`, etc.) to manage state according to your needs.
+
+Once the basic state hooks (`useState`, `useReducer`, etc.) became available inside React, logic could be reused and kept lightweight.
+As a result, **micro state management** with hooks became possible.
+
+React already provides plenty of features for controlling local state,
+but global state is trickier to handle.
+
+> 💡 Why is global state management so hard?
+>
+> I wonder if React's one-way data flow is what makes global state management difficult.
+> Data flows from top to bottom (parent to child), so the deeper the hierarchy gets, the harder it is to pass data down and to trace where that data goes.
+
+# What Is Micro State Management?
+
+In React, state is the data that represents your UI.
+State changes over time, and React handles re-rendering the components along with that state.
+
+You can manage state with a traditional, centralized state management library,
+but the code you need for state management gets bloated. With React hooks, you can provide a solution tailored to the purpose at hand.
+Libraries that offer purpose-built state management solutions include `React Hook Form` for form management and `TanStack Query` for async state management.
+
+Managing state that has a specific purpose and can still be used broadly like this is called **micro state management**.
+
+## Characteristics of Micro State Management
+
+- Lightweight: A general-purpose state management approach should be implemented lightly.
+- Flexibility: Developers should be able to pick the approach that fits their requirements. → freedom
+- Emphasis on locality: Based on the component model, it stresses isolation and reuse between components.
+
+In other words, micro state management is like an open-world game that gives developers a lot of freedom.
+
+Essential elements:
+
+- Reading state
+- Writing state
+- State-based rendering
+
+Additional elements:
+
+- Re-render optimization
+- Interaction with other systems
+- Async support
+- Derived state
+- Simple syntax → low learning curve
+
+# Using Local State
+
+React components form a tree structure, so creating local state is easy.
+Create local state → use it in the component and its child components → you get the benefits of reuse and locality.
+
+When state is used only inside a component and doesn't affect other components, we can say it is contained.
+
+There are two approaches you can adopt to use local state effectively.
+
+## Lifting State Up
+
+This is the approach of creating state in a parent component and passing it down to child components.
+Since the state has been lifted up to the parent, every child element below it re-renders when the state changes.
+
+→ You use it not for individual use of state, but to share state from a parent component to the layers below.
+
+## Lifting Content Up
+
+If there are components that don't depend on the state, they don't need to re-render.
+This approach passes those components, which don't depend on re-rendering, through the `children` prop.
+
+> 💡 Why doesn't the `children` prop re-render when the parent's state changes?
+>
+> - Looking at the actual hierarchy, the children prop is part of the tree as a parent-child relationship, but it simply passes along the result of a render
+> - The child isn't mounted until the parent has finished mounting
+> - The child component isn't evaluated until it is actually placed in the tree
+> - I wonder if this is similar to creating a provider so you can use a server component inside a client component. Something to think about
+
+# Using Global State
+
+## What Is Global State?
+
+State that doesn't belong to a single component and is shared by many components is called global state.
+
+There are two situations where we use global state.
+
+- When prop drilling happens
+- When using state that already exists outside React → browser storage, server data, and other information obtained without depending on React
+
+## Global State and Singletons
+
+To manage local state, we use React's `useState` and `useReducer` hooks.
+
+Global state is state used by multiple components that sit far apart in the hierarchy.
+Global state doesn't have to be a **singleton**; it simply means shared state used by multiple components.
+
+> 📦 Singleton?
+> The singleton pattern is like a toy box. A toy box works like this:
+>
+> 1. There's only one box: No matter how many boxes you ask for, you always get the same one.
+> 2. Everyone shares the same box: You, me, and everyone else get the very same box.
+> 3. What's in the box belongs to everyone: If I put a toy in the box, other people can play with it too.
+>
+> Everyone can see the same contents through the same information.
+
+The singleton pattern is initialized once and can then be accessed from anywhere globally.
+
+# Zustand
+
+Zustand is a small library designed for creating module state.
+It's based on an immutable update model where you never modify the state object and always create a new one,
+and it handles render optimization manually through selectors.
+It also has a store creator interface.
+
+# Jotai
+
+Jotai is a small library for global state that uses hooks for changing state, along with something called atoms.
+Unlike Zustand, it uses component state, and like Zustand it follows an immutable state model.
+
+Atoms let it track dependencies and detect when to re-render.
+An atom doesn't hold a value itself, which makes it reusable, and for arrays you can optimize rendering with the atoms-in-atom technique.
+
+# Valtio
+
+Valtio is based on a mutable model and uses proxies to get immutable snapshots.
+Because it uses proxies, re-rendering is optimized automatically. Through the proxy, you can change an object's values directly.
+It's based on a technique called state usage tracking, so a component can re-render only when the part it actually used changes.
+
+# Similarities and Differences Among the Three Global State Libraries
+
+The Zustand, Jotai, and Valtio we just looked at correspond to the existing global state management libraries Redux, Recoil, and MobX.
+
+<table>
+  <thead>
+    <tr>
+      <th>Micro state library</th>
+      <th>Global library</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Zustand</td>
+      <td>Redux</td>
+    </tr>
+    <tr>
+      <td>Jotai</td>
+      <td>Recoil</td>
+    </tr>
+    <tr>
+      <td>Valtio</td>
+      <td>MobX</td>
+    </tr>
+  </tbody>
+</table>
+
+## Zustand vs Redux
+
+### Similarities
+
+- Both libraries are based on one-way data flow
+  - In one-way data flow, you go through these steps: an action that updates state → the state is updated through the action → the update propagates to wherever the state is needed.
+
+### Differences
+
+- Redux updates state based on reducers.
+  - A reducer is a pure function that takes the previous state and an action object and returns the new state.
+  - Using reducers makes things more predictable.
+- With Zustand, you don't have to use them.
+
+- Redux enforces a directory structure to some extent. (It feels like a framework - like Next)
+
+  ```bash
+  src/
+  ├── app/
+  │   ├── store.js          # Redux 스토어 설정 파일
+  │   └── rootReducer.js    # (선택 사항) 여러 slice를 결합하는 루트 리듀서
+  ├── features/             # 기능별 폴더
+  │   ├── counter/          # 'counter' 기능 관련 폴더
+  │   │   ├── Counter.js    # UI 컴포넌트 파일
+  │   │   └── counterSlice.js  # Redux slice 파일 (상태, 액션, 리듀서 포함)
+  │   ├── todos/            # 'todos' 기능 관련 폴더
+  │   │   ├── Todos.js      # UI 컴포넌트 파일
+  │   │   └── todosSlice.js # Redux slice 파일 (상태, 액션, 리듀서 포함)
+  ├── common/               # 공통 유틸리티, 훅, 스타일 등
+  │   └── utils.js          # 유틸리티 함수들
+  └── index.js              # 애플리케이션 진입점
+  ```
+
+  You end up with a folder structure like this.
+  With Zustand, on the other hand, the developer decides the structure entirely. (It feels like a library - like React)
+
+- Redux uses `immer` by default, which makes it easy to create new state objects while preserving immutability.
+- For propagating state, Redux uses context (a provider), while Zustand uses module imports.
+- Redux is one-way, but Zustand doesn't enforce it.
+
+## Jotai vs Recoil
+
+- Recoil requires key strings, but with Jotai they can be omitted.
+  - Jotai doesn't need naming. This works because Jotai basically uses a `WeakMap` and references atom objects, while Recoil doesn't rely on object references and is based on key strings.
+  - Strings can be serialized and persisted. (local/session storage)
+- Jotai provides a unified atom function.
+- It lets you skip the provider component. → lowers the **mental barrier**, which is DX-friendly
+
+## Valtio vs MobX
+
+Their philosophies differ, but they're similar in that developers can change state directly.
+For render optimization, Valtio uses hooks while MobX uses HOCs.
+
+- MobX updates state based on classes, while Valtio does it based on proxies.
+- Valtio lets you use a pattern of separating functions from the state object.
+
+  ```ts
+  const timer = proxy({ secondsPassed: 0 });
+
+  export const increase = () => {
+    timer.secondsPassed += 1;
+  };
+
+  export const reset = () => {
+    timer.secondsPassed = 0;
+  };
+
+  export const useSecondsPassed = () => useSnapshot(timer).secondsPassed;
+  ```
+
+  You can define update functions outside the state object. That means code splitting, minimization, and bundle size optimization are all possible.
+
+- For render optimization, MobX uses HOCs, which makes it more predictable, while Valtio uses hooks, which makes it friendlier to concurrent rendering.
+
+## Comparing Zustand, Jotai, and Valtio
+
+- Where does the state live?
+  There are two ways to think about state in React: module state and component state.
+  Module state is state that doesn't depend on components, while component state is created during React's lifecycle and controlled by React.
+
+  Zustand and Valtio are based on module state, and Jotai is based on component state.
+  Take a Jotai atom as an example: it doesn't hold the actual value. → The actual value lives in the provider.
+
+- What's the update style?
+  Zustand is based on immutable state.
+  You have to create a new object like `state = { count = state.count += 1 }`.
+  With Valtio, you can use `state.count += 1`.
+  Immutable state improves performance for large, nested objects. Also, React itself is based on an immutable object model, so it's highly compatible.
+  A mutable state model is convenient when objects are deeply nested.
+
+In the end, I think what matters is choosing the library that fits your service.
+
+Personally, I like the Zustand and Jotai approaches.
+Valtio is based on a mutable state model, so it makes changing state easy, but if you ask me whether it matches React's mental model, I'd say, well, not really. After all, I think keeping objects immutable is important in React.
+
+Still, compared to traditional state management libraries, all three have less code and a lower learning curve, and I think it's great that you can get state without a provider, which lowers the mental barrier.

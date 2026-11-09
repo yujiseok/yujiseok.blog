@@ -1,0 +1,484 @@
+export const metadata = {
+  "title": "Lonsily Retrospective: A Loan Product Recommendation Service",
+  "publishedAt": "2023-04-27",
+  "summary": "A retrospective on a project I worked on during my bootcamp.",
+  "published": true
+}
+
+## Overview
+
+This post covers a mini project I did in collaboration with the backend team: an introduction to it, how it went, the features I implemented, and my retrospective.
+
+## Project Introduction
+
+<strong>Lonsily</strong> is a loan product recommendation service built on a `REST API`. The name Lonsily is a blend of "loan" and "easily," meaning getting a loan with ease. In other words, it's a service where you can find and apply for loan products with no hassle.
+
+The team had 8 members in total, 4 frontend and 4 backend, and development ran from 2023.02.13 to 2023.02.24.
+I was the team leader, and I took charge of the overall project setup, the My Page, liked products, purchase history, user info, role-based routes, the authentication logic, and deployment.
+
+## How the Project Went
+
+The theme was already decided: build a financial product shopping mall. Which kind of financial product to pick was up to us.
+We decided to go with a service that recommends loan products. The backend team built the server and data using the loan product data from the Financial Supervisory Service's [Open API](https://finlife.fss.or.kr/finlife/main/contents.do?menuNo=700029).
+There were some features we had to implement as requirements, and they were as follows.
+
+- Login / sign-up
+- Viewing and filtering financial product information
+- Adding/removing a specific financial product to/from liked products
+- Viewing products registered as liked products
+- Adding a specific financial product to the cart
+
+We decided to implement the features by splitting them up into pages, one per feature.
+Since the development period was short, we adopted `GitHub Flow`, a branching strategy that uses only `main` and `feature` branches. We also worked by cloning the repo rather than forking it.
+After settling on the division of features and the branching strategy, we moved on to choosing the tech stack. The tech stack and the reasons for choosing each are as follows.
+
+- **React (CRA)**
+  - Getting work done quickly mattered in this project, so I considered `vite`, which is based on `esbuild`. But since we wanted to use `Redux-toolkit`, I initialized the React app with the `CRA` toolchain, which has a template for it.
+- **TypeScript**
+  - I chose it because static typing lets you catch errors at compile time instead of at runtime, and IntelliSense boosts code productivity. I also chose it so that I and my teammates could get more comfortable with it.
+- **Styled-Components**
+  - There were plenty of options like `TailwindCSS` and `SCSS`, but we decided to go with `Styled-Components`, which the team was most familiar with.
+    Its advantages include conditional styling with props, turning styles into components, SCSS support, and unique class names.
+- **Redux-Toolkit**
+  - It was a project requirement, and managing client state is a must in React anyway, so I chose it. Its advantage is that it lets you manage state more concisely than the original `Redux`.
+- **React-Query**
+  - Most of the time, what goes into global state management is actually server state. When that happens, the `store` takes on too much responsibility and things get inefficient. I brought in `React-Query` to manage client state and server state separately.
+    It also uses caching to cut down on API calls, which reduces the load on the server.
+- **React-Hook-Form**
+  - We use forms for login, sign-up, and editing user info. To handle a form with controlled components, you need to create state and write handler functions to change it. That means even a simple form ends up needing way too much state and too many functions. To solve this problem,
+    I brought in `React-Hook-Form`, which lets you manage forms easily and efficiently.
+- **Zod**
+  - `Zod` is a library for `TypeScript` type schemas and validation, and I brought it in to make form validation easier. You can also extract a schema as a type through `infer`.
+
+On top of that, to keep everyone's code consistent, we set up `eslint` and `prettier`, and used `husky` and `lint-staged` to automate code consistency before commits.
+A teammate who knew how to use Figma put together a rough UI, and then we got down to the real work.
+
+> 😵 This project made me realize just how important UI/UX is..
+
+## Feature Implementation
+
+#### My Page
+
+```tsx title="MyPage.tsx" {2}
+const MyPage = () => {
+  const { auth } = useAppSelector((state) => state);
+  const { birth } = auth;
+  const gender = birth?.slice(-1);
+
+  return (
+      // ...
+
+      <ProfileWrapper>
+        {gender === "1" || gender === "3" ? <MaleAvatar /> : <FemaleAvatar />}
+        <div>
+          <Username>{auth?.name}</Username>님 환영합니다.
+          <div>
+            <LogOutBtn onClick={handleClickLogout}>로그아웃</LogOutBtn>
+          </div>
+        </div>
+      </ProfileWrapper>
+
+      // ...
+```
+
+I built the overall layout of the My Page, using nested routing in `React-Router-Dom` to set up the child routes.
+I also used `Redux-Toolkit` so that the user info saved in the `store` at login can be looked up.
+
+#### Liked Products
+
+```tsx title="ProductDetail.tsx" {2, 5}
+const ProductDetail = () => {
+  const like = useAppSelector((state) => state.like);
+  const dispatch = useAppDispatch();
+  const { data: detail } = useQuery(["data"], () => getDetail(id as string));
+  const isLiked = like.find((item) => item.productId === detail?.productId);
+
+  // ...
+
+  // mutate
+  const queryClient = useQueryClient();
+  const likeMutation = useMutation((id: string) => postLikeLists(id), {
+    onSuccess(data) {
+      queryClient.invalidateQueries(["like"]);
+      dispatch(
+        addLike({
+          likeId: data.likeId,
+          productId: data.productId,
+        }),
+      );
+    },
+  });
+  const deleteLikeMutation = useMutation((id: number) => deleteLikeList(id), {
+    onSuccess(data, id) {
+      queryClient.invalidateQueries(["like"]);
+      dispatch(deleteLike(id));
+    },
+  });
+
+
+  return (
+    <div>
+      {detail && (
+          <ProductBox>
+            <ProductTitle>{detail?.productName}</ProductTitle>
+            {isLiked?.likeId ? (
+              <button
+                onClick={() =>
+                  deleteLikeMutation.mutate(isLiked.likeId as number)
+                }
+              >
+                <HiHeart />
+              </button>
+            ) : (
+              <button onClick={() => likeMutation.mutate(detail?.productId)}>
+                <HiOutlineHeart />
+              </button>
+            )}
+          </ProductBox>
+
+          // ...
+```
+
+When the button is clicked, I used `mutate` from `React-Query`'s `useMutation` hook to add and remove liked products.
+I also used `invalidateQueries()`, which invalidates a query so it will `fetch` new data, to keep the data up to date.
+
+Here I managed liked products with `Redux-Toolkit`. First, I use the `find` method to check whether the `productId` of a liked product in the state matches the `productId` of the product detail I `fetch`ed.
+The state value of the liked product found this way goes into the `isLiked` variable. Then, I conditionally render a filled icon with `deleteLikeMutation.mutate()` for removing when the product is liked, and an empty icon with `likeMutation.mutate()` for adding when it isn't.
+
+> 🤔 Back then I wasn't used to `React-Query` and was so focused on just getting features working that I think I wrote code that's hard to read. If I wrote it again, I'd split the features that handle `mutatate` out into custom hooks.
+> Also, `isLiked` follows a convention that suits a boolean variable, yet it isn't actually used that way, so I failed to follow the convention properly when writing the code.
+
+```tsx title="Likes.tsx"
+const Likes = () => {
+  const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
+  const {
+    data: likeItem,
+    isLoading,
+    isError,
+  } = useQuery<Item[]>({
+    queryKey: ["like"],
+    queryFn: getLikeLists,
+  });
+
+  const deleteMutation = useMutation((id: number) => deleteLikeList(id), {
+    onSuccess(data, id) {
+      queryClient.invalidateQueries(["like"]);
+      dispatch(deleteLike(id));
+    },
+  });
+
+  // ...
+};
+```
+
+On the liked products page, I used the `useQuery` hook so the list of liked products can be looked up.  
+Just like above, there's a `mutatate` for deleting a liked product, and I regret not making it a custom hook, since that would have made the code far more reusable.
+
+#### Purchase History
+
+```tsx title="Order.tsx"
+const Order = () => {
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, isError } = useQuery<Item[]>({
+    queryKey: ["order"],
+    queryFn: getOrderLists,
+  });
+
+  const deleteMutation = useMutation((id: number) => deleteOrder(id), {
+    onSuccess(data) {
+      queryClient.invalidateQueries(["order"]);
+    },
+  });
+
+  // ...
+```
+
+For purchase history too, I used `React-Query`'s `useQuery` hook to `fetch` the data. And to delete purchase history, I used `mutatate` just like with liked products.
+I regret not turning that into a custom hook.
+
+#### User Info
+
+```tsx title="TextFiled.tsx"
+interface ITextFiled {
+  id:
+    | "name"
+    | "password"
+    | "confirmPassword"
+    | "asset"
+    | "income"
+    | "job"
+    | "region"
+    | "joinType";
+  label:
+    | "이름 *"
+    | "비밀번호 변경 *"
+    | "비밀번호 확인 *"
+    | "총 자산"
+    | "소득"
+    | "직업"
+    | "지역"
+    | "가입목적";
+  type?: "text" | "password" | "select";
+  error?: string;
+  placeholder?: string;
+  register?: {
+    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+    onBlur: (e: FocusEvent<HTMLInputElement>) => void;
+    ref: RefCallback<HTMLInputElement>;
+    name: string;
+    min?: string | number;
+    max?: string | number;
+    maxLength?: number;
+    minLength?: number;
+    pattern?: string;
+    required?: boolean;
+    disabled?: boolean;
+  };
+}
+
+const TextFiled = ({
+  id,
+  label,
+  type,
+  error,
+  placeholder,
+  register,
+}: ITextFiled) => {
+  return (
+    <>
+      <InputWrapper>
+        <Label htmlFor={id}>{label}</Label>
+        <input
+          {...(register ?? {})}
+          type={type ?? "text"}
+          id={id}
+          placeholder={placeholder}
+        />
+      </InputWrapper>
+      {error ? <ErrorMessage>{error}</ErrorMessage> : null}
+    </>
+  );
+};
+export default TextFiled;
+```
+
+The user info page had to manage a bunch of inputs. So I thought hard on my own about component reusability,
+and I made a `TextFiled` component to manage the inputs. I think typing out every option by hand, instead of using `UseFormRegister<TFieldValues>`, the type of `register` that `React-Hook-Form` provides, hurts the code's readability.
+Also, if I made types for `id` and `label` and managed them that way, the code would be a bit more readable.
+
+```tsx title="UserForm.tsx"
+const validationSchema = z
+  .object({
+    name: z.string().min(2, "2글자 이상 입력해주세요."),
+    password: z
+      .string()
+      .min(8, "비밀번호는 8자 이상 입력해주세요.")
+      .max(20, "비밀번호는 20자 이하로 입력해주세요.")
+      .regex(
+        /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/,
+        "8-20자 영문, 숫자, 특수문자를 사용하세요."
+      ),
+    confirmPassword: z
+      .string()
+      .min(8, "비밀번호는 8자 이상 입력해주세요.")
+      .max(20, "비밀번호는 20자 이하로 입력해주세요.")
+      .regex(
+        /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/,
+        "8-20자 영문, 숫자, 특수문자를 사용하세요."
+      ),
+    asset: z.string().optional(),
+    income: z.string().optional(),
+    job: z.string().optional(),
+    region: z.string().optional(),
+    joinType: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "비밀번호가 일치하지 않습니다.",
+  });
+
+export type EditValues = z.infer<typeof validationSchema>;
+
+const UserForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<EditValues>({
+    resolver: zodResolver(validationSchema),
+  });
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { auth } = useAppSelector((state) => state);
+
+  const deleteMutation = useMutation(() => deleteUser(), {
+    onSuccess(data) {
+      dispatch(logoutAction());
+      alert("탈퇴 성공");
+      navigate("/");
+    },
+  });
+
+  const editMutation = useMutation((data: EditValues) => editUser(data), {
+    onSuccess(data) {
+      navigate("/");
+    },
+  });
+  const onSubmit = (data: EditValues) => {
+    editMutation.mutate(data);
+
+    dispatch(
+      updateUser({
+        ...auth,
+        name: data.name,
+        asset: data.asset,
+        income: data.income,
+        job: data.job,
+        region: data.region,
+        joinType: Number(data.joinType),
+      }),
+    );
+  };
+
+// ...
+
+```
+
+Here I used `React-Hook-Form` and `Zod` to handle input field management and validation efficiently.
+I create a `validationSchema` for validation and add it to the `resolver` option of the `useForm` hook.
+Then I used `Zod`'s `infer` to extract a type from the schema, which made it easy to type the form.
+
+For editing and leaving the service (account deletion), I implemented them with `react-Query`'s `mutate`. When each `mutatate` succeeds, I `dispatch` to update the user info.
+
+#### Role-Based Routers
+
+For role-based routers, we decided to handle two cases.
+
+**1. PublicRouter**
+
+```tsx title="PublicRouter"
+const PublicRouter = ({ children }: { children: ReactElement }) => {
+  const {
+    auth: { accessToken },
+  } = useAppSelector((state) => state);
+
+  return accessToken ? <Navigate to="/" /> : children;
+};
+```
+
+`PublicRouter` covers routes that users who aren't logged in can access (sign-up, login, etc.).
+First, I grab the token saved in the `store` at login. Then, depending on whether the token exists, a ternary operator decides whether to send the user to the main page with `<Navigate />` or render `children`.
+
+**2. PrivateRouter**
+
+```tsx title="PrivateRouter"
+const PrivateRouter = ({ children }: { children: ReactElement }) => {
+  const {
+    auth: { accessToken },
+  } = useAppSelector((state) => state);
+
+  return accessToken ? children : <Navigate to="/signin" />;
+};
+```
+
+`PrivateRouter` covers routes that logged-in users can access (cart, My Page, liked products, etc.).
+If there's a token, it renders `children`, and if not, it redirects to `/signin` so the user can log in.
+
+#### Authentication Logic with axios interceptors
+
+While preparing for the [Wanted Pre-Onboarding course](https://www.yujiseok.blog/post/wanted-pre-onboarding), I learned about `interceptors`, and I decided to apply them to this project.
+I implemented different logic for two cases: `request` for requests and `response` for responses.
+
+**1. request**
+
+```ts title="api.ts"
+client.interceptors.request.use((config) => {
+  if (!config.headers) return config;
+
+  if (accessToken !== null) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+```
+
+`request` lets you add logic before a request is sent.
+Since many endpoints require token-based authentication, I added logic that injects the token into `Authorization` before the request goes out, depending on whether a token exists.
+
+**2. response**
+
+```ts title="api.ts"
+client.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const {
+      config,
+      response: { status },
+    } = error;
+
+    if (status !== 401 || config.url !== "/refresh") {
+      return Promise.reject(error);
+    }
+    if (accessToken && status === 401) {
+      const { data: newAccessToken } = await axios.post(
+        `${config.baseURL}/refresh`
+      );
+
+      config.headers.Authorization = `Bearer ${newAccessToken}`;
+    }
+
+    return axios(config);
+  }
+);
+```
+
+This handles the case where the token has expired and the response comes back as an error.
+If the response data is fine, it returns the `response`.
+If a token exists and the response status code is `401`, which shows up when the credentials are invalid, it gets a new token through `axios` rather than through the instance made with `create`.
+After injecting the newly issued token into `Authorization`, it returns `axios(config)`.
+
+With this approach, when authentication expires, a new token is automatically issued and injected.
+
+## Problems I Ran Into
+
+**http and https**
+
+I deployed with Vercel, and the deployed address was an encrypted `https` one while the backend server's address was an unencrypted `http` one, so a `Mixed content` error popped up. Here's what I tried to fix it.
+
+1. Adding upgrade-insecure-requests
+
+   upgrade-insecure-requests is a directive that tells the browser to upgrade insecure URLs before making network requests.
+   `<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> `
+   I tried adding a meta tag like the one above to fix the error, but the error still didn't go away.
+
+2. Changing the browser's insecure content setting
+
+   The second fix I tried was changing the browser's own settings. I switched the insecure content setting to allow, so that https wouldn't be enforced. As a result, communication with the http server became possible.
+
+> We had to submit and demo the project right away, and I remember my heart dropping when I found this error. Since it was my first time collaborating with another part of the team, everyone was just busy with their own development, and I think we didn't consider something like this.
+> This error taught me how important http and https are. 🥲
+
+## Project Retrospective ✨
+
+When I started writing this retrospective, I was worried that it had already been 2 months since the project and I might not remember much.
+And sure enough..! There was plenty of code that made me think, "I don't understand any of this, did I really write it?!" I read through the code slowly and tried to jog my memory. As I did, I started to see the flow of the code, and quite a few things I could improve stood out to me.
+There was code I scribbled out just to get the project done without really understanding it, and plenty of logic that could easily have been reused.
+Of course, compared to right after the project, the sense of accomplishment from finishing a project together with another part of the team has faded, but reading the code again after some time and spotting its problems made me feel that I haven't been standing still all this while.
+
+If I had to pick the one thing I regret most about the project, it would be that we didn't communicate actively with our teammates.
+Since it was my first time collaborating with another part of the team and we didn't know each other well, I remember questions kept popping up, like what to ask for, how to go about the work, and how to deal with http/https.
+On top of that, even with teammates on the same side, we were each busy with our own development and didn't communicate enough, which I regret.
+It made me reflect on my old belief that as a developer, you just need to be good at development with your own skills, and I learned firsthand that communication skills are indispensable for a developer.
+
+During the project, I think I worked hard to bring in new technologies.
+They were all technologies I was using for the first time, so there were many rough spots, but I strongly felt that if I didn't use them in a project like this, it would be hard to get more comfortable with them and I'd get fewer chances to encounter them later.
+So I brought in `React-Hook-Form` for form management, `Zod` for schemas and validation, and `React-Query` for server state management, and I had a really satisfying development experience.
+Rather than leaving it as a one-off, I want to study more and use them more efficiently. I'll keep encountering and applying technologies I haven't tried yet.
+
+I'm going to take on and work through many more projects, and I need to be more diligent about documenting them. Rather than simply writing "implemented ~ feature," I'll make an effort to record why I implemented it the way I did.
+
+> Also, I must remember to keep the results as a gif or a video!  
+> You can check out the results [here](https://github.com/yujiseok/lonsily).

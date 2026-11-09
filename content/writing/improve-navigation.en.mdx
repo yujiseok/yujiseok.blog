@@ -1,0 +1,360 @@
+export const metadata = {
+  "title": "Improving Server-Side Navigation in Our Service",
+  "publishedAt": "2025-03-25",
+  "summary": "Let's fix the problems I found like a treasure hunt.",
+  "published": true
+}
+
+## Overview
+
+I'll walk you through my thought process, starting from a simple question about why something behaves the way it does and ending with an actual feature improvement.
+
+While exploring our service's pages as if I were a customer, I kept running into a frustrating behavior on certain pages: a full page refresh.
+I had assumed navigation would naturally be client-side, so running into unexpected behavior made me want to fix it.
+
+It bothered me so much that I kept muttering "ugh, I really want to fix this..." while putting it off with the excuse of other issues. Half a year went by, and I finally couldn't look the other way anymore.
+
+> Doesn't everyone have one problem in the back of their mind that only they know about..? 🤖
+
+## Identifying and Defining the Problem
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/improve-navigation/as.mp4" />
+  </video>
+  <figcaption className="text-center">Full page refresh</figcaption>
+</figure>
+
+As I moved between pages, the client-side navigation I took for granted wasn't working. So I started asking "why?"
+With a modern framework (library) like **Next**/**React**, navigation within the app should generally be client-side, but on our service it was running as server-side navigation, and that was the problem.
+So I decided to dig into the cause of this unexpected behavior.
+
+To find it, I first had to look at how the pages are put together.
+The process goes like this:
+
+1. Pages are managed in a CMS (content management system) format
+2. The page's HTML data is returned as a string
+3. The returned HTML string is converted into a DOM tree with a DOM parser, followed by post-processing that adds the necessary scripts
+4. If extra work (dependent on React) is needed, the layout is replaced with a matching React component and rendered
+5. If no extra work is needed, the original HTML is injected with the `dangerouslySetInnerHTML` prop and rendered
+
+In this process, the script that controls client-side navigation was missing, which led to a structural problem: page transitions were forced into server-side navigation (a full page refresh).
+On top of that, some layouts didn't use anchors for navigation at all, but handled it programmatically with button tags.
+
+Now I knew what the problem was. Next, I set out to decide how to fix it.
+
+## Direction for the Fix
+
+From the moment I understood the problem, I decided to fix it by turning the affected layouts into React components.
+
+## Fixing It by Replacement
+
+In the existing codebase, when extra work is needed, turning that layout into a React component was the natural choice, so I decided to solve this problem the same way.
+That's because I figured I only needed to handle the case where the layout used on the event page does programmatic navigation directly with button tags.
+
+Then I tried to build a new component that maps the layout to the `Link` provided by Next.
+The layout I wanted to replace (101) is like a blank canvas that users can freely compose, and everything, including inline styles and actual styles, comes back as HTML data.
+
+<details>
+  <summary>101 layout data</summary>
+  ```tsx
+  <p class="container__text-content fc-content-text" style="color: #121212">
+   <style type="text/css">
+      .eventpage {
+      background-color: #f2f2f2;
+      padding: 5px 12px 4px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 400;
+      margin-right:8px; 
+      margin-top:12px;
+      color: #4D4D4D;}
+      .eventpage:hover {
+      background-color: #e0e0e0;
+      color:#4d4d4d;
+      }
+   </style>
+   <button type="button" class="eventpage" style="background-color: #4d4d4d; color:#fff;" onclick="location.href='/event/event-list-main';">추천 이벤트</button>
+   <button type="button" class="eventpage" onclick="location.href='/event/event-list-exhibitions';">기획전</button>
+   <button type="button" class="eventpage" onclick="location.href='/event/event-list-user';">브랜드관</button>
+   <button type="button" class="eventpage" onclick="location.href='/event/event-list-earlybird';">얼리버드</button>
+   <button type="button" class="eventpage" onclick="location.href='/event/event-list-notice';">종료</button>
+</p>
+  ```
+</details>
+
+First, I extracted the existing attributes as they were and converted them into JSX to build the component. But as I worked, a question came up: "What if the CMS operator changes an attribute value? Do I have to build this to handle every parameter injected from outside?"
+I concluded that this would be hard to keep up with. It's not impossible, of course, but I started wondering whether there was a more efficient way.
+
+Here's what I was wondering:
+
+1. Is the 101 layout really the only one that falls back to server-side navigation because the script isn't applied? Did I jump to the conclusion that a 1:1 mapping could solve this?
+2. Just because the existing approach is replacement, do I have to follow it?
+3. Is the `Link` component really the only way to get client-side navigation while using my framework?
+
+Even with all those doubts, once I had chosen component replacement from the start, it was hard to change course.
+I felt like a horse wearing blinders, running toward the destination of "component replacement."
+
+> Maybe it was just that I didn't want to waste the time I'd already invested.. ⏳
+
+### 1. Jumping to a 1:1 Mapping
+
+When I set the direction for the fix, the layout I focused on was the tab buttons on the event page.
+
+<Image
+  src="/images/improve-navigation/event-tab.png"
+  width={640}
+  height={400}
+  alt="Event tabs"
+/>
+
+I started working on the fix believing that replacing just that layout with a React component would do it, and I assumed it would end with a simple replacement. But as I mentioned earlier, I realized that handling every attribute and HTML tag is not realistic.
+
+As I went on, the question "How do the other layouts behave?" kept nagging me, and eventually I ended up looking at the other layouts too. Oops...🫠 As expected, the other layouts had no handling for navigation at all either. Since they used the original HTML as is, navigation was done with anchor tags, which made client-side navigation impossible.
+
+In the end, I realized that a 1:1 mapping couldn't handle every situation. Going through this, two sayings came to mind:
+
+1. There is no silver bullet.
+2. Develop as if there were a hundred million different situations.
+
+Maybe I was trying to solve the problem too simply. Or maybe I had decided on the ending in advance and was trying to fix things to fit it. And development is a world that, above all, favors open endings.
+After thinking this through, I took off the blinders and asked myself, "So where should I go now?"
+
+### 2. Do I Have to Follow Replacement?
+
+I found out that there are several ways to do replacement.
+
+1. `dangerouslySetInnerHTML`
+
+   - This is the simplest method, but I judged it unsuitable for handling scripting
+   - It also has security vulnerabilities, so personally it's not a method I like
+
+2. Using an HTML parsing library
+
+   - A parsing library can convert the string-based structure into plain HTML tags or components
+   - However, adding the library would need another round of verification, and since adding a dependency is something our team avoids, it might well have been rejected
+   - The setup isn't complicated, so it was appealing, but I wanted to solve this myself, so it was my last resort
+
+3. Using a custom component
+
+   - This is the one I actually tried, and 1:N mapping is hard with it
+
+What other approaches are there besides replacement? Am I missing something? As my thinking shifted naturally, I started looking into what navigation methods my framework provides.
+
+### 3. Navigation Methods Provided by the Framework (Next)
+
+- `Link`
+
+  - The solution that fit my original idea of replacement
+  - Extends the `a` tag to provide prefetching and client-side navigation
+  - Using this component makes improving navigation very simple → I thought this would work, but..!
+  - Next officially recommends using the `Link` component unless you have specific requirements
+
+- `useRouter`
+
+  - Unlike the `Link` component, this is a built-in Next hook that lets you handle navigation programmatically
+  - In other words, it changes routes programmatically
+  - **Specific requirements** → this answered the question I'd been trying to resolve
+  - A hook that controls the browser's History API
+
+## The Actual Fix (Intercepting Navigation with useRouter)
+
+Putting all of the above together, I had specific requirements to deal with, so using the `useRouter` hook looked like the simplest way to fix this.
+Then I thought about how I could apply navigation with that hook, based on these situations:
+
+- When the HTML tag is an anchor tag
+- When programmatic navigation is applied to a tag that isn't an anchor
+
+### When It's an Anchor Tag
+
+First, find the anchor tag. Then grab its `href` attribute and validate that `href`.
+
+- External links
+  - If it starts with https, client-side navigation isn't needed, so do nothing.
+- Internal links
+  - For internal links, prevent the anchor tag's default behavior.
+  - Then use the `router` object created with the `useRouter` hook to navigate programmatically to the `href` found above.
+- Links whose href includes the origin URL
+  - For example, when the `href` set in the CMS is `href="https://coloso.co.kr/...`
+  - If it includes the origin URL, add extra condition handling.
+
+### When Programmatic Navigation Is Applied to a Non-Anchor Tag
+
+I tried to cover every HTML tag case, but eventually concluded that handling every case was too hard.
+So after discussing it with the CMS operators, we agreed to use anchor tags, the tag that semantically plays the role of moving between pages.
+
+Thanks to this, I could solve the problem by handling only anchor tags, with no additional code.
+
+### Implementing the `useRouteInterceptor` Custom Hook
+
+I decided to build a custom hook that intercepts navigation across all of the HTML. Using this hook has the following benefits:
+
+- No need to handle individual HTML attributes and tags
+- No need for 1:1 mapping per layout
+- Navigation for pages composed in the CMS can be controlled from a single hook
+
+```ts title="useRouteInterceptor"
+const useRouteInterceptor = () => {
+  const router = useRouter();
+
+  const interceptAnchorClick = (e: MouseEvent<HTMLElement>) => {
+    const anchor = (e.target as HTMLElement).closest('a');
+    const href = anchor?.getAttribute('href');
+
+    if (shouldBypassRouter(href)) return;
+
+    e.preventDefault();
+
+    const path = extractPath(href);
+    router.push(path);
+  };
+
+  return { interceptAnchorClick };
+};
+
+export default useRouteInterceptor;
+
+```
+
+The `interceptAnchorClick` function returned by the hook is implemented to control events from a parent element through event delegation. Here's how it works:
+
+1. When a component is clicked, extract the target info from the event object
+2. Find the anchor tag closest to the target
+3. Extract the anchor tag's `href`
+4. If there's no `href` or it's an external link, client-side navigation isn't needed, so the function exits
+5. If an internal page transition is needed, prevent the anchor tag's default behavior
+6. Then use Next.js's `router` to implement client-side navigation
+
+A hook of fewer than 20 lines of code solved the problem effectively.
+
+## Results
+
+<figure>
+  <video width={680} height={350} controls>
+    <source src="/images/improve-navigation/to.mp4" />
+  </video>
+  <figcaption className="text-center">
+    Client-side navigation applied
+  </figcaption>
+</figure>
+
+Can you see the difference from the earlier server-side navigation? With no refresh happening, page transitions are noticeably smoother.
+Also, instead of requesting the entire data from the server, only the necessary data is fetched, which reduces network traffic and speeds up data loading, improving the user experience even more.
+
+Let's analyze before and after using metrics.
+
+### Basic Performance Metrics Comparison
+
+<figure>
+  <Image
+    src="/images/improve-navigation/as.png"
+    width={680}
+    height={350}
+    alt="Server-side navigation"
+  />
+  <figcaption className="text-center">
+    Before: server-side navigation
+  </figcaption>
+</figure>
+<figure>
+  <Image
+    src="/images/improve-navigation/to.png"
+    width={680}
+    height={350}
+    alt="Client-side navigation"
+  />
+  <figcaption className="text-center">
+    After: client-side navigation
+  </figcaption>
+</figure>
+
+<table>
+  <thead>
+    <tr>
+      <th>Performance metric</th>
+      <th>Before (server-side navigation)</th>
+      <th>After (client-side navigation)</th>
+      <th>Improvement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Total execution time</td>
+      <td>12,148ms</td>
+      <td>6,536ms</td>
+      <td>46.2% decrease</td>
+    </tr>
+    <tr>
+      <td>Loading</td>
+      <td>107ms</td>
+      <td>27ms</td>
+      <td>74.8% decrease</td>
+    </tr>
+    <tr>
+      <td>Scripting</td>
+      <td>4,046ms</td>
+      <td>891ms</td>
+      <td>78.0% decrease</td>
+    </tr>
+    <tr>
+      <td>Rendering</td>
+      <td>233ms</td>
+      <td>65ms</td>
+      <td>72.1% decrease</td>
+    </tr>
+    <tr>
+      <td>Painting</td>
+      <td>32ms</td>
+      <td>13ms</td>
+      <td>59.4% decrease</td>
+    </tr>
+    <tr>
+      <td>System</td>
+      <td>443ms</td>
+      <td>142ms</td>
+      <td>67.9% decrease</td>
+    </tr>
+    <tr>
+      <td>Idle</td>
+      <td>7,248ms</td>
+      <td>5,387ms</td>
+      <td>25.7% decrease</td>
+    </tr>
+  </tbody>
+</table>
+
+### Differences in Network Request Patterns
+
+Before the fix, each navigation triggered multiple network requests, and you can see DCL (DOMContentLoaded), FP (First Paint), FCP (First Contentful Paint), and so on firing again and again.
+This means the entire page lifecycle restarts with every page transition. After the fix, the pattern changed to requesting only the data that's needed, and the network load dropped significantly.
+
+### Results After Switching to Client-Side Navigation
+
+- Faster page transitions reduce users' waiting time
+- Since the whole page isn't reloaded, users get a smooth experience without screen flicker
+- Only the necessary data is loaded, so network traffic goes down → server load goes down
+- Stable heap memory usage
+
+### Conclusion
+
+The metrics make the performance improvement clear.
+By switching from server-side to client-side navigation, total loading time dropped by about **46%**,
+and scripting time (**78.3%**) and rendering time (**72.1%**) fell dramatically. This shows that the user experience during page transitions improved a great deal.
+
+## Looking Back on the Process
+
+I learned a lot from defining the problem myself, digging into it, and reaching a conclusion.
+The code needed for the actual fix was simple, but the process of defining the problem and finding the solution was very meaningful.
+At first I focused only on the symptom that "server-side navigation is inconvenient," but analyzing how pages are put together helped me understand the problem.
+
+> Someday I'd like to improve this page composition process itself. 🔨
+
+What I regret is getting stuck on a single approach and not considering others while solving the problem.
+Because I had decided on the conclusion up front and tried to implement only in that direction, my thinking was limited, and I also had a lingering attachment that kept me from giving up because of the time and effort I'd already put in.
+But once I recognized those limits and broke out of the frame, I was able to find a better solution. Through this, I learned how important it is to think while keeping multiple possibilities open.
+
+Once I defined the problem precisely and set the solution clearly, even a problem that looked complicated could be solved with simple code.
+I also realized how important it is to keep asking "why?" as you approach a problem, and comparing performance metrics before and after to check the results with data was a meaningful lesson too.
+
+This experience went beyond a simple feature improvement. It taught me how I should think when solving problems.

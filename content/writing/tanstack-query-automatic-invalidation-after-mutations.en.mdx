@@ -1,0 +1,301 @@
+export const metadata = {
+  "title": "Introducing Automatic Query Invalidation with TanStack Query",
+  "publishedAt": "2025-01-05",
+  "summary": "Developers hate repetition",
+  "published": true
+}
+
+## Overview
+
+While using TanStack Query, I started wondering whether there was a smoother way to invalidate queries after a mutation, and that's how I ended up introducing automatic query invalidation.
+I'd like to share how I went about it and what I learned.
+
+## Queries and Mutations
+
+Before getting into invalidation, let me briefly explain queries and mutations in TanStack Query.
+
+### Query
+
+When we build web applications, there are so many times we need to fetch data (resources) from a server and show it on the screen.
+For example, fetching and displaying a list of users or a user's detail information.
+A query is what we use to fetch data from the server like this, and it's a declarative dependency on asynchronous data tied to a unique key.
+In TanStack Query, you declare a query with the `useQuery` hook, and you can fetch or invalidate queries through the `QueryClient`.
+
+Queries mainly handle **reading (Read)** data.
+
+### Mutation
+
+A mutation is an asynchronous operation with a different purpose from a query.
+Unlike queries, whose main job is reading, mutations change data.
+For example, updating or deleting user information.
+In TanStack Query, you declare and run a mutation with the `useMutation` hook.
+
+Mutations mainly handle **changing (Update)** data.
+
+Here's a table summarizing the two:
+
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Query</th>
+      <th>Mutation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Main purpose</td>
+      <td>Reading data (Read)</td>
+      <td>Changing data (Update)</td>
+    </tr>
+    <tr>
+      <td>Hook used</td>
+      <td>useQuery</td>
+      <td>useMutation</td>
+    </tr>
+    <tr>
+      <td>Main features</td>
+      <td>Fetching data from the server, data caching</td>
+      <td>Creating/updating/deleting data</td>
+    </tr>
+    <tr>
+      <td>How it runs</td>
+      <td>Runs automatically through declarative dependencies</td>
+      <td>Runs through an explicit function call</td>
+    </tr>
+    <tr>
+      <td>Management tool</td>
+      <td>Managed through QueryClient</td>
+      <td>Run directly through the useMutation hook</td>
+    </tr>
+    <tr>
+      <td>Examples</td>
+      <td>Fetching a user list, fetching detail information</td>
+      <td>Updating or deleting user information</td>
+    </tr>
+  </tbody>
+</table>
+
+When a mutation completes successfully, you can define what happens through the `onSuccess` callback.
+
+> You can also use the `onSettled` callback to define behavior regardless of whether it succeeded or failed.
+
+## Query Invalidation
+
+If a mutation succeeds, it's likely to affect some queries.
+If data changes but the user's screen doesn't reflect it, the user experience suffers and people may start to lose trust in the application.
+For example, if you press the like button on a post and the like count goes up but the screen doesn't show it, users would be confused. 🫨
+
+It would be nice if TanStack Query just handled refetching on its own at this point, but TanStack Query is designed to let developers decide how to handle resources here.
+Some developers may not like refetching, and others may want to take the changed data returned from the mutation and update the cache with it.
+
+So how can we invalidate queries after a mutation and trigger a refetch?
+
+As mentioned earlier, you can define what happens on mutation success through the `onSuccess` callback.
+This lets us invalidate queries when a mutation succeeds. To do that, we use a `QueryClient` instance.
+First, get the closest `QueryClient` instance in your component with the `useQueryClient` hook.
+Then you can invalidate queries with the instance's `invalidateQueries` method.
+
+```tsx
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+const Like = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate } = useMutation({
+    mutationFn: likePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries("likes");
+    },
+  });
+
+  return <button onClick={mutate}>좋아요</button>;
+};
+```
+
+The example above simply declares a mutation that updates like information and invalidates the `likes` query on success.
+This way, a refetch runs when the mutation succeeds.
+
+While working at my company, I often ran into situations where a single mutation needed to invalidate several queries.
+There was a lot of this kind of code in the codebase, and with so much duplication, readability suffered and maintenance got harder.
+
+```tsx {4-6}
+const { mutate } = useMutation({
+  mutationFn: redeemVoucher,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: "voucher" });
+    queryClient.invalidateQueries({ queryKey: "referralHistory" });
+    queryClient.invalidateQueries({ queryKey: "referralVoucher" });
+  },
+});
+```
+
+To solve this problem, I decided to introduce automatic query invalidation.
+
+## Introducing Automation
+
+To automate invalidation, you need to extend `MutationCache` so that queries get invalidated automatically when a mutation succeeds.
+
+### MutationCache
+
+- It's a store for mutations, and just like a regular mutation, it has `onSuccess`, `onSettled`, and `onError` callbacks.
+- There's only one in the entire application. -> The callbacks you define there run for every mutation.
+- It's usually created implicitly.
+
+To use `MutationCache`, you need to access it through the `mutationCache` property of `QueryClient`, like this:
+
+```ts title="queryClient.ts" {4-8}
+import { QueryClient, MutationCache } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onSuccess,
+    onError,
+    onSettled,
+  }),
+});
+```
+
+Now let's dig into how to extend `MutationCache` so that queries are invalidated automatically on mutation success.
+
+### 1. Invalidating All Queries
+
+Here's how to invalidate every query:
+
+```ts title="queryClient.ts" {2-4}
+const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onSuccess: () => queryClient.invalidateQueries(),
+  }),
+});
+```
+
+With just 3 added lines of code, you can invalidate every query whenever a mutation succeeds.
+There's no need to write separate invalidation logic in each component.
+You also don't need to use the `useQueryClient` hook to get the `QueryClient` instance.
+When a mutation succeeds, the active queries get refreshed automatically, which keeps your data consistent.
+
+However, since this approach invalidates all queries, it can cause unnecessary refetches.
+
+So how do we invalidate only specific queries?
+
+### 2. Invalidating Specific Queries
+
+Invalidating every query can be implemented simply with very little code, but it felt like overkill that the user's profile information would also get invalidated just because they redeemed a voucher.
+To invalidate only specific queries, I needed to decide which queries to invalidate based on information about the mutation.
+
+#### Invalidating Queries with mutationKey
+
+Here are the characteristics of mutationKey:
+
+- A unique key that identifies a mutation
+- You can define it with the `mutationKey` option of the `useMutation` hook when declaring a mutation.
+- On mutation success, you can invalidate queries through the `mutationKey` in the `onSuccess` callback of `MutationCache`.
+
+```ts {3, 7-13}
+const { mutate } = useMutation({
+  mutationFn: redeemVoucher,
+  mutationKey: ["voucher"],
+});
+
+const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onSuccess: (_data, _variables, _context, mutation) => {
+      queryClient.invalidateQueries({
+        queryKey: mutation.options.mutationKey,
+      });
+    },
+  }),
+});
+```
+
+The example above declares a mutation that redeems a voucher and identifies the mutation through `mutationKey`.
+When the mutation succeeds, it invalidates the queries matching the `queryKey` through `mutation.options.mutationKey`.
+If a mutation has no `mutationKey`, all queries get invalidated.
+Since I decided that invalidating every query wasn't necessary, I looked for another approach.
+
+#### Invalidating Queries with the meta Option
+
+`meta` is an option that lets developers, meaning users of the library, store additional information on queries or mutations.
+With this option, you can attach tags to a mutation. These tags can then be used to decide which queries should be invalidated.
+
+Here, you need to use a `predicate` function so that only mutations matching certain conditions are handled selectively.
+Inside the function, you can use the `matchQuery` function to check whether a query matches the condition.
+
+```ts title="queryClient.ts" {14-19}
+const invalidateMatchedQueries: TypeInvalidatesQueryFn = ({
+  query,
+  mutation,
+  metaKey,
+}) =>
+  mutation.meta?.[metaKey]?.some((queryKey) =>
+    matchQuery({ queryKey }, query),
+  ) ?? false;
+
+const queryClientOptions: QueryClientConfig = {
+  mutationCache: new MutationCache({
+    onSuccess: (_data, _variables, _context, mutation) => {
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          invalidateMatchedQueries({
+            query,
+            mutation,
+            metaKey: "successInvalidates",
+          }),
+      });
+    },
+  }),
+};
+```
+
+Inside the `invalidateMatchedQueries` function, it checks whether a query matches a `queryKey` defined in the `meta` data.
+Then it invalidates the queries that return `true`.
+
+To control mutation invalidation through the `meta` option, you can add code like this:
+
+```ts {15}
+// as-is
+const { mutate } = useMutation({
+  mutationFn: redeemVoucher,
+  onSuccess: () => {
+    queryClient.invalidateQueries("voucher");
+    queryClient.invalidateQueries("referralHistory");
+    queryClient.invalidateQueries("referralVoucher");
+  },
+});
+
+// to-be
+const { mutate } = useMutation({
+  mutationFn: redeemVoucher,
+  meta: {
+    successInvalidates: [["voucher"], ["referralHistory"], ["referralVoucher"]],
+  },
+});
+```
+
+> To use `meta` data in a type-safe way, you need to define the type in a module declaration.
+>
+> ```ts title="types.d.ts"
+> import "@tanstack/react-query";
+> declare module "@tanstack/react-query" {
+>   interface Register {
+>     mutationMeta: {
+>       successInvalidates?: QueryKey[];
+>     };
+>   }
+> }
+> ```
+
+Previously, I used an imperative approach, directly calling instance methods inside callback functions. But by introducing the `meta` option, I was able to define query invalidation declaratively, and that cut down a lot on code duplication.
+In particular, using `mutationCache` together with `meta` let me implement query invalidation in a consistent way across the whole system.
+
+## Conclusion
+
+Introducing automatic invalidation with TanStack Query brought a number of positive changes.
+By defining invalidation logic declaratively and managing it in one central place, readability and maintainability of the code improved, and as a result, development productivity and code quality went up too.
+
+---
+
+#### References
+
+- [https://tkdodo.eu/blog/automatic-query-invalidation-after-mutations](https://tkdodo.eu/blog/automatic-query-invalidation-after-mutations)

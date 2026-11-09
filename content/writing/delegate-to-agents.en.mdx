@@ -1,0 +1,144 @@
+export const metadata = {
+  "title": "Delegating Work to Agents",
+  "publishedAt": "2026-09-01",
+  "published": true
+}
+
+<Image src="/images/delegate-to-agents/8022682b6bbe4ddf22132d07d55f4635-1.jpg" alt="matrix" width={942} height={589} />
+
+This March, I took on the [Creator Membership](https://coloso.co.kr/membership) project, where I was responsible for the frontend of two things: the customer-facing service where users browse products and pay, and the admin where products and orders are managed. The work covered the payment and refund flows for subscription (recurring payment) and session (one-time payment) products. It was a different service from our existing products, so I had to build it from scratch.
+
+We had to ship on June 24 to meet the card payment review schedule. There were **20 customer-facing screens and 34 admin screens** to prepare, and I had about 75 working days.  
+With a schedule that tight, my first thought was this:
+
+> If I run AI as hard as I can, we should be able to make it in time..? 🧑‍🏭&#x20;
+
+Once AI was doing the feature implementation, I finally had room to think about how I work.  
+I read the spec, created tickets, and after implementation I handled QA and deployment. It was the same pattern every time, so I figured I could turn it into skills or automation.
+
+## What I Decided Before Implementation
+
+Even if I handed many screens to agents, I wanted data mutations and API calls to stay consistent. So I settled the code structure first.
+
+- Set up the initial app scaffolding, design the directory structure and coding conventions, and document working rules for agents
+- Build data mutations in the customer app on Server Actions
+- Use React Server Components (RSC) for fetching data on service screens
+- Apply optimistic updates to comments and likes so the screen updates before the server responds
+- Treat the backend OpenAPI spec as the SSOT and generate the admin's types and API client with [orval](https://orval.dev/)
+
+> There was also a chance that the membership would later be split off into a separate service, so in the initial design I considered splitting the apps with Next.js multi-zones. But I judged that it would make the structure too complex for what we needed at the time, so I didn't adopt it.
+
+## Turning Repetitive Work into Skills
+
+I organized the procedures I kept repeating across development, QA, and operations into skills, and built a working harness that fit the project. Each skill has reference documents, a work sequence, and completion criteria.
+
+I called the skills up when I needed them, and whenever QA turned up something to fix, I repeated the start and wrap-up of the work. At steps that needed my confirmation, like reviewing a plan or deploying, I had it stop and move on to the next task only after I approved.
+
+### 1. Reviewing the Spec (`/spec`)
+
+When I pick which screens to read from Figma with `/spec`, a per-screen agent works in parallel to lay out the behavior and states. Anything the mockups alone can't tell us, like behaviors or policies, gets pulled out separately as a list of questions.
+This step only produces documents, and I read and confirmed them before moving on to the next step.
+
+### 2. Breaking Features into Tickets (`/backlog`)
+
+`/backlog` drafts tickets and a schedule from the spec documents and the feature list. I had it create the tickets only after I'd confirmed the scope and schedule.
+To make sure no rules were missed, I split the work by domain.
+
+### 3. Getting Ready to Start Work (`/start`)
+
+It reads the Figma material attached to the ticket and leaves a work plan in the log. For tickets that were reopened, I had it read the previous log first so it could pick up the context.  
+After checking the assignee, it moves the ticket to in progress, and if the ticket belongs to someone else, it asks for my confirmation first. For new features, it reviews whether the plan fits the ticket's scope before starting implementation.
+
+### 4. Implementation and Wrapping Up (`/done`)
+
+`/done` commits the changes for that ticket, and **it only creates a PR once the tests pass.** If there's already an open PR, it reuses it.  
+The ticket moves to resolved, and the work log records the result and anything left over.  
+I kept "development finished" separate from "passed QA and fully done."
+
+### 5. Deploying to the Dev Environment (`/deploy`)
+
+`/deploy` first shows me the app to deploy, the environment, and the code version. Since it's a shared environment, I had it run the deployment only after I confirmed, and then track the result.
+
+### 6. Checking Test Cases Before QA (`/tc`)
+
+Before handing off to QA, I tested once more by following the expected results of the test cases (TCs) that QA wrote in their spreadsheet.
+
+- Logic and components are verified with Vitest
+- Screen flows are verified with Playwright and ego-browser
+- Needed test data is prepared through the TablePlus MCP
+- Visual checks, real payments, and external integrations are verified manually
+
+I put the TC number in each automated test to link it back to the original, and when there were a lot of cases, I decided the scope first.
+
+### 7. Checking and Fixing QA Tickets (`/qa-sweep`)
+
+`/qa-sweep` gets my confirmation when it starts, then checks the sub-tasks of the QA tickets at one-hour intervals. It only assigns tickets that are clearly frontend work, and when it's ambiguous, it reads both the frontend and API repositories together. Anything it still can't judge is left for me to look at.
+
+Small tasks within the auto-fix scope I'd set up front went through `/start` → fix → `/done`. When there were several, it handled them one at a time, and for reopened tickets it read the log and the QA failure reason and continued on the existing branch.
+After confirming the deployment, it moved the ticket to waiting for QA. If it passes QA, the ticket is completed, and if it fails, the work starts over depending on the reason it was reopened.
+
+### 8. Preparing the Product Release (`/release`)
+
+`/release` checks the changes that haven't been deployed yet against ticket statuses and the release version, and separately picks out the work whose inclusion needs to be confirmed.
+Once I decide which changes to include, it writes the deployment change list accordingly.
+
+## Trust vs. Judgment
+
+While setting the auto-fix scope, maybe because my trust in AI wasn't fully there yet, I also sorted out what I'd judge myself.
+
+- Tickets that were backend work or whose ownership was unclear were left in pending review.
+- QA tickets with insufficient reopen reasons or reproduction info were also left in pending review.
+- It stops if more than five files need to change, or if it touches shared components or payment logic.
+- If tests still didn't pass after one attempt at fixing the cause of the failure, I took another look myself.
+- If the same ticket was reopened twice in a row, I took another look at that too.
+
+**Payments, capacity limits, and refunds affect users' money and operating rules, so I personally checked what we had agreed on.**
+
+## Looking at the QA Tickets in Numbers
+
+I had 116 QA tickets across the customer service and the admin. Besides bugs, there were also design fixes and additional requests mixed in, so I categorized them by their actual content.
+
+| Category | Admin | Customer service | Total |
+| - | - | - | - |
+| Functional bugs | 32 | 27 | 59 |
+| Design mismatches | 0 | 20 | 20 |
+| Additional requests | 21 | 15 | 36 |
+| Closed without a fix | 1 | 0 | 1 |
+| **Total** | **54** | **62** | **116** |
+
+There were 59 functional bugs, where things behaved differently from the spec or were saved wrong, and 20 design mismatches in size, color, alignment, and so on, for **79 implementation issues in total**. Jira's Defect type also has improvement requests mixed in, so this differs from a count based on ticket type alone.
+
+> The admin was built with shadcn/ui without separate design mockups. So it's hard to compare its design mismatches by the same standard as the customer service. 😪
+
+## Comparing with My Previous Project, the Portfolio
+
+I wondered how my earlier work, the [portfolio](https://www.yujiseok.blog/posts/how-to-implement-portfolio), had gone, so I put the records side by side. I only compared the first-round QA for new implementation of each customer service, leaving out the admin. I also measured code volume as of the time of QA.
+
+| Category | Portfolio | Membership |
+| - | - | - |
+| QA period | 2025.05.16–06.11, 26 days | 2026.06.02–06.22, 20 days |
+| Screen code at the time | 74 files · 3,636 lines | 135 files · 9,107 lines |
+| Defect tickets | 31 | 34 |
+| Defect tickets per 1,000 lines of code | about 8.5 | about 3.7 |
+| Lines of code per defect ticket | about 117 lines | about 268 lines |
+
+The screen code for the membership was about **2.5x** larger. My Defect tickets were similar at 31 and 34, but tickets per 1,000 lines of code dropped from about 8.5 to 3.7. **Even though the implementation got bigger, the number of QA tickets didn't grow much, and the ticket density relative to code actually went down.**
+
+The features and QA periods of the two projects differ, so it's hard to claim that all of this difference is thanks to the way I worked. Still, there are two things this record does confirm.
+
+- **Throughput:** Just the customer service I compared had about 2.5x the screen code. Adding the admin on top, I built 54 screens in about 75 days and met the June 24 deployment date.
+- **Quality:** In first-round QA, defect tickets per 1,000 lines of code fell from about 8.5 to 3.7, less than half.
+
+Before, the more features I built, the more QA grew along with it. This time, though, code grew 2.5x while QA tickets barely moved, from 31 to 34. How was that possible? I point to two things that changed this time. One is that skills fixed the procedure, so every ticket went through the same order and the same completion criteria. The other is that I verified against the TCs' expected results before handing off to QA. Not just code-level tests, but also having agents drive the browser paid off. I think these approaches helped with both productivity and quality.&#x20;
+
+## After Building the Membership
+
+When I first took on the membership, I thought, "How am I supposed to do this alone?" Design, the customer service, the admin, all of it to be built in a short time, and honestly, I was a little angry.
+
+Then I figured, since it had come to this, I might as well use AI as much as I could. I handed off not just screen implementation but also organizing the spec, splitting up the work, testing, and QA. I'd used AI before, but I just tossed requests at it, so the schedule pressure stayed the same. This time I turned the repeated procedures into skills, and decided in advance what to check after handing off work and where to pick up a task that QA had reopened. Thanks to that, the burden of wondering what to do next each time, and the pressure of the schedule, dropped a lot.
+
+After going through all this, I stopped feeling at all like we'd miss the schedule. If anything, I gained confidence that I could do it all. I live in a world of asking AI questions and having it implement things all day, but it did give me a chance to see where human judgment is still needed. Though honestly, it feels like the time when even that judgment isn't needed is right around the corner.. 🫠
+
+The way I've worked will become legacy soon too, but it was a really good experience to be able to think about how I work itself, something I'd never thought about before. I was also surprised at how simple the work process turned out to be.&#x20;
+
+My trust in AI has only gotten firmer, and the question of "so what do I do now?" is still there, but I figure if I keep running AI hard, some answer will come out of it, so let's not get too buried in the worry!

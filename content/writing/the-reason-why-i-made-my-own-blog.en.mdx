@@ -1,0 +1,105 @@
+export const metadata = {
+  "title": "My Journey Toward Building a Blog",
+  "publishedAt": "2023-02-20",
+  "summary": "I built a blog.",
+  "published": true
+}
+
+## Overview
+
+Ever since I started studying development, I've wanted to build a personal blog.
+But I kept saying "I'll make one, I'll make one" and then dropping it halfway, so it always fizzled out.
+This time, I want to accomplish two things at once: break my habit of never following through, and finally build the blog I've longed for over so many years.
+
+## Why I Decided to Build a Blog
+
+I've always loved jotting my thoughts down by hand. I'd scribble ideas on whatever note was right in front of me, but later, when I wanted to look back at them, I could never find them, or they had simply disappeared.
+As a result, I could no longer recall the thoughts that really mattered or what I felt in that moment, and it left me with a real sense of emptiness.
+To put an end to those regrettable moments, I needed a place to record my thoughts and keep them safe.
+
+The same went for organizing what I learned. After I started studying development, there was so much to learn that I often fell into a sense of helplessness, not knowing where to start or even what to start with. Every time, I'd tell myself, "Who has time to worry about this?
+Just study!" and cram everything in as fast as I could.
+But only stuffing things in is really like pouring water into a bottomless jar. Because I never properly organized anything, I couldn't internalize the knowledge I gained from learning. As a result, instead of feeling like I was moving forward, I felt like I was going in circles in the same spot and not growing.
+
+Of course, there are plenty of really good blog services out there, but I felt that building the space I need with my own hands would mean even more to me.
+
+In a sense, this blog is the first product I'm putting out into the world under my own name, **Yu Jiseok** (유지석). How romantic and exciting it is to release a product that carries my name!
+
+In this space I built myself, I want to record what I've learned and what I've felt, and share my thoughts with others, too.
+
+I'm also building this blog because I want to grow further by actually using the technologies I've wanted to learn and apply.
+
+## Tech Stack
+
+### Next 13
+
+After deciding to build the blog, I wavered between `Gatsby` and `Next` as the framework to use.
+
+In the end I decided to build it with **Next**, and here's why.
+
+**1. Server Side Rendering(SSR) & Static Rendering**
+
+With **SSR**, the server sends over an already-built `HTML` page, so rendering is fast.
+Since the HTML is already put together on the server, it also provides excellent SEO.
+
+On top of that, with **Static Rendering**, each page is pre-rendered at build time and sent over when a request comes in.
+
+**2. Excellent SEO**
+
+As an extension of point 1, the HTML is already composed on the server, so it provides far better SEO than **React**'s **CSR**.
+
+Also, if you use the `next@canary` version, you can easily set up all kinds of metadata through `metadata`.
+
+**3. Routing**
+
+Without the help of a library like `react-router-dom`, Next provides file-system-based routing all on its own.
+
+> ✨ Next13 also provides files that handle UI such as loading, error, and 404 pages.
+
+Beyond that, Next offers many other features, like image optimization with the `Image` tag and prefetching with the `Link` tag.
+Since I was building a blog, SEO mattered more than anything, and I also wanted to get closer to Next, so I chose it.
+
+So far, I'm having a really satisfying development experience. 😆
+
+### TypeScript
+
+I think the greatest benefit you get from using **TypeScript** is **IntelliSense**. By specifying types, we can get all kinds of help from an **IDE** like `vscode`.
+And TypeScript catches the mistakes I tend to make, so it makes for a better development experience.
+
+### TailwindCSS
+
+**TailwindCSS** is a utility-class-based CSS framework. When I first came across TailwindCSS, I was briefly overwhelmed by the sheer number of utility classes.
+But as I kept using it, it clicked with me much faster than I expected, and I got used to it. After that, styling has honestly been easy and fun.
+I also chose it because TailwindCSS's design system suits my taste.
+
+### Contentlayer
+
+I found out about **Contentlayer** through a [video](https://www.youtube.com/watch?v=jeBy4vIBqw0) in which Lee Robinson, VP at [Vercel](https://vercel.com), walks through the code of his personal blog. I had originally considered using a CMS like `strapi` or `sanity`. But it would have taken far more studying than I expected, and I wasn't confident I could keep maintaining a deployed server.
+
+With Contentlayer, though, you can turn markdown or mdx files into data really easily. And it's even **type-safe** data! 😉
+
+### pnpm
+
+In my previous projects, I mostly used `npm` and `yarn` for package management.
+Since this blog is a personal project, I wanted to use new technologies and ones I've been itching to try.
+
+That's why I chose **pnpm**. pnpm is a fast, efficiency-focused package manager created in 2017.
+If you have 100 projects that use a dependency with npm, 100 copies of that dependency will be stored on disk. But pnpm uses a `content-addressable` store, so you end up with just 1 copy.
+Each dependency is `hard-linked`, so no extra disk space is needed. As a result, you save disk space and get fast install times.
+
+Having actually used it, I can really feel how fast it is. ⚡
+
+## What's Next
+
+Once the blog looks a bit more like a proper blog, I'd like to write in detail about how I built it and share what I experienced along the way.
+I also want to share what I learn and what I think, and grow this into a lively blog.
+
+I look forward to your support from here on out.
+
+---
+
+#### Sources
+
+- https://beta.nextjs.org/docs
+- https://www.contentlayer.dev
+- https://pnpm.io/motivation

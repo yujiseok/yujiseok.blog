@@ -1,0 +1,222 @@
+export const metadata = {
+  "title": "So What Exactly Are React Server Components?",
+  "publishedAt": "2023-09-15",
+  "summary": "Let's untangle the confusing world of React Server Components.",
+  "published": true
+}
+
+<Image
+  src="/images/react-server-components/php.jpeg"
+  width={450}
+  height={500}
+  alt="Isn't this just PHP?"
+/>
+
+## Overview
+
+Let's take our time and really dig into what React Server Components are.
+
+> Before getting into React Server Components, it helps to first understand React as a client-side UI library, and server-side rendering.
+
+## React as a Client-Side UI Library
+
+The form of React most of us are familiar with is React as a **client-side UI library**.
+Literally, you use React to draw the UI that the client needs. React makes component-based development possible here,
+so developers can break one giant monolithic component down into small, manageable components.
+
+<Image
+  src="/images/react-server-components/components.png"
+  width={768}
+  height={500}
+  alt="components"
+/>
+
+These broken-down components have `state`, which is a snapshot of their data, and `prop`s, which get passed down to other components. Through these components, we can interact with users.
+Most React apps are client-side apps, and every component (except class components) is a JavaScript function.
+
+In other words, the app only works properly once it's loaded in the browser and the JavaScript bundle containing the components has been downloaded and parsed.
+This approach, where JavaScript is downloaded and parsed on the client side, is called **client-side rendering (CSR)**.
+
+> The familiar components we use here can be called **client components**.
+
+Client-side rendering has the advantage of letting users interact quickly,
+but the downside is that users can't see the content they actually came for until that whole sequence finishes. In other words, they stare at a blank screen while they wait.
+Every time we add code or install a new library, the JavaScript bundle grows, and that makes users wait even longer, which is a pretty painful experience for them.
+
+So how can we improve on this? We can address these problems with server-side rendering.
+
+## Server-Side Rendering (SSR)
+
+Instead of sending an empty HTML document, SSR renders the app by generating real HTML on the server. SSR focuses on the initial page load.
+The server sends pre-rendered HTML to the client. But for that HTML to be interactive on the client, the downloaded JavaScript has to go through **hydration**.
+
+> Hydration means watering dry HTML, where the water stands for interactivity and event handlers.
+
+So SSR means generating HTML on the server so users don't have to stare at a blank page while the JavaScript bundle downloads and parses, and then sprinkling on the water through hydration.
+Unlike CSR, users can see content quickly at the start, which is an improvement, but SSR has its own problems too: the "**All or nothing**" waterfall problem.
+
+Here are the problems:
+
+### All data must be fetched on the server before anything can be shown.
+
+Say we want to render a product page with reviews. It's important for the reviews to show up first, so we include them in the server's output. But then we hit an unavoidable situation: the database or API is slow.
+We have to make a choice. If we leave the reviews out of the server render, users can only see them after all the JavaScript has loaded. But if we include them, the rest of the HTML can't be rendered until the reviews have loaded.
+
+### All JavaScript must be downloaded before the client can hydrate.
+
+Say the review component has complicated interaction logic and its JavaScript takes a while to load.
+Showing the reviews to users early with SSR is nice. However, hydration completes in a single pass, so hydration of the reviews can't start until the navigation bar, sidebar, and product content have finished hydrating.
+
+### Nothing on the client can be interacted with until all hydration is complete.
+
+Once React starts hydrating, it keeps going without stopping until it's done. Say the review component has really complex rendering logic and takes a few seconds to appear on screen.
+Since hydration isn't finished, users can't interact with the navigation bar, sidebar, product content, and so on. The navigation bar is especially bad, because users get stuck on a page they don't want to be on.
+
+To solve these problems, React went with a feature called `<Suspense>`, which enables server-side streaming and selective hydration.
+By wrapping a component in `<Suspense>`, we can tell React that the component's rendering and hydration are lower priority. It also means that other components' loading is no longer blocked by a slow one.
+
+So does `<Suspense>` solve everything? It's a solid improvement, but a few issues remain.
+
+1. Fetching data requires too many long round trips between the server and the client.
+2. Even if things stream asynchronously to the browser, all of the JavaScript still ends up being downloaded.
+3. Even with optimized hydration, users can't interact until the client-side JavaScript has been downloaded.
+4. A large share of JavaScript still lives on the client.
+
+**React Server Components** appeared to solve these problems.
+
+## React Server Components
+
+React's new Server Components complement server-side rendering, letting you render without adding anything to the JavaScript bundle.
+They also run only on the server, so with Server Components you can render UI on the server and fetch data directly inside the component.
+
+In short, a React Server Component is a component that runs only on the server.
+
+### Advantages of Server Components
+
+- **Data fetching**: Server Components let you move data fetching to the server, closer to your data source. This reduces the time fetching takes during rendering and the number of requests the client has to make.
+- **Caching**: Since rendering happens on the server, the results can be reused across subsequent requests and across users.
+- **Bundle size**: Server Components can resolve large dependencies that would otherwise affect the client JavaScript bundle. They send only the processed result to the client, so the client doesn't need to download those dependencies, which is helpful for users with slow internet or low-powered devices.
+- **Initial page load and First Contentful Paint**: Because HTML is generated on the server, users can see the page right away without waiting for the client to download and parse JavaScript.
+- **Streaming**: Server Components break rendering work into chunks and stream them to the client as they become ready. Users can see parts of the page without waiting for the whole page to render on the server.
+- **SEO**: The rendered HTML can be crawled by search engine bots, and social network bots can use it to generate previews of the page.
+
+### Limitations of Server Components
+
+React Server Components run only on the server. They have no client-side capabilities at all.
+That means you can't add user interaction with a Server Component. For example, you can't attach event handlers or use React hooks.
+
+> If a component relies on client-side interaction, you have to use a client component.  
+> In other words, the React components we've always used (hooks, user interaction) are all client components.
+
+### React Server Components in Next
+
+Right now, to use React Server Components you need the meta-framework Next.
+
+With the release of [Next 13.4](https://nextjs.org/blog/next-13-4), the App Router became a stable feature.
+In Next, components are Server Components by default.
+
+> If you want to use a client component in Next, add the `"use client"` directive at the very top of the file (above the `import`s).
+
+## Comparing CSR and SSR from a Data Fetching Perspective
+
+To fetch data, you need a client-side React app that displays the data and a server-side REST API app.
+In React, fetching data means making network requests to the backend using the `useEffect` hook, [React-Query](https://tanstack.com/query/latest/docs/react/overview), [SWR](https://swr.vercel.app/), and so on.
+The backend picks the data up from the database and sends it over the network.
+
+<Image
+  src="/images/react-server-components/csr-fetch.png"
+  width={768}
+  height={500}
+  alt="csr-fetch"
+/>
+
+The graph above shows the client-side rendering pattern. It starts at the moment the client receives the HTML file.
+This file contains no content, just one or more script tags.
+
+Once the JavaScript is downloaded and parsed, the React app runs and creates DOM nodes to fill in the UI. At first, the user has no real data,
+and only the loading state and the app's shell (layout) get rendered. The user sees the loading state until the network request completes, and then a re-render replaces the loading UI (spinners, skeletons, etc.) with the actual content.
+
+Next is the fetch pattern with SSR.
+
+<Image
+  src="/images/react-server-components/ssr-fetch.png"
+  width={768}
+  height={500}
+  alt="ssr-fetch"
+/>
+The difference from the client side is that the initial render happens on the server. That means the user
+doesn't receive an empty HTML file. It's definitely a performance improvement over looking at a blank page,
+but in practice it isn't a noticeable one. Users visit our app to see content,
+not a loading UI.
+
+When we render on the server first, users can see the shell sooner.
+Since things feel like they're progressing instead of showing a blank page, the loading experience can feel a bit faster.
+
+But that flow still feels off. If we skipped the back-and-forth between client and server and ran the database query on the server from the start, we could send users a UI that's already filled with content.
+This is where React Server Components solve the problem.
+
+### Fetching Data with React Server Components
+
+React Server Components let you fetch data and query the database right inside the component.
+Since the data fetching logic itself can move to the server, the client receives components that are already composed with their data.
+
+With Server Components, you can write code like this.
+
+```tsx
+import db from "some-db";
+
+async function Home() {
+  const data = await db.findMany();
+
+  return (
+    <section>
+      {data.map((item) => (
+        <div key={item.id}>{item.title}</div>
+      ))}
+    </section>
+  );
+}
+```
+
+<Image
+  src="/images/react-server-components/rsc-fetch.png"
+  width={768}
+  height={500}
+  alt="rsc-fetch"
+/>
+
+With React Server Components, you can create the data flow shown above without any round trips between the client and server.
+This lets users see content on the page right away, without a loading UI.
+
+## The Difference Between Server-Side Rendering and Server Components
+
+Server Components don't replace server-side rendering. You still depend on SSR to produce the initial HTML.
+React Server Components let components be excluded from the client-side bundle, and guarantee that they run only on the server.
+
+- Server Component code is never sent to the client. When you implement SSR with plain React, the component code gets shipped in the client bundle anyway, which delays interactivity.
+- Server Components can access the backend from anywhere in the tree. With the old pages router's `getServersideProps`, that was only possible at the top-level page.
+- Server Components can be refetched within the tree while preserving client-side state. This enriches the HTML by letting you pull in server-rendered parts without resetting the HTML's state (search input text, focus, and so on).
+
+> You can think of using the two together as a synergy that benefits both (like sushi and wasabi 🍣).
+
+## Recap
+
+**React Server Components** let you run code only on the server.
+Since they're not included in the JavaScript bundle, you can reduce the amount of JavaScript to download and the number of components to hydrate.
+
+If a component doesn't need interactivity and can be a Server Component, using a React Server Component is better for performance.
+They can also access the server directly, which cuts down the time spent fetching data.
+
+You can still use **client components** to get the traditional React way of doing things (interactivity, SSR hydration).
+By picking the right kind of component for each job, we can now build hybrid applications.
+
+---
+
+Sources and references
+
+- https://react.dev/blog/2020/12/21/data-fetching-with-react-server-components
+- https://github.com/reactwg/react-18/discussions/37
+- https://vercel.com/blog/understanding-react-server-components
+- https://nextjs.org/docs/app/building-your-application/rendering/server-components
+- https://www.joshwcomeau.com/react/server-components
+- https://www.patterns.dev/posts/react-server-components

@@ -1,0 +1,237 @@
+export const metadata = {
+  "title": "Exploring What's New in Next 15",
+  "publishedAt": "2024-10-27",
+  "summary": "Looking into what changed in Next.js 15, and trying it out on my blog.",
+  "published": true
+}
+
+## Overview
+
+[Next.js 15](https://github.com/vercel/next.js/releases/tag/v15.0.0) has been released.
+In this post, I'll go over what changed in Next.js 15 and apply it to my blog.
+
+> Another one already? 🫨
+
+## What's New
+
+After two RC (Release Candidate) versions, posted back in [February](https://nextjs.org/blog/next-15-rc) and [October](https://nextjs.org/blog/next-15-rc2), the stable version 15 of Next has officially been released.
+Let's take a look at a few of the changes.
+
+### Upgrading Smoothly with the `@next/codemod` CLI
+
+With Next.js 15, you can now automatically transform your codebase using the `@next/codemod` CLI.
+
+```bash title="codemod CLI"
+npx @next/codemod@canary upgrade latest
+```
+
+With a command like the one above, you can upgrade your codebase to the latest stable version or a pre-release version.
+
+### Async Request APIs (Breaking Change)
+
+In the traditional SSR model, the server waits for the request before rendering any content.
+But not every component depends on request data, so this waiting is unnecessary.
+Ideally, the server should finish all the preparation it can before the request arrives.
+To do that, we need to know when to wait for the request.
+
+That's why the data that depends on a specific request (`headers`, `cookies`, `params`, `searchParams`) needs to become async APIs.
+
+With the `@next/codemod` CLI we just saw, you can migrate your codebase easily.
+
+```bash title="codemod CLI next-async-request-api"
+npx @next/codemod@canary next-async-request-api .
+```
+
+When you run the code changes through that CLI, the code is transformed like this:
+
+```tsx title="[slug]/page.tsx" {16}
+// as-is
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata | undefined> {
+  // params await 없이 사용
+  const post = getAllPosts().find((post) => post.slug === params.slug);
+  // ...
+}
+
+//to-be
+export async function generateMetadata(props: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata | undefined> {
+  const { slug } = await props.params;
+  const post = getAllPosts().find((post) => post.slug === params.slug);
+  // ...
+}
+```
+
+### Caching Semantics
+
+Next's App Router uses caching by default for the best performance, and you can opt out when you need to.
+In version 15, `GET` route handlers and the client router cache are no longer cached by default.
+
+#### `GET` route handlers are no longer cached by default.
+
+In Next 14, route handlers using the `GET` method were cached by default, even when they used dynamic functions and dynamic options.
+Now in version 15, `GET` route handlers are not cached by default.
+
+If you want caching, you can opt in with the static route config `export dynamic = "force-static"`.
+Handlers related to metadata files (`sitemap.ts`, `opengraph-image` ...) are still cached.
+
+#### The client router cache no longer caches page components by default.
+
+Next 14.2 added the `staleTimes` flag for the router cache.
+
+In Next 15, that flag still works, but its default behavior has changed to `0`.
+When you move around the app, the client activated through navigation always reflects the latest data from the page components.
+That said, there are some important behaviors that stay the same:
+
+- Shared layout data is not refetched from the server, and partial rendering is supported.
+- Back/forward navigation uses the cache so the browser can preserve the scroll position.
+- `loading.js` is cached for 5 minutes.
+
+You can control the client router cache behavior through `next.config`:
+
+```ts title="next.config.ts"
+const nextConfig = {
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+    },
+  },
+};
+
+export default nextConfig;
+```
+
+### React 19
+
+React 19 is still in RC, but the Next team worked closely with the React team and got their confidence in React 19's stability,
+so Next 15 is being released with React 19 applied.
+
+#### React Compiler (Experimental)
+
+The [React Compiler](https://19.react.dev/learn/react-compiler) is an experimental compiler for React that automatically handles the work of manual memoization (`useMemo`, `useCallback`).
+
+```bash title="react compiler"
+npm install babel-plugin-react-compiler
+```
+
+```ts title="next.config.ts" {2-4}
+const nextConfig = {
+  experimental: {
+    reactCompiler: true,
+  },
+};
+
+export default nextConfig;
+```
+
+> To use the React Compiler, you need to install a Babel plugin. This can lead to slower dev environments and build times.
+
+### Turbopack Dev
+
+`next dev --turbo` is now stable and offers a fast development experience.
+
+Here are the results from applying it to my actual blog project:
+
+<figure>
+  <Image
+    src="/images/next-15/not-use.png"
+    width={550}
+    height={350}
+    alt="not using turbo"
+  />
+  <figcaption
+    style={{
+      textAlign: "center",
+    }}
+  >
+    <code>as-is</code> Build time without Turbopack
+  </figcaption>
+</figure>
+<figure>
+  <Image
+    src="/images/next-15/turbopack.png"
+    width={550}
+    height={350}
+    alt="using turbo"
+  />
+  <figcaption
+    style={{
+      textAlign: "center",
+    }}
+  >
+    <code>to-be</code> Build time with Turbopack
+  </figcaption>
+</figure>
+
+After applying it to my blog, the build time went from `1230ms` -> `547ms`, which cut it roughly in half.
+
+### Static Route Indicator
+
+In the development environment, Next 15 provides a static route indicator.
+With this indicator, you can tell whether each route is static or dynamic.
+
+<Image
+  src="/images/next-15/indicator.avif"
+  width={728}
+  height={350}
+  alt="indicator"
+/>
+
+### Improved Security for Server Actions (Functions)
+
+Server Actions are server-side functions that can be called directly from the client.
+They're defined in files with the `use server` directive and used as async functions.
+
+Even if a Server Action or utility function isn't important, that code publicly exposes an HTTP endpoint.
+This behavior is technically correct, but it can lead to a function being exposed unintentionally.
+
+To improve security, the following changes were made:
+
+- Dead code elimination: The IDs of unused Server Actions are not exposed in the client JavaScript bundle, which reduces bundle size and improves performance.
+- Secure action IDs: Next creates unguessable, non-deterministic IDs so that Server Actions can be referenced and called from the client.
+
+### Development and Build Improvements
+
+#### Server Components HMR
+
+In development, Server Components are re-executed on save. This means `fetch` calls and third-party services get called again too.
+
+To reduce dev performance costs and API call costs, HMR now makes sure it can reuse `fetch` responses from the previous render.
+
+#### Faster Static Generation for the App Router
+
+This optimizes build time for static generation when you have slow network requests.
+
+The previous approach needed two renders: one to generate data for client-side navigation, and another to render HTML on the initial page visit.
+Now the first render is reused, which cuts down the workload and build time.
+
+Additionally, static generation workers share the `fetch` cache across pages.
+This prevents the same data from being requested multiple times.
+
+#### Enhanced Static Generation Control (Experimental)
+
+There are also new experimental options for controlling static generation across different use cases.
+
+The Next team says these can cause extra resource usage and memory leaks, so they recommend sticking with the default settings unless you have specific requirements.
+
+```ts title="next.config.ts"
+const nextConfig = {
+  experimental: {
+    // 넥스트가 실패한 정적 페이지를 몇 번 재시도할 것인지
+    // 빌드 실패 전
+    staticGenerationRetryCount: 1
+    // 워커 당 처리할 최대 페이지 수
+    staticGenerationMaxConcurrency: 8
+    // 새로운 워커가 돌기 전에 각 워커가 처리할 최소 페이지 수
+    staticGenerationMinPagesPerWorker: 25
+  },
+}
+
+export default nextConfig;
+```
+
+> For other changes beyond these, you can check the [release notes](https://nextjs.org/blog/next-15) on the official blog.
