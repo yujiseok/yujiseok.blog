@@ -55,7 +55,6 @@ export const ko = {
   resume: {
     keywords: ["웹 개발", "프론트엔드"],
     avatarAlt: (name: string) => `${name} 프로필 이미지`,
-    contribution: "기여",
   },
   feeds: {
     rssTitle: "Yujiseok's Blog",

@@ -58,7 +58,6 @@ export const en = {
   resume: {
     keywords: ["web development", "frontend"],
     avatarAlt: (name: string) => `${name} profile photo`,
-    contribution: "PR",
   },
   feeds: {
     rssTitle: "Yujiseok's Blog",

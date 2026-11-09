@@ -80,7 +80,6 @@ export async function generateMetadata({ params }: LocaleParams) {
 const page = async ({ params }: LocaleParams) => {
   const locale = await requireLocale(params);
   const resumeData = RESUME[locale];
-  const { resume } = getDictionary(locale);
   const translated = await getTranslatedSlugs();
   // 영어 이력서는 /en 글로 잇되, 번역이 아직 없는 글은 404 대신 한국어 원문으로 간다.
   const postHref = (slug: string) =>
@@ -165,7 +164,7 @@ const page = async ({ params }: LocaleParams) => {
                   href={contribution.link}
                   className="underline underline-offset-2"
                 >
-                  {resume.contribution}
+                  PR #{contribution.link.split("/").pop()}
                 </ExternalLink>
                 {contribution.blogSlug && (
                   <>
