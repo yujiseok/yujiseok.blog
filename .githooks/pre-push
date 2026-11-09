@@ -1,0 +1,11 @@
+#!/bin/sh
+# 번역이 없거나 원문과 어긋난 글을 알려 준다. Vercel 빌드는 번역하지 않으므로
+# 그대로 올리면 영어판이 빠진 채 배포된다. 급한 수정을 막지 않도록 경고만 낸다.
+warnings=$(CI=1 bun scripts/translate/index.ts 2>&1 | grep '^경고:')
+
+if [ -n "$warnings" ]; then
+  echo "$warnings" >&2
+  echo "bun run translate 후 번역본을 커밋하세요. 푸시는 그대로 진행합니다." >&2
+fi
+
+exit 0

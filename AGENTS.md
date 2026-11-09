@@ -23,11 +23,18 @@
   새 소비자(피드·사이트맵·llms.txt)는 그 함수를 거치기만 하면 따로 처리할 게 없다.
 - 본문은 포매터 대상이 아니다(.prettierignore). 에디터가 MDX를 직접 직렬화하기 때문이고,
   prettier를 다시 걸면 저장할 때마다 diff가 튄다.
+- 공개 글을 쓰거나 고치면 `bun run translate`로 `slug.en.mdx`를 만들고 `content/.translations.json`과
+  함께 커밋한다. Vercel 빌드는 번역하지 않으므로, 빠뜨리면 그 글의 `/en` 주소가 404다. pre-push 훅이
+  경고만 낸다(`.githooks/`, `bun install`이 연결한다).
+- 번역본을 손으로 고쳐도 되지만 원문이 바뀌면 다시 번역되어 덮인다. MDX 컴포넌트 안의 문구는 번역
+  대상이 아니라 컴포넌트에 언어별로 직접 둔다.
 
 ## 함정
 
 - `cacheComponents` 가 켜져 있다. `generateStaticParams` 가 빈 배열을 반환하면 그 자체로 빌드가
   깨지므로, 외부 API(Spotify)에 기대는 라우트는 `export const instant = false` 로 둔다.
+- `cacheComponents` 아래에서는 떠난 페이지가 `<Activity>`로 숨겨진 채 DOM에 남는다. `html:has(...)`처럼
+  페이지 안의 표식으로 전역 스타일을 바꾸면 다른 라우트까지 따라온다.
 - `/editor` 는 개발 서버 전용이다. 서버 액션마다 `assertDevOnly()` 가 걸려 있다.
 - `app/[locale]/(main)/atelier` 는 살아 있는 라우트지만 내비 어디에도 링크하지 않는다.
 
