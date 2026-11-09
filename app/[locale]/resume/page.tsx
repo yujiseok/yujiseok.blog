@@ -8,16 +8,14 @@ import ResumeContent from "./_components/resume-content";
 import ContentContainer from "./_components/content-container";
 import { alternates, siteOg } from "@/lib/metadata";
 import ExternalLink from "@/app/_components/external-link";
-import { getAllWritings } from "@/lib/content/repository";
+import { getTranslatedSlugs } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
-
-type ResumeParams = { params: Promise<{ locale: string }> };
 
 const RESUME: Record<Locale, Resume> = { ko, en };
 
-export async function generateMetadata({ params }: ResumeParams) {
+export async function generateMetadata({ params }: LocaleParams) {
   const locale = await requireLocale(params);
   const { profile } = RESUME[locale];
   const { site, resume } = getDictionary(locale);
@@ -76,13 +74,11 @@ export async function generateMetadata({ params }: ResumeParams) {
   };
 }
 
-const page = async ({ params }: ResumeParams) => {
+const page = async ({ params }: LocaleParams) => {
   const locale = await requireLocale(params);
   const resumeData = RESUME[locale];
   const { resume } = getDictionary(locale);
-  const translated = new Set(
-    (await getAllWritings("en")).map(({ slug }) => slug),
-  );
+  const translated = await getTranslatedSlugs();
   // 영어 이력서는 /en 글로 잇되, 번역이 아직 없는 글은 404 대신 한국어 원문으로 간다.
   const postHref = (slug: string) =>
     `${SITE_URL}${localizedPath(locale === "en" && !translated.has(slug) ? "ko" : locale, `/posts/${slug}`)}`;

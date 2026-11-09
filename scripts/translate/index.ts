@@ -7,6 +7,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { isPublished, parsePost } from "@/lib/content/document";
+import {
+  listLocaleFiles,
+  toTranslationPath,
+} from "@/lib/content/translation-path";
 import { translatePost } from "@/lib/i18n/translate-post";
 import {
   hashSource,
@@ -63,11 +67,8 @@ const collectTargets = async (only?: string): Promise<Target[]> => {
   const targets: Target[] = [];
   for (const type of TYPES) {
     const dir = path.join(CONTENT_DIR, type);
-    const files = (await fs.readdir(dir)).filter(
-      (f) => f.endsWith(".mdx") && !f.endsWith(".en.mdx"),
-    );
-    for (const file of files.sort()) {
-      const slug = file.slice(0, -".mdx".length);
+    const sources = listLocaleFiles((await fs.readdir(dir)).sort(), "ko");
+    for (const { file, slug } of sources) {
       if (only && slug !== only) continue;
       const sourcePath = path.join(dir, file);
       try {
@@ -81,7 +82,7 @@ const collectTargets = async (only?: string): Promise<Target[]> => {
         key: `${type}/${slug}`,
         slug,
         sourcePath,
-        outPath: path.join(dir, `${slug}.en.mdx`),
+        outPath: toTranslationPath(sourcePath),
       });
     }
   }

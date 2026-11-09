@@ -7,14 +7,12 @@ import { ViewTransition } from "react";
 import type { Metadata } from "next";
 import { alternates, siteOg } from "@/lib/metadata";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
 
 export const generateMetadata = async ({
   params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> => {
+}: LocaleParams): Promise<Metadata> => {
   const locale = await requireLocale(params);
   const alt = alternates(locale, "/music/playlists");
 
@@ -26,7 +24,7 @@ export const generateMetadata = async ({
   };
 };
 
-const page = async ({ params }: { params: Promise<{ locale: string }> }) => {
+const page = async ({ params }: LocaleParams) => {
   const locale = await requireLocale(params);
   const playlists = await getPlaylists();
 

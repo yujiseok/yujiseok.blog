@@ -5,7 +5,7 @@ import PostRow from "@/app/[locale]/(main)/_components/post-row";
 import { SITE_URL } from "@/lib/constants";
 import { getAllWritings } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath } from "@/lib/i18n/locales";
 import { alternates, siteOg } from "@/lib/metadata";
 
@@ -13,9 +13,7 @@ const TITLE = "Posts";
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}: LocaleParams): Promise<Metadata> {
   const locale = await requireLocale(params);
   const description = getDictionary(locale).posts.description;
 
@@ -33,7 +31,7 @@ export async function generateMetadata({
   };
 }
 
-async function PostPage({ params }: { params: Promise<{ locale: string }> }) {
+async function PostPage({ params }: LocaleParams) {
   const locale = await requireLocale(params);
   const writings = await getAllWritings(locale);
 

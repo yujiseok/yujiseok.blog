@@ -1,20 +1,15 @@
 import type { MetadataRoute } from "next";
 
 import { SITE_URL } from "@/lib/constants";
-import type { PostMetadata } from "@/lib/content/document";
+import type { ContentEntry } from "@/lib/content/repository";
 import { LOCALES, type Locale } from "@/lib/i18n/locales";
 import { alternates } from "@/lib/metadata";
 
-interface Entry {
-  slug: string;
-  metadata: PostMetadata;
-}
-
 interface SitemapInput {
-  ko: Entry[];
+  ko: ContentEntry[];
   /** 번역이 있는 글만 */
-  en: Entry[];
-  atelier: Entry[];
+  en: ContentEntry[];
+  atelier: ContentEntry[];
 }
 
 type Item = MetadataRoute.Sitemap[number];

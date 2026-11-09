@@ -6,7 +6,8 @@ import { buildRss } from "./rss";
 
 // cacheComponents 아래에서 라우트 핸들러는 동적이라 매 요청 재생성된다.
 // 피드 리더·LLM 크롤러는 자주 폴링하므로 CDN 캐시로 그 빈도를 흡수한다.
-const CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400";
+export const CACHE_CONTROL =
+  "public, s-maxage=3600, stale-while-revalidate=86400";
 
 export const rssResponse = async (locale: Locale) =>
   new Response(buildRss(locale, await getAllWritings(locale)), {

@@ -1,13 +1,8 @@
 import { SITE_URL } from "@/lib/constants";
-import type { PostMetadata } from "@/lib/content/document";
+import type { ContentEntry } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
 import { rssPath } from "@/lib/metadata";
-
-interface RssPost {
-  slug: string;
-  metadata: PostMetadata;
-}
 
 const escapeXml = (str: string): string =>
   str
@@ -28,7 +23,7 @@ const guid = (locale: Locale, slug: string) =>
     ? `${SITE_URL}/writing/${slug}`
     : `${SITE_URL}${localizedPath(locale, `/posts/${slug}`)}`;
 
-export const buildRss = (locale: Locale, posts: RssPost[]): string => {
+export const buildRss = (locale: Locale, posts: ContentEntry[]): string => {
   const { feeds, site } = getDictionary(locale);
 
   const items = posts

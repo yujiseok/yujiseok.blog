@@ -5,7 +5,6 @@ import "@/app/globals.css";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -15,14 +14,11 @@ import { LanguageToggle } from "@/app/_components/language-toggle";
 import Lenis from "@/app/_components/lenis";
 import { LocaleProvider } from "@/app/_components/locale-provider";
 import { SITE_URL } from "@/lib/constants";
-import { getAllWritings } from "@/lib/content/repository";
+import { getTranslatedSlugs } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale, LOCALES, localizedPath } from "@/lib/i18n/locales";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { alternates, siteOg } from "@/lib/metadata";
-
-interface LocaleParams {
-  params: Promise<{ locale: string }>;
-}
 
 export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
 
@@ -75,15 +71,11 @@ export default async function RootLayout({
   children,
   params,
 }: LocaleParams & { children: React.ReactNode }) {
-  const { locale } = await params;
-
-  if (!isLocale(locale)) {
-    notFound();
-  }
+  const locale = await requireLocale(params);
 
   const dictionary = getDictionary(locale);
   // 언어 토글이 번역 없는 글에서 404로 보내지 않도록 번역된 slug만 안다
-  const translated = (await getAllWritings("en")).map(({ slug }) => slug);
+  const translated = [...(await getTranslatedSlugs())];
 
   return (
     <html lang={locale} className={`${geistSans.variable} antialiased`}>

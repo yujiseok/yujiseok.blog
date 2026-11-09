@@ -6,15 +6,13 @@ import GalleryWall from "@/app/[locale]/gallery/_components/gallery-wall";
 import { SITE_URL } from "@/lib/constants";
 import { getGallery, shuffle } from "@/lib/gallery";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath } from "@/lib/i18n/locales";
 import { alternates, siteOg } from "@/lib/metadata";
 
-type GalleryParams = { params: Promise<{ locale: string }> };
-
 export const generateMetadata = async ({
   params,
-}: GalleryParams): Promise<Metadata> => {
+}: LocaleParams): Promise<Metadata> => {
   const locale = await requireLocale(params);
   const description = getDictionary(locale).gallery.description;
 
@@ -45,7 +43,7 @@ export const instant = false;
  * (main) 그룹 밖에 둔 라우트다. 그 레이아웃의 max-w-2xl 안에서는 이미지가
  * 너무 작아 벽으로 보이지 않는다. 설명도 푸터도 없이 이미지만 세운다.
  */
-const page = async ({ params }: GalleryParams) => {
+const page = async ({ params }: LocaleParams) => {
   await connection();
   const locale = await requireLocale(params);
   const { artists, all, viewArtwork, previous, next, close, artistNames } =

@@ -7,6 +7,9 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 
 import { isPublished, parsePost, type PostMetadata } from "./document";
 import { toMarkdown } from "./markdown";
+import { listLocaleFiles, LOCALE_SUFFIX } from "./translation-path";
+
+export { listLocaleFiles };
 
 type ContentType = "writing" | "atelier";
 
@@ -25,14 +28,12 @@ const ROOT_DIR = path.join(process.cwd(), "content");
 const contentLocale = (contentType: ContentType, locale: Locale): Locale =>
   contentType === "atelier" ? DEFAULT_LOCALE : locale;
 
-const SUFFIX = { ko: "", en: ".en" } as const satisfies Record<Locale, string>;
-
 /** `content/<type>/` 아래의 파일명. toc처럼 원문을 직접 읽는 쪽이 쓴다. */
 export const contentFileName = (
   contentType: ContentType,
   slug: string,
   locale: Locale,
-) => `${slug}${SUFFIX[contentLocale(contentType, locale)]}.mdx`;
+) => `${slug}${LOCALE_SUFFIX[contentLocale(contentType, locale)]}.mdx`;
 
 // 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있어 분기한다
 export const importMdx = (
@@ -41,27 +42,10 @@ export const importMdx = (
   locale: Locale,
 ): Promise<MdxModule> =>
   contentType === "writing"
-    ? import(`@/content/writing/${slug}${SUFFIX[locale]}.mdx`)
+    ? import(`@/content/writing/${slug}${LOCALE_SUFFIX[locale]}.mdx`)
     : import(`@/content/atelier/${slug}.mdx`);
 
-/** 디렉터리 파일명에서 해당 언어의 글만 골라 slug(언어 접미사 제외)와 묶는다. */
-export const listLocaleFiles = (files: string[], locale: Locale) =>
-  files.flatMap((file) => {
-    if (path.extname(file) !== ".mdx") return [];
-
-    const slug = path.basename(file, ".mdx");
-    const isTranslation = slug.endsWith(SUFFIX.en);
-
-    if (locale === "en") {
-      return isTranslation
-        ? [{ file, slug: slug.slice(0, -SUFFIX.en.length) }]
-        : [];
-    }
-
-    return isTranslation ? [] : [{ file, slug }];
-  });
-
-interface ContentEntry {
+export interface ContentEntry {
   metadata: PostMetadata;
   slug: string;
 }
@@ -149,6 +133,10 @@ const getAllContent = async (contentType: ContentType, locale: Locale) => {
 /** en에는 번역본이 있는 글만 나온다. 번역이 없는 slug는 en에서 없는 글이다. */
 export const getAllWritings = (locale: Locale) =>
   getAllContent("writing", locale);
+
+/** 번역본이 있는 글의 slug. 언어 토글·hreflang·이력서 링크가 번역 유무를 가를 때 쓴다. */
+export const getTranslatedSlugs = async () =>
+  new Set((await getAllWritings("en")).map(({ slug }) => slug));
 
 export const getWritingBySlug = async (slug: string, locale: Locale) =>
   (await getAllWritings(locale)).find((writing) => writing.slug === slug);

@@ -14,7 +14,10 @@ import {
   type PostMetadata,
 } from "@/lib/content/document";
 import { docToMarkdown, openForEditing } from "@/lib/editor/markdown";
-import { listLocaleFiles } from "@/lib/content/repository";
+import {
+  listLocaleFiles,
+  toTranslationPath,
+} from "@/lib/content/translation-path";
 import { LOCALES, localizedPath } from "@/lib/i18n/locales";
 
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
@@ -50,7 +53,7 @@ function resolvePostPath(slug: string): string {
 
 /** 번역본(`slug.en.mdx`)의 경로. 같은 slug 검증을 거친다. */
 const translationPath = (slug: string) =>
-  resolvePostPath(slug).replace(/\.mdx$/, ".en.mdx");
+  toTranslationPath(resolvePostPath(slug));
 
 /**
  * getAllWritings가 "use cache"로 캐싱돼 있어 재검증 없이는 홈·목록·상세 어디에도

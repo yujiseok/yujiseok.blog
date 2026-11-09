@@ -4,15 +4,13 @@ import { getAllAtelier } from "@/lib/content/repository";
 import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath } from "@/lib/i18n/locales";
 import { alternates, siteOg } from "@/lib/metadata";
 
-type AtelierParams = { params: Promise<{ locale: string }> };
-
 export const generateMetadata = async ({
   params,
-}: AtelierParams): Promise<Metadata> => {
+}: LocaleParams): Promise<Metadata> => {
   const locale = await requireLocale(params);
   const description = getDictionary(locale).atelier.description;
 
@@ -30,7 +28,7 @@ export const generateMetadata = async ({
   };
 };
 
-const page = async ({ params }: AtelierParams) => {
+const page = async ({ params }: LocaleParams) => {
   const locale = await requireLocale(params);
   const atelier = await getAllAtelier();
 

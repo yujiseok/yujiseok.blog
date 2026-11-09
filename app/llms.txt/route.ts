@@ -1,6 +1,7 @@
 import { getAllAtelier, getAllWritings } from "@/lib/content/repository";
 import { getGallery } from "@/lib/gallery";
 import { buildLlmsTxt } from "@/lib/seo/llms";
+import { CACHE_CONTROL } from "@/lib/seo/responses";
 
 export async function GET() {
   const [ko, en, atelier, gallery] = await Promise.all([
@@ -22,7 +23,7 @@ export async function GET() {
       "Content-Type": "text/plain; charset=utf-8",
       // cacheComponents 아래에서 라우트 핸들러는 동적이라 매 요청 재생성된다.
       // LLM 크롤러가 자주 폴링하므로 CDN 캐시로 그 빈도를 흡수한다.
-      "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      "cache-control": CACHE_CONTROL,
     },
   });
 }

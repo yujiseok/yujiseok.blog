@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
   getAllWritings,
+  getTranslatedSlugs,
   getWritingBySlug,
   importMdx,
 } from "@/lib/content/repository";
@@ -33,12 +34,12 @@ interface PostParams {
 export async function generateStaticParams() {
   const [ko, en] = await Promise.all([
     getAllWritings("ko"),
-    getAllWritings("en"),
+    getTranslatedSlugs(),
   ]);
 
   return [
     ...ko.map(({ slug }) => ({ locale: "ko", slug })),
-    ...en.map(({ slug }) => ({ locale: "en", slug })),
+    ...[...en].map((slug) => ({ locale: "en", slug })),
   ];
 }
 
@@ -60,7 +61,7 @@ export async function generateMetadata(
   } = writing.metadata;
   const path = `/posts/${writing.slug}`;
   // 번역이 없는 글을 hreflang에 올리면 404를 가리킨다
-  const translated = (await getWritingBySlug(slug, "en")) !== undefined;
+  const translated = (await getTranslatedSlugs()).has(slug);
 
   return {
     title,

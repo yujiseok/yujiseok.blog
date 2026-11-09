@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import NavBar from "@/app/[locale]/(music)/_components/nav-bar";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
-
-type LayoutParams = { params: Promise<{ locale: string }> };
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 
 // alternates/openGraph.url은 라우트별 값이라 레이아웃에 두면 하위 페이지가 통째로 상속한다.
 export async function generateMetadata({
   params,
-}: LayoutParams): Promise<Metadata> {
+}: LocaleParams): Promise<Metadata> {
   const locale = await requireLocale(params);
 
   return {
@@ -23,7 +21,7 @@ export async function generateMetadata({
 const Layout = async ({
   children,
   params,
-}: LayoutParams & { children: React.ReactNode }) => {
+}: LocaleParams & { children: React.ReactNode }) => {
   const locale = await requireLocale(params);
 
   return (

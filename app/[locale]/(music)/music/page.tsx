@@ -4,13 +4,11 @@ import { getRecentlyPlayed } from "@/lib/spotify/api";
 import type { Metadata } from "next";
 import { alternates, siteOg } from "@/lib/metadata";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 
 export const generateMetadata = async ({
   params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> => {
+}: LocaleParams): Promise<Metadata> => {
   const locale = await requireLocale(params);
   const alt = alternates(locale, "/music");
 

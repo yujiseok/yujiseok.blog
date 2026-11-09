@@ -6,13 +6,9 @@ import { getAllWritings } from "@/lib/content/repository";
 import ArrowUpRight from "@/app/_components/arrow-up-right";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localizedPath } from "@/lib/i18n/locales";
-import { requireLocale } from "@/lib/i18n/params";
+import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 
-export default async function Home({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function Home({ params }: LocaleParams) {
   const locale = await requireLocale(params);
   const { site, home } = getDictionary(locale);
   const writings = (await getAllWritings(locale)).slice(0, 5);

@@ -1,24 +1,19 @@
 import { SITE_URL } from "@/lib/constants";
-import type { PostMetadata } from "@/lib/content/document";
+import type { ContentEntry } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
 
-interface Entry {
-  slug: string;
-  metadata: PostMetadata;
-}
-
 interface LlmsInput {
-  ko: Entry[];
+  ko: ContentEntry[];
   /** 번역이 있는 글만 */
-  en: Entry[];
-  atelier: Entry[];
+  en: ContentEntry[];
+  atelier: ContentEntry[];
   gallery: { name: string; count: number }[];
 }
 
 const describe = (summary?: string) => (summary ? `: ${summary}` : "");
 
-const postLinks = (locale: Locale, posts: Entry[]) =>
+const postLinks = (locale: Locale, posts: ContentEntry[]) =>
   posts
     .map(
       ({ slug, metadata }) =>
