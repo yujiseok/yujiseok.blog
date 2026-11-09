@@ -1,5 +1,6 @@
 "use client";
 
+import { PAGE_TOP } from "@/app/_components/page-spacing";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
@@ -20,8 +21,8 @@ const Navbar = ({
   const backHref = localizedPath(locale, playlistId ? "/music/playlists" : "/");
 
   return (
-    <nav className="mt-10 h-14 w-full">
-      <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between md:p-2">
+    <nav className={`w-full ${PAGE_TOP}`}>
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
         <Link
           href={backHref}
           className="cursor-pointer text-neutral-600 dark:text-neutral-400"

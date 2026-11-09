@@ -1,3 +1,4 @@
+import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -58,7 +59,7 @@ const page = async ({ params }: LocaleParams) => {
   }));
 
   return (
-    <main id="content" className="w-full p-2 pt-10 sm:pt-14">
+    <main id="content" className={`w-full ${PAGE_TOP} ${PAGE_BOTTOM}`}>
       {/* 화면에서는 이미지가 전부다. 제목은 문서 구조로만 남긴다 */}
       <h1 className="sr-only">Gallery</h1>
 

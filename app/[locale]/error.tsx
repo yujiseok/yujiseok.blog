@@ -1,5 +1,6 @@
 "use client";
 
+import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
 import { useLocaleContext } from "@/app/_components/locale-provider";
 
 export default function Error({ reset }: { reset: () => void }) {
@@ -7,7 +8,9 @@ export default function Error({ reset }: { reset: () => void }) {
   const { error } = useLocaleContext();
 
   return (
-    <main className="mx-auto mt-24 flex w-full max-w-2xl flex-col gap-2 sm:mt-28">
+    <main
+      className={`mx-auto flex w-full max-w-2xl flex-col gap-2 ${PAGE_TOP} ${PAGE_BOTTOM}`}
+    >
       <h1 className="text-lg font-semibold">{error.title}</h1>
       <p className="text-neutral-600 dark:text-neutral-400">
         {error.description}

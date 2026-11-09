@@ -79,7 +79,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${geistSans.variable} antialiased`}>
-      <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-white">
+      <body className="mx-2 flex flex-col bg-transparent px-4 text-black dark:text-white print:m-0 print:p-0">
         {/* 스크린리더·키보드 사용자가 내비게이션을 매번 다 훑지 않고 본문으로
             바로 뛸 수 있게 한다. 평소엔 화면에서 숨겨두고 포커스를 받을 때만
             보인다. */}

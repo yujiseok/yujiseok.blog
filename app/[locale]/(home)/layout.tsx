@@ -1,3 +1,4 @@
+import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
 /*
  * 홈만 글 목록 오른쪽에 그림이 한 판 더 붙어 다른 라우트보다 넓다.
  *
@@ -13,7 +14,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <>
       <main
         id="content"
-        className="mx-auto mt-24 mb-16 w-full max-w-[69rem] sm:mt-28"
+        className={`mx-auto w-full max-w-[69rem] ${PAGE_TOP} ${PAGE_BOTTOM}`}
       >
         {children}
       </main>
