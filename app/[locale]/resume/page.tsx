@@ -1,5 +1,4 @@
 import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
-import BlurContainer from "@/app/_components/blur-container";
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
 import { SITE_URL } from "@/lib/constants";
@@ -87,7 +86,7 @@ const page = async ({ params }: LocaleParams) => {
     <main
       className={`text-sm leading-6 break-keep print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
     >
-      <BlurContainer className="mx-auto max-w-[960px] gap-10 rounded-md border border-neutral-200/80 p-4 sm:p-8 dark:border-neutral-200/20">
+      <section className="mx-auto grid max-w-[960px] gap-10 sm:rounded-md sm:border sm:border-neutral-200/80 sm:p-8 sm:dark:border-neutral-200/20">
         <ResumeProfile
           profile={resumeData.profile}
           contact={resumeData.contact}
@@ -114,26 +113,28 @@ const page = async ({ params }: LocaleParams) => {
             >
               <ul className="mt-3 flex flex-col gap-6">
                 {career.projects.map((project) => (
-                  <li key={project.title}>
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-                      <h4 className="text-[15px] font-semibold">
-                        {project.title}
-                      </h4>
-                      {project.postSlug && (
-                        <ExternalLink
-                          href={postHref(project.postSlug)}
-                          className="text-xs text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
-                        >
-                          {project.linkText}
-                        </ExternalLink>
-                      )}
-                    </div>
+                  <li
+                    key={project.title}
+                    className="grid sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-x-4"
+                  >
+                    <h4 className="text-[15px] font-semibold">
+                      {project.title}
+                    </h4>
+                    {project.postSlug && (
+                      // 좁은 화면에서는 제목과 설명 사이에 끼면 부제처럼 읽혀 항목 맨 아래로 보낸다.
+                      <ExternalLink
+                        href={postHref(project.postSlug)}
+                        className="order-last mt-1 justify-self-start text-xs text-neutral-600 underline underline-offset-2 sm:order-none sm:mt-0 dark:text-neutral-400"
+                      >
+                        {project.linkText}
+                      </ExternalLink>
+                    )}
                     {project.summary && (
-                      <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                      <p className="mt-1 text-neutral-600 sm:col-span-2 dark:text-neutral-400">
                         {project.summary}
                       </p>
                     )}
-                    <ul className="mt-1 list-disc space-y-1 pl-5">
+                    <ul className="mt-1 list-disc space-y-1.5 pl-5 leading-[22px] sm:col-span-2">
                       {project.achievements.map((achievement) => (
                         <li key={achievement}>{achievement}</li>
                       ))}
@@ -213,7 +214,7 @@ const page = async ({ params }: LocaleParams) => {
             />
           ))}
         </ContentContainer>
-      </BlurContainer>
+      </section>
     </main>
   );
 };
