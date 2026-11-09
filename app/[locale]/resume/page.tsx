@@ -87,105 +87,93 @@ const page = async ({ params }: LocaleParams) => {
     <main
       className={`text-sm leading-6 break-keep print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
     >
-      <BlurContainer className="mx-auto max-w-[960px] gap-6 rounded-md border border-neutral-200/80 p-4 sm:p-8 dark:border-neutral-200/20">
+      <BlurContainer className="mx-auto max-w-[960px] gap-10 rounded-md border border-neutral-200/80 p-4 sm:p-8 dark:border-neutral-200/20">
         <ResumeProfile
           profile={resumeData.profile}
           contact={resumeData.contact}
         />
 
         <ContentContainer title="Experience">
-          <div className="grid gap-4">
-            {resumeData.workExperience.map((career) => (
-              <ResumeContent
-                key={career.company}
-                leftContent={<time>{career.period}</time>}
-                rightContent={
-                  <div className="grid gap-2">
-                    <div>
-                      <h4 className="mb-1 flex gap-0.5 text-[15px] font-bold">
-                        {career.company.split(" ").slice(0, -1).join(" ")}
-                        <ExternalLink
-                          href={career.url}
-                          className="hover:underline"
-                        >
-                          {career.company.split(" ").pop()}
-                        </ExternalLink>
-                        <div
-                          className="mb-1.5 size-[3px] self-end rounded-full"
-                          style={{ backgroundColor: career.color }}
-                        />
+          {resumeData.workExperience.map((career) => (
+            <ResumeContent
+              key={career.company}
+              period={career.period}
+              titleClassName="text-base"
+              title={
+                <span className="flex gap-0.5">
+                  {career.company.split(" ").slice(0, -1).join(" ")}
+                  <ExternalLink href={career.url} className="hover:underline">
+                    {career.company.split(" ").pop()}
+                  </ExternalLink>
+                  <span
+                    className="mb-1.5 size-[3px] self-end rounded-full"
+                    style={{ backgroundColor: career.color }}
+                  />
+                </span>
+              }
+            >
+              <ul className="mt-3 flex flex-col gap-6">
+                {career.projects.map((project) => (
+                  <li key={project.title}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                      <h4 className="text-[15px] font-semibold">
+                        {project.title}
                       </h4>
+                      {project.postSlug && (
+                        <ExternalLink
+                          href={postHref(project.postSlug)}
+                          className="text-xs text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
+                        >
+                          {project.linkText}
+                        </ExternalLink>
+                      )}
                     </div>
-                    <ul className="flex flex-col gap-4">
-                      {career.projects.map((project, projectIndex) => (
-                        <li key={projectIndex}>
-                          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-                            <strong>{project.title}</strong>
-                            {project.postSlug && (
-                              <ExternalLink
-                                href={postHref(project.postSlug)}
-                                className="text-xs text-neutral-600 underline underline-offset-2 dark:text-neutral-400"
-                              >
-                                {project.linkText}
-                              </ExternalLink>
-                            )}
-                          </div>
-                          {project.summary && (
-                            <p className="mt-1 text-neutral-600 dark:text-neutral-400">
-                              {project.summary}
-                            </p>
-                          )}
-                          <ul className="mt-1 list-disc space-y-1 pl-8">
-                            {project.achievements.map(
-                              (achievement, achievementIndex) => (
-                                <li key={achievementIndex}>{achievement}</li>
-                              ),
-                            )}
-                          </ul>
-                        </li>
+                    {project.summary && (
+                      <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                        {project.summary}
+                      </p>
+                    )}
+                    <ul className="mt-1 list-disc space-y-1 pl-5">
+                      {project.achievements.map((achievement) => (
+                        <li key={achievement}>{achievement}</li>
                       ))}
                     </ul>
-                  </div>
-                }
-              />
-            ))}
-          </div>
+                  </li>
+                ))}
+              </ul>
+            </ResumeContent>
+          ))}
         </ContentContainer>
 
         <ContentContainer title="Open Source Contributions">
           {resumeData.openSource.map((contribution) => (
             <ResumeContent
               key={contribution.title}
-              leftContent={
-                <time dateTime={contribution.period}>
-                  {contribution.period}
-                </time>
-              }
-              rightContent={
-                <p>
-                  <strong>{contribution.title}</strong>{" "}
-                  {contribution.description} (
-                  <ExternalLink
-                    href={contribution.link}
-                    className="underline underline-offset-2"
-                  >
-                    {resume.contribution}
-                  </ExternalLink>
-                  {contribution.blogSlug && (
-                    <>
-                      {" · "}
-                      <ExternalLink
-                        href={postHref(contribution.blogSlug)}
-                        className="underline underline-offset-2"
-                      >
-                        {contribution.blogLinkText}
-                      </ExternalLink>
-                    </>
-                  )}
-                  )
-                </p>
-              }
-            />
+              title={contribution.title}
+              period={contribution.period}
+            >
+              <p>
+                {contribution.description} (
+                <ExternalLink
+                  href={contribution.link}
+                  className="underline underline-offset-2"
+                >
+                  {resume.contribution}
+                </ExternalLink>
+                {contribution.blogSlug && (
+                  <>
+                    {" · "}
+                    <ExternalLink
+                      href={postHref(contribution.blogSlug)}
+                      className="underline underline-offset-2"
+                    >
+                      {contribution.blogLinkText}
+                    </ExternalLink>
+                  </>
+                )}
+                )
+              </p>
+            </ResumeContent>
           ))}
         </ContentContainer>
 
@@ -193,27 +181,26 @@ const page = async ({ params }: LocaleParams) => {
           {resumeData.otherExperience.map((item) => (
             <ResumeContent
               key={item.title}
-              leftContent={<time dateTime={item.period}>{item.period}</time>}
-              rightContent={
-                <div className="grid gap-2">
-                  <div>
-                    <h4 className="mb-1 flex gap-0.5">
-                      {item.title}
-                      <div
-                        className="mb-1.5 size-[3px] self-end rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                    </h4>
-                    <p>{item.description}</p>
-                  </div>
-                  <ul>
-                    {item.details.map((detail, detailIndex) => (
-                      <li key={detailIndex}>{detail}</li>
-                    ))}
-                  </ul>
-                </div>
+              period={item.period}
+              title={
+                <span className="flex gap-0.5">
+                  {item.title}
+                  <span
+                    className="mb-1.5 size-[3px] self-end rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                </span>
               }
-            />
+            >
+              <p>{item.description}</p>
+              {item.details.length > 0 && (
+                <ul className="mt-2">
+                  {item.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              )}
+            </ResumeContent>
           ))}
         </ContentContainer>
 
@@ -221,12 +208,8 @@ const page = async ({ params }: LocaleParams) => {
           {resumeData.education.map((edu) => (
             <ResumeContent
               key={edu.school}
-              leftContent={<time dateTime={edu.period}>{edu.period}</time>}
-              rightContent={
-                <div className="grid gap-2">
-                  <div className="mb-1">{edu.school}</div>
-                </div>
-              }
+              title={edu.school}
+              period={edu.period}
             />
           ))}
         </ContentContainer>

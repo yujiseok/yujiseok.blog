@@ -1,16 +1,22 @@
 const ResumeContent = ({
-  rightContent,
-  leftContent,
+  title,
+  period,
+  titleClassName = "text-[15px]",
+  children,
 }: {
-  rightContent: React.ReactNode;
-  leftContent: React.ReactNode;
+  title: React.ReactNode;
+  period: string;
+  /** 글자 크기. 아래에 프로젝트를 거느린 회사명만 한 단계 키운다 */
+  titleClassName?: string;
+  children?: React.ReactNode;
 }) => {
   return (
-    <div className="grid gap-2 sm:grid-cols-[160px_1fr] sm:gap-10">
-      <div className="text-neutral-600 dark:text-neutral-400">
-        {leftContent}
+    <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+        <h3 className={`font-semibold ${titleClassName}`}>{title}</h3>
+        <span className="text-neutral-600 dark:text-neutral-400">{period}</span>
       </div>
-      <div>{rightContent}</div>
+      {children}
     </div>
   );
 };

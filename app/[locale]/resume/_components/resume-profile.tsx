@@ -20,12 +20,12 @@ const ResumeProfile = ({
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-xl font-semibold">{profile.name}</h1>
+          <h1 className="text-2xl font-semibold">{profile.name}</h1>
           <small className="text-xs text-neutral-600 dark:text-neutral-400">
             {profile.title}
           </small>
         </div>
-        <ul className="flex flex-wrap gap-x-3 text-xs text-neutral-600 dark:text-neutral-400">
+        <ul className="flex flex-wrap gap-x-3 text-[13px] text-neutral-600 dark:text-neutral-400">
           {links.map(({ href, label }) => (
             <li key={href}>
               <ExternalLink
