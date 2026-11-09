@@ -63,7 +63,7 @@ export const resumeData = {
           achievements: [
             "에이전트 기반 워크플로우를 설계해 기획 확인부터 구현·QA·릴리즈까지 진행, 고객 서비스 20개·어드민 34개 화면을 근무일 약 75일 만에 일정 내 동시 출시",
             "QA의 TC 기대 결과를 QA 진입 전 Vitest·Playwright로 사전 검증해, 이전 프로젝트(포트폴리오 서비스) 대비 코드 규모 2.5배에서도 1차 QA Defect 밀도 약 56% 감소 (천 줄당 8.5건 → 3.7건)",
-            "반복 절차는 Claude Code 스킬 8종으로 자동화하고, 결제·정원·환불 등 금전·정합성 영역 하네스 설계",
+            "반복 절차는 Claude Code 스킬 8종으로 자동화하고, 결제·정원·환불 등 거래·정합성 영역 하네스 설계",
           ],
           postSlug: "delegate-to-agents",
           linkText: "에이전트에게 일 맡겨보기",

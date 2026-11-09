@@ -24,7 +24,7 @@ export const resumeData = {
           achievements: [
             "Designed an agent-based workflow that carried work from requirements review through implementation, QA, and release, and shipped 20 customer-facing screens and 34 admin screens together, on schedule, in about 75 working days",
             "Verified QA's expected test-case results with Vitest and Playwright before QA began, which cut first-round QA defect density by about 56% (8.5 to 3.7 per 1,000 lines) even though the codebase was 2.5x the size of the previous project (the portfolio service)",
-            "Automated recurring procedures with 8 Claude Code skills and designed a harness for areas where money and data consistency matter, such as payments, capacity, and refunds",
+            "Automated recurring procedures with 8 Claude Code skills and designed a harness for areas where transactions and data consistency matter, such as payments, capacity, and refunds",
           ],
           postSlug: "delegate-to-agents",
           linkText: "Trying Out Delegating Work to Agents",
