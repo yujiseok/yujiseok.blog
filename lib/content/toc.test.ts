@@ -11,6 +11,7 @@ import { unified } from "unified";
 import type { Nodes as HastNodes } from "hast";
 
 import { parsePost } from "./document";
+import { listLocaleFiles } from "./repository";
 import { buildToc, getToc } from "./toc";
 
 /*
@@ -38,34 +39,42 @@ const headingIdsOf = (node: HastNodes): string[] =>
 const renderedIds = (body: string): string[] =>
   headingIdsOf(renderer.runSync(renderer.parse(body)) as HastNodes);
 
-const CONTENT_TYPES = ["writing", "atelier"] as const;
+// atelier는 번역 대상이 아니라 ko 원문만 있다
+const CORPUS = [
+  { contentType: "writing", locale: "ko" },
+  { contentType: "writing", locale: "en" },
+  { contentType: "atelier", locale: "ko" },
+] as const;
 
-const posts = CONTENT_TYPES.flatMap((contentType) => {
+const posts = CORPUS.flatMap(({ contentType, locale }) => {
   const dir = path.join(process.cwd(), "content", contentType);
 
-  return fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".mdx"))
-    .map((file) => ({
+  return listLocaleFiles(fs.readdirSync(dir), locale).map(
+    ({ file, slug }) => ({
       contentType,
-      slug: path.basename(file, ".mdx"),
+      locale,
+      slug,
       file: path.join(dir, file),
-    }));
+    }),
+  );
 });
 
 const bodyOf = (file: string) => parsePost(fs.readFileSync(file, "utf8")).body;
 
 describe("목차 id가 rehype-slug가 박는 id와 일치한다", () => {
-  it.each(posts)("$contentType/$slug", async ({ contentType, slug, file }) => {
-    const toc = await getToc(contentType, slug);
+  it.each(posts)(
+    "$locale $contentType/$slug",
+    async ({ contentType, locale, slug, file }) => {
+    const toc = await getToc(contentType, slug, locale);
 
-    expect(toc.map((entry) => entry.id)).toEqual(renderedIds(bodyOf(file)));
-  });
+      expect(toc.map((entry) => entry.id)).toEqual(renderedIds(bodyOf(file)));
+    },
+  );
 });
 
 describe("코퍼스의 경계 사례", () => {
   it("같은 제목이 두 번 나오면 rehype-slug와 같은 접미사를 붙인다", async () => {
-    const toc = await getToc("writing", "next-sitemap-and-robots");
+    const toc = await getToc("writing", "next-sitemap-and-robots", "ko");
 
     expect(toc.filter((entry) => entry.text === "robots.txt")).toEqual([
       { id: "robotstxt", text: "robots.txt", indent: 1 },
@@ -74,11 +83,11 @@ describe("코퍼스의 경계 사례", () => {
   });
 
   it("heading이 없는 글은 빈 목차를 낸다", async () => {
-    expect(await getToc("writing", "2025")).toEqual([]);
+    expect(await getToc("writing", "2025", "ko")).toEqual([]);
   });
 
   it("h1로 시작하는 글도 최상위가 0단계다", async () => {
-    const toc = await getToc("writing", "react-micro-hook");
+    const toc = await getToc("writing", "react-micro-hook", "ko");
 
     expect(toc.length).toBeGreaterThan(0);
     expect(Math.min(...toc.map((entry) => entry.indent))).toBe(0);
@@ -94,6 +103,6 @@ describe("코퍼스의 경계 사례", () => {
   });
 
   it("존재하지 않는 경로를 가리키는 slug는 파일을 읽지 않는다", async () => {
-    expect(await getToc("writing", "../../package")).toEqual([]);
+    expect(await getToc("writing", "../../package", "ko")).toEqual([]);
   });
 });

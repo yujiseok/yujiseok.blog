@@ -3,6 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { revalidatePath } from "next/cache";
+
 import type { PostMetadata } from "@/lib/content/document";
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -219,6 +221,17 @@ describe("listPosts", () => {
   });
 });
 
+describe("listPosts 번역본", () => {
+  it(".en.mdx 번역본은 별개의 글로 나오지 않는다", async () => {
+    const { savePost, listPosts } = await loadActions();
+
+    await savePost({ slug: "hello", metadata: METADATA, doc: DOC });
+    fs.writeFileSync(path.join(writingDir, "hello.en.mdx"), "translated");
+
+    expect((await listPosts()).map((post) => post.slug)).toEqual(["hello"]);
+  });
+});
+
 describe("readPost 무손실 판정", () => {
   const withBody = (body: string) =>
     `export const metadata = {\n  "title": "제목",\n  "publishedAt": "2026-09-09",\n  "summary": "요약"\n}\n\n${body}\n`;
@@ -254,6 +267,41 @@ describe("readPost 무손실 판정", () => {
   });
 });
 
+describe("캐시 재검증", () => {
+  const revalidated = () => vi.mocked(revalidatePath).mock.calls.flat();
+
+  beforeEach(() => vi.mocked(revalidatePath).mockClear());
+
+  it("저장하면 두 언어의 홈·목록·상세를 모두 갱신한다", async () => {
+    const { savePost } = await loadActions();
+
+    await savePost({ slug: "fresh", metadata: METADATA, doc: DOC });
+
+    expect(revalidated()).toEqual(
+      expect.arrayContaining([
+        "/ko",
+        "/en",
+        "/ko/posts",
+        "/en/posts",
+        "/ko/posts/fresh",
+        "/en/posts/fresh",
+      ]),
+    );
+  });
+
+  it("삭제하면 두 언어의 상세를 모두 갱신한다", async () => {
+    const { savePost, deletePost } = await loadActions();
+
+    await savePost({ slug: "bye", metadata: METADATA, doc: DOC });
+    vi.mocked(revalidatePath).mockClear();
+    await deletePost("bye");
+
+    expect(revalidated()).toEqual(
+      expect.arrayContaining(["/ko/posts/bye", "/en/posts/bye", "/ko", "/en"]),
+    );
+  });
+});
+
 describe("deletePost", () => {
   it("글 파일을 지운다", async () => {
     const { savePost, deletePost, listPosts } = await loadActions();
@@ -263,6 +311,24 @@ describe("deletePost", () => {
 
     expect(fs.existsSync(path.join(writingDir, "goodbye.mdx"))).toBe(false);
     expect(await listPosts()).toEqual([]);
+  });
+
+  it("번역본도 함께 지운다 — 남으면 영어 페이지가 공개된 채 고아가 된다", async () => {
+    const { savePost, deletePost } = await loadActions();
+
+    await savePost({ slug: "goodbye", metadata: METADATA, doc: DOC });
+    fs.writeFileSync(path.join(writingDir, "goodbye.en.mdx"), "translated");
+    await deletePost("goodbye");
+
+    expect(fs.existsSync(path.join(writingDir, "goodbye.en.mdx"))).toBe(false);
+  });
+
+  it("번역본이 없어도 지워진다", async () => {
+    const { savePost, deletePost } = await loadActions();
+
+    await savePost({ slug: "solo", metadata: METADATA, doc: DOC });
+
+    await expect(deletePost("solo")).resolves.toEqual({ ok: true });
   });
 
   it("다른 글은 건드리지 않는다", async () => {

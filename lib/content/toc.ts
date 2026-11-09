@@ -9,7 +9,10 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Heading, Nodes } from "mdast";
 
+import type { Locale } from "@/lib/i18n/locales";
+
 import { isValidSlug, parsePost } from "./document";
+import { contentFileName } from "./repository";
 
 export interface TocEntry {
   /** rehype-slug가 렌더 시 heading에 박는 id와 같은 값 */
@@ -75,6 +78,7 @@ export const buildToc = (body: string): TocEntry[] => {
 export const getToc = async (
   contentType: ContentType,
   slug: string,
+  locale: Locale,
 ): Promise<TocEntry[]> => {
   "use cache";
 
@@ -84,7 +88,7 @@ export const getToc = async (
   }
 
   const source = await fs.readFile(
-    path.join(CONTENT_DIR, contentType, `${slug}.mdx`),
+    path.join(CONTENT_DIR, contentType, contentFileName(contentType, slug, locale)),
     "utf8",
   );
 

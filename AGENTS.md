@@ -29,7 +29,7 @@
 - `cacheComponents` 가 켜져 있다. `generateStaticParams` 가 빈 배열을 반환하면 그 자체로 빌드가
   깨지므로, 외부 API(Spotify)에 기대는 라우트는 `export const instant = false` 로 둔다.
 - `/editor` 는 개발 서버 전용이다. 서버 액션마다 `assertDevOnly()` 가 걸려 있다.
-- `app/(main)/atelier` 는 살아 있는 라우트지만 내비 어디에도 링크하지 않는다.
+- `app/[locale]/(main)/atelier` 는 살아 있는 라우트지만 내비 어디에도 링크하지 않는다.
 
 ## 관례
 

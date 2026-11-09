@@ -1,13 +1,13 @@
 import type { MDXComponents } from "mdx/types";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
 
 import { cn } from "@/lib/cn";
 
 import ExternalLink from "@/app/_components/external-link";
 import CodeBlock from "@/app/_mdx/code-block";
 import { Callout } from "@/app/_mdx/callout";
+import { LocalizedLink } from "@/app/_mdx/localized-link";
 
 // 24개 글 중 2~4개만 쓰는 클라이언트 컴포넌트다(그중 셋은 motion/react까지
 // 끌고 온다). mdx-components.tsx는 모든 글의 렌더 경로에 걸리므로, 정적
@@ -27,11 +27,7 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   const href = props.href ?? "";
 
   if (href.startsWith("/")) {
-    return (
-      <Link href={href} {...props}>
-        {props.children}
-      </Link>
-    );
+    return <LocalizedLink {...props} href={href} />;
   }
 
   if (href.startsWith("#")) {

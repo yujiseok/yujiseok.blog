@@ -9,8 +9,8 @@ import type { LoadedPostInput } from "@/lib/editor/draft";
 // 에디터는 (main) 레이아웃 밖이라 헤더도 푸터 내비도 없다. 여기 링크가 없으면
 // 주소를 직접 고치는 것 말고는 나갈 길이 없다.
 const EXIT_LINKS = [
-  { href: "/", label: "홈" },
-  { href: "/posts", label: "글 목록" },
+  { href: "/ko", label: "홈" },
+  { href: "/ko/posts", label: "글 목록" },
 ];
 
 // 로컬 도구라 스트리밍 껍데기를 먼저 보낼 이유가 없다. Suspense로 감싸는 대신

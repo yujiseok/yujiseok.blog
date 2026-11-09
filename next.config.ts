@@ -19,24 +19,42 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // 글 경로가 두 번 바뀌었다: /post → /writing → /posts. 옛 경로는 체인으로
-  // 넘기지 않고 전부 현재 경로로 직결시킨다 — 리다이렉트가 이어지면 그만큼
-  // 왕복이 늘고 검색엔진도 마지막 목적지를 늦게 인식한다.
-  redirects: async () =>
-    ["/post", "/writing"].flatMap((legacy) => [
-      { source: legacy, destination: "/posts", permanent: true },
+  // 글 경로가 세 번 바뀌었다: /post → /writing → /posts → /ko/posts. 옛 경로는
+  // 체인으로 넘기지 않고 전부 현재 경로로 직결시킨다 — 리다이렉트가 이어지면
+  // 그만큼 왕복이 늘고 검색엔진도 마지막 목적지를 늦게 인식한다.
+  // 접두사 없는 옛 주소는 언어를 고르지 않고 ko로 보낸다(proxy보다 먼저 걸린다).
+  // 글 본문 안의 옛 링크(/post/x)는 CustomLink가 접두사를 붙여 /ko/post/x가 되므로
+  // 접두사 있는 형태도 받는다. :path*라야 하위 경로(opengraph-image)도 따라온다.
+  redirects: async () => [
+    ...["/post", "/writing"].flatMap((legacy) => [
+      { source: legacy, destination: "/ko/posts", permanent: true },
       {
-        // :path*라야 /writing/<slug>/opengraph-image 같은 하위 경로도 따라온다
         source: `${legacy}/:path*`,
-        destination: "/posts/:path*",
+        destination: "/ko/posts/:path*",
         permanent: true,
       },
     ]),
+    {
+      source: "/:locale(ko|en)/:legacy(post|writing)",
+      destination: "/:locale/posts",
+      permanent: true,
+    },
+    {
+      source: "/:locale(ko|en)/:legacy(post|writing)/:path*",
+      destination: "/:locale/posts/:path*",
+      permanent: true,
+    },
+  ],
   // 에이전트용 마크다운 원문. 글 페이지 [slug]가 "x.md"를 slug로 받아 404를
-  // 내기 전에 route handler로 돌린다.
+  // 내기 전에 route handler로 돌린다. 접두사 없는 옛 주소는 한국어 원문이다
+  // (이미 llms.txt에 실려 나간 주소).
   rewrites: async () => ({
     beforeFiles: [
-      { source: "/posts/:slug.md", destination: "/md/posts/:slug" },
+      { source: "/posts/:slug.md", destination: "/md/ko/posts/:slug" },
+      {
+        source: "/:locale(ko|en)/posts/:slug.md",
+        destination: "/md/:locale/posts/:slug",
+      },
     ],
   }),
   cacheComponents: true,
@@ -45,6 +63,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   reactCompiler: true,
   experimental: {
+    // 루트 레이아웃이 둘(app/[locale], app/editor)이라 하나로 404를 조립할 수 없다.
+    // 접두사 밖의 못 찾는 주소는 app/global-not-found.tsx가 받는다.
+    globalNotFound: true,
     typedEnv: true,
     agentUpgrade: "latest",
     // Babel을 거치지 않고 Turbopack 안에서 컴파일러를 돌린다
@@ -70,9 +91,12 @@ const withMDX = createMDX({
         "rehype-autolink-headings",
         {
           behavior: "append",
+          // 라벨을 두지 않는다. 컴파일 시점에 고정되는 값이라 언어를 따라갈 수 없고,
+          // 제목이 이미 앵커의 맥락이라 보조기기에는 숨긴다(링크는 목차가 대신한다).
           properties: {
             className: ["heading-anchor"],
-            ariaLabel: "이 섹션 링크",
+            ariaHidden: true,
+            tabIndex: -1,
           },
           content: { type: "text", value: "#" },
         },

@@ -3,6 +3,7 @@ import path from "node:path";
 import type { ComponentType } from "react";
 
 import { SITE_URL } from "@/lib/constants";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 
 import { isPublished, parsePost, type PostMetadata } from "./document";
 import { toMarkdown } from "./markdown";
@@ -16,14 +17,85 @@ interface MdxModule {
 
 const ROOT_DIR = path.join(process.cwd(), "content");
 
+/*
+ * 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. atelier는 번역 대상이 아니라
+ * 어느 언어로 불러도 원문을 읽는다 — en 목록이 비면 generateStaticParams가
+ * 빈 배열이 되어 cacheComponents 빌드가 깨지기도 한다.
+ */
+const contentLocale = (contentType: ContentType, locale: Locale): Locale =>
+  contentType === "atelier" ? DEFAULT_LOCALE : locale;
+
+const SUFFIX = { ko: "", en: ".en" } as const satisfies Record<Locale, string>;
+
+/** `content/<type>/` 아래의 파일명. toc처럼 원문을 직접 읽는 쪽이 쓴다. */
+export const contentFileName = (
+  contentType: ContentType,
+  slug: string,
+  locale: Locale,
+) => `${slug}${SUFFIX[contentLocale(contentType, locale)]}.mdx`;
+
 // 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있어 분기한다
 export const importMdx = (
   contentType: ContentType,
   slug: string,
+  locale: Locale,
 ): Promise<MdxModule> =>
   contentType === "writing"
-    ? import(`@/content/writing/${slug}.mdx`)
+    ? import(`@/content/writing/${slug}${SUFFIX[locale]}.mdx`)
     : import(`@/content/atelier/${slug}.mdx`);
+
+/** 디렉터리 파일명에서 해당 언어의 글만 골라 slug(언어 접미사 제외)와 묶는다. */
+export const listLocaleFiles = (files: string[], locale: Locale) =>
+  files.flatMap((file) => {
+    if (path.extname(file) !== ".mdx") return [];
+
+    const slug = path.basename(file, ".mdx");
+    const isTranslation = slug.endsWith(SUFFIX.en);
+
+    if (locale === "en") {
+      return isTranslation
+        ? [{ file, slug: slug.slice(0, -SUFFIX.en.length) }]
+        : [];
+    }
+
+    return isTranslation ? [] : [{ file, slug }];
+  });
+
+interface ContentEntry {
+  metadata: PostMetadata;
+  slug: string;
+}
+
+/*
+ * 번역본의 published는 번역 시점의 값이라 원문이 나중에 비공개로 돌아가도
+ * true로 남는다. 번역본은 원문이 있고 공개 상태일 때만 보인다 — 원문 없이
+ * 남은 .en.mdx(고아)도 여기서 걸러진다. 초안을 보여 주는 모드에서는 원문이
+ * 비공개여도 번역본을 남긴다.
+ */
+export const requireSource = <T extends ContentEntry>(
+  translations: T[],
+  sources: ContentEntry[],
+  includeDrafts: boolean,
+): T[] =>
+  translations.filter(({ slug }) => {
+    const source = sources.find((entry) => entry.slug === slug);
+
+    return source !== undefined && (includeDrafts || isPublished(source.metadata));
+  });
+
+const readEntries = (contentType: ContentType, locale: Locale) =>
+  fs.readdir(path.join(ROOT_DIR, contentType)).then((files) =>
+    Promise.all(
+      listLocaleFiles(files, locale).map(async ({ file, slug }) => {
+        const source = await fs.readFile(
+          path.join(ROOT_DIR, contentType, file),
+          "utf8",
+        );
+
+        return { metadata: parsePost(source).metadata, slug };
+      }),
+    ),
+  );
 
 /*
  * 목록 페이지·RSS·sitemap·llms.txt는 메타데이터만 있으면 된다. importMdx로
@@ -33,31 +105,29 @@ export const importMdx = (
  */
 export const readAllContent = async (
   contentType: ContentType,
-  { includeDrafts = false }: { includeDrafts?: boolean } = {},
+  {
+    locale,
+    includeDrafts = false,
+  }: { locale: Locale; includeDrafts?: boolean },
 ) => {
-  const files = await fs.readdir(path.join(ROOT_DIR, contentType));
-
-  const contents = await Promise.all(
-    files
-      .filter((file) => path.extname(file) === ".mdx")
-      .map(async (file) => {
-        const slug = path.basename(file, ".mdx");
-        const source = await fs.readFile(
-          path.join(ROOT_DIR, contentType, file),
-          "utf8",
+  const effective = contentLocale(contentType, locale);
+  const own = (await readEntries(contentType, effective)).filter(
+    ({ metadata }) => includeDrafts || isPublished(metadata),
+  );
+  const visible =
+    effective === DEFAULT_LOCALE
+      ? own
+      : requireSource(
+          own,
+          await readEntries(contentType, DEFAULT_LOCALE),
+          includeDrafts,
         );
 
-        return { metadata: parsePost(source).metadata, slug };
-      }),
+  return visible.sort(
+    (a, b) =>
+      new Date(b.metadata.publishedAt).getTime() -
+      new Date(a.metadata.publishedAt).getTime(),
   );
-
-  return contents
-    .filter(({ metadata }) => includeDrafts || isPublished(metadata))
-    .sort(
-      (a, b) =>
-        new Date(b.metadata.publishedAt).getTime() -
-        new Date(a.metadata.publishedAt).getTime(),
-    );
 };
 
 /*
@@ -67,41 +137,46 @@ export const readAllContent = async (
  */
 const INCLUDE_DRAFTS = process.env.NODE_ENV === "development";
 
-const getAllContent = async (contentType: ContentType) => {
+const getAllContent = async (contentType: ContentType, locale: Locale) => {
   "use cache";
 
-  return readAllContent(contentType, { includeDrafts: INCLUDE_DRAFTS });
+  return readAllContent(contentType, {
+    locale,
+    includeDrafts: INCLUDE_DRAFTS,
+  });
 };
 
-export const getAllWritings = () => getAllContent("writing");
+/** en에는 번역본이 있는 글만 나온다. 번역이 없는 slug는 en에서 없는 글이다. */
+export const getAllWritings = (locale: Locale) =>
+  getAllContent("writing", locale);
 
-export const getWritingBySlug = async (slug: string) =>
-  (await getAllWritings()).find((writing) => writing.slug === slug);
+export const getWritingBySlug = async (slug: string, locale: Locale) =>
+  (await getAllWritings(locale)).find((writing) => writing.slug === slug);
 
 /*
  * 에이전트용 마크다운 원문(/posts/<slug>.md, /llms-full.txt). 목록에 있는 slug만
  * 읽으므로 초안 필터와 slug 검증을 getAllWritings에 그대로 맡긴다.
  */
-export const getWritingMarkdown = async (slug: string) => {
-  const writing = await getWritingBySlug(slug);
+export const getWritingMarkdown = async (slug: string, locale: Locale) => {
+  const writing = await getWritingBySlug(slug, locale);
 
   if (!writing) {
     return;
   }
 
   const source = await fs.readFile(
-    path.join(ROOT_DIR, "writing", `${writing.slug}.mdx`),
+    path.join(ROOT_DIR, "writing", contentFileName("writing", slug, locale)),
     "utf8",
   );
 
   return toMarkdown({
     ...writing.metadata,
-    url: `${SITE_URL}/posts/${writing.slug}`,
+    url: `${SITE_URL}/${locale}/posts/${writing.slug}`,
     body: parsePost(source).body,
   });
 };
 
-export const getAllAtelier = () => getAllContent("atelier");
+export const getAllAtelier = () => getAllContent("atelier", DEFAULT_LOCALE);
 
 export const getAtelierBySlug = async (slug: string) =>
   (await getAllAtelier()).find((atelier) => atelier.slug === slug);

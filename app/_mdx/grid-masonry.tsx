@@ -1,3 +1,8 @@
+"use client";
+
+import { useLocaleContext } from "@/app/_components/locale-provider";
+import type { Locale } from "@/lib/i18n/locales";
+
 const GRID_COLORS = [
   "#f1f5f9",
   "#e0e7ef",
@@ -13,15 +18,23 @@ const GRID_COLORS = [
   "#fde68a",
 ];
 
+// 번역 스크립트는 컴포넌트 안의 문구를 볼 수 없어 언어별로 직접 둔다
+const COPY = {
+  ko: { caption: "grid-row를 사용한 레이아웃", height: "높이" },
+  en: { caption: "Layout using grid-row", height: "Height" },
+} as const satisfies Record<Locale, { caption: string; height: string }>;
+
 const GridMasonry = ({
   item1,
   item2,
-  text = "grid-row를 사용한 레이아웃",
+  text,
 }: {
   item1?: number;
   item2?: number;
   text?: string;
 }) => {
+  const copy = COPY[useLocaleContext().locale];
+
   return (
     <div className="text-center">
       <div className="grid grid-cols-3 gap-4 text-zinc-900">
@@ -42,16 +55,16 @@ const GridMasonry = ({
               {index + 1}
               <span className="text-xs text-zinc-800">
                 {index === item1
-                  ? "높이 476px"
+                  ? `${copy.height} 476px`
                   : index === item2
-                    ? "높이 274px"
+                    ? `${copy.height} 274px`
                     : ""}
               </span>
             </div>
           );
         })}
       </div>
-      <small className="mt-4 block">{text}</small>
+      <small className="mt-4 block">{text ?? copy.caption}</small>
     </div>
   );
 };

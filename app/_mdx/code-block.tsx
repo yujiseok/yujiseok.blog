@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { useLocaleContext } from "@/app/_components/locale-provider";
 import { cn } from "@/lib/cn";
 
 const COPIED_DURATION_MS = 1500;
@@ -55,6 +56,7 @@ function CodeBlock({
   const preRef = useRef<HTMLPreElement>(null);
   const revertTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [copied, setCopied] = useState(false);
+  const { codeBlock } = useLocaleContext();
 
   const handleCopy = async () => {
     const code = preRef.current?.textContent ?? "";
@@ -75,7 +77,7 @@ function CodeBlock({
         <button
           type="button"
           onClick={handleCopy}
-          aria-label="코드 복사"
+          aria-label={codeBlock.copy}
           className={cn(
             "absolute top-2 right-2 flex size-7 items-center justify-center rounded-md",
             "bg-white/10 text-white/80 transition-opacity hover:bg-white/20",
@@ -89,7 +91,7 @@ function CodeBlock({
         </button>
       </pre>
       <span className="sr-only" aria-live="polite">
-        {copied ? "복사됨" : ""}
+        {copied ? codeBlock.copied : ""}
       </span>
     </>
   );

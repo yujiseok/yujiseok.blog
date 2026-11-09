@@ -14,6 +14,8 @@ import {
   type PostMetadata,
 } from "@/lib/content/document";
 import { docToMarkdown, openForEditing } from "@/lib/editor/markdown";
+import { listLocaleFiles } from "@/lib/content/repository";
+import { LOCALES, localizedPath } from "@/lib/i18n/locales";
 
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
 
@@ -44,6 +46,22 @@ function resolvePostPath(slug: string): string {
   }
 
   return filePath;
+}
+
+/** 번역본(`slug.en.mdx`)의 경로. 같은 slug 검증을 거친다. */
+const translationPath = (slug: string) =>
+  resolvePostPath(slug).replace(/\.mdx$/, ".en.mdx");
+
+/**
+ * getAllWritings가 "use cache"로 캐싱돼 있어 재검증 없이는 홈·목록·상세 어디에도
+ * 반영되지 않는다. 언어마다 별개의 경로라 둘 다 갱신한다.
+ */
+function revalidateWriting(slug: string) {
+  for (const locale of LOCALES) {
+    revalidatePath(localizedPath(locale, "/"));
+    revalidatePath(localizedPath(locale, "/posts"));
+    revalidatePath(localizedPath(locale, `/posts/${slug}`));
+  }
 }
 
 function assertValidMetadata(metadata: PostMetadata) {
@@ -112,15 +130,13 @@ export async function listPosts(): Promise<PostListItem[]> {
 
   const files = await fs.readdir(WRITING_DIR);
 
+  // 에디터는 한국어 원문만 다룬다. `.en.mdx` 번역본은 번역 스크립트의 산출물이다.
   const posts = await Promise.all(
-    files
-      .filter((file) => path.extname(file) === ".mdx")
-      .map(async (file) => {
-        const slug = path.basename(file, ".mdx");
-        const source = await fs.readFile(path.join(WRITING_DIR, file), "utf8");
-        const { metadata } = parsePost(source);
-        return { slug, metadata };
-      }),
+    listLocaleFiles(files, "ko").map(async ({ file, slug }) => {
+      const source = await fs.readFile(path.join(WRITING_DIR, file), "utf8");
+      const { metadata } = parsePost(source);
+      return { slug, metadata };
+    }),
   );
 
   return posts.sort((a, b) =>
@@ -182,11 +198,7 @@ export async function savePost(input: SavePostInput): Promise<{ ok: true }> {
 
   await fs.writeFile(filePath, serializePost(document), "utf8");
 
-  // getAllWritings/getAllContent가 "use cache"로 캐싱돼 있어 재검증 없이는
-  // 새 글이 홈·목록·상세 어디에도 반영되지 않는다.
-  revalidatePath("/");
-  revalidatePath("/posts");
-  revalidatePath(`/posts/${input.slug}`);
+  revalidateWriting(input.slug);
 
   return { ok: true };
 }
@@ -203,10 +215,10 @@ export async function deletePost(slug: string): Promise<{ ok: true }> {
   // public/images/<slug>/ 는 남긴다. 글 하나 지우자고 다른 글이 참조할 수도
   // 있는 파일까지 건드리지 않는다 — 필요하면 직접 지우는 게 안전하다.
   await fs.unlink(filePath);
+  // 번역본이 남으면 원문 없이 영어 페이지만 공개된 채 고아가 된다
+  await fs.rm(translationPath(slug), { force: true });
 
-  revalidatePath("/");
-  revalidatePath("/posts");
-  revalidatePath(`/posts/${slug}`);
+  revalidateWriting(slug);
 
   return { ok: true };
 }
