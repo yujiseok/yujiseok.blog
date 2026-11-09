@@ -15,8 +15,6 @@ const input = {
     { slug: "b", metadata: meta("글 B") },
   ],
   en: [{ slug: "a", metadata: meta("Post A", "Summary A") }],
-  atelier: [{ slug: "meteor", metadata: meta("Meteor") }],
-  gallery: [{ name: "김환기", count: 3 }],
 };
 
 describe("buildLlmsTxt", () => {
@@ -53,7 +51,6 @@ describe("buildLlmsTxt", () => {
     expect(txt).toContain("https://yujiseok.blog/en/llms-full.txt");
     expect(txt).toContain("https://yujiseok.blog/rss.xml");
     expect(txt).toContain("https://yujiseok.blog/en/rss.xml");
-    expect(txt).toContain("- 김환기: 3점");
   });
 });
 

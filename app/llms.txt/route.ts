@@ -1,24 +1,14 @@
-import { getAllAtelier, getAllWritings } from "@/lib/content/repository";
-import { getGallery } from "@/lib/gallery";
+import { getAllWritings } from "@/lib/content/repository";
 import { buildLlmsTxt } from "@/lib/seo/llms";
 import { CACHE_CONTROL } from "@/lib/seo/responses";
 
 export async function GET() {
-  const [ko, en, atelier, gallery] = await Promise.all([
+  const [ko, en] = await Promise.all([
     getAllWritings("ko"),
     getAllWritings("en"),
-    getAllAtelier(),
-    getGallery(),
   ]);
 
-  const artists = [...new Set(gallery.map(({ artist }) => artist.name))]
-    .map((name) => ({
-      name,
-      count: gallery.filter(({ artist }) => artist.name === name).length,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  return new Response(buildLlmsTxt({ ko, en, atelier, gallery: artists }), {
+  return new Response(buildLlmsTxt({ ko, en }), {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       // cacheComponents 아래에서 라우트 핸들러는 동적이라 매 요청 재생성된다.

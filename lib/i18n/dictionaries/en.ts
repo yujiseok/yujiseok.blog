@@ -46,35 +46,6 @@ export const en = {
     home: "Back to home",
     recent: "Recent posts",
   },
-  atelier: {
-    description: "A space for exploring interfaces",
-  },
-  gallery: {
-    description: "Paintings I've collected",
-    artists: "Artists",
-    all: "All",
-    viewArtwork: "View {artist} artwork larger",
-    previous: "Previous",
-    next: "Next",
-    close: "Close",
-    artistNames: {
-      "park-seo-bo": "Park Seo-Bo",
-      "yun-hyong-keun": "Yun Hyong-keun",
-      "chung-sang-hwa": "Chung Sang-Hwa",
-      "ha-chong-hyun": "Ha Chong-Hyun",
-      "kim-tschang-yeul": "Kim Tschang-Yeul",
-      "lee-ungno": "Lee Ungno",
-      "chang-ucchin": "Chang Ucchin",
-      "rhee-seundja": "Rhee Seund-ja",
-      "kwon-young-woo": "Kwon Young-woo",
-      "lee-dai-won": "Lee Dai-Won",
-      "chun-kyung-ja": "Chun Kyung-Ja",
-      "yoo-young-kuk": "Yoo Youngkuk",
-      "kim-whanki": "Kim Whanki",
-      "lee-ufan": "Lee Ufan",
-      yujiseok: "Yu Jiseok",
-    },
-  },
   music: {
     description: "A space for sharing my taste in music",
     back: "Go back",
@@ -96,7 +67,5 @@ export const en = {
       "Yu Jiseok's personal tech blog, where he writes down and shares what he studies. It covers web development: frontend, React, Next.js, and TypeScript.",
     llmsIntro:
       "This blog is run by Yu Jiseok, a frontend developer. It mostly covers React, Next.js, TypeScript, and web performance optimization.",
-    llmsGallery: "Paintings I've collected.",
-    pieces: (count: number) => (count === 1 ? "1 piece" : `${count} pieces`),
   },
 } satisfies Dictionary;

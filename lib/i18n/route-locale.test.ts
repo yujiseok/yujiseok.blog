@@ -33,9 +33,10 @@ describe("routeLocale", () => {
   });
 
   it("쿼리 문자열을 보존한다", () => {
-    expect(
-      routeLocale({ pathname: "/gallery", search: "?artist=a&image=b" }),
-    ).toEqual({ type: "redirect", location: "/ko/gallery?artist=a&image=b" });
+    expect(routeLocale({ pathname: "/posts", search: "?a=1&b=2" })).toEqual({
+      type: "redirect",
+      location: "/ko/posts?a=1&b=2",
+    });
   });
 
   it("접두사가 있으면 쿠키와 달라도 그대로 통과시킨다", () => {

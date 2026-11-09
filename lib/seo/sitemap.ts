@@ -9,7 +9,6 @@ interface SitemapInput {
   ko: ContentEntry[];
   /** 번역이 있는 글만 */
   en: ContentEntry[];
-  atelier: ContentEntry[];
 }
 
 type Item = MetadataRoute.Sitemap[number];
@@ -17,9 +16,7 @@ type Item = MetadataRoute.Sitemap[number];
 const PAGES = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/posts", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/atelier", changeFrequency: "monthly", priority: 0.7 },
   { path: "/resume", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/gallery", changeFrequency: "monthly", priority: 0.6 },
   { path: "/music", changeFrequency: "daily", priority: 0.5 },
 ] as const;
 
@@ -50,12 +47,11 @@ const entry = (
  * 목록 페이지는 최신 콘텐츠 날짜를, 나머지는 lastModified를 생략한다.
  * 번역이 없는 글은 en URL도, en 대체 언어도 내지 않는다(404를 가리키게 된다).
  */
-export const buildSitemap = ({ ko, en, atelier }: SitemapInput): Item[] => {
+export const buildSitemap = ({ ko, en }: SitemapInput): Item[] => {
   const translated = new Set(en.map(({ slug }) => slug));
   const latest = {
     "/": ko[0]?.metadata.publishedAt,
     "/posts": ko[0]?.metadata.publishedAt,
-    "/atelier": atelier[0]?.metadata.publishedAt,
   } as Record<string, string | undefined>;
 
   const pages = LOCALES.flatMap((locale) =>
@@ -78,15 +74,5 @@ export const buildSitemap = ({ ko, en, atelier }: SitemapInput): Item[] => {
     );
   });
 
-  const ateliers = atelier.flatMap(({ slug, metadata }) =>
-    LOCALES.map((locale) =>
-      entry(locale, `/atelier/${slug}`, LOCALES, {
-        lastModified: metadata.publishedAt,
-        changeFrequency: "monthly",
-        priority: 0.7,
-      }),
-    ),
-  );
-
-  return [...pages, ...writings, ...ateliers];
+  return [...pages, ...writings];
 };

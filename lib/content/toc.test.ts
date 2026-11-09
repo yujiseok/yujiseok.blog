@@ -39,11 +39,9 @@ const headingIdsOf = (node: HastNodes): string[] =>
 const renderedIds = (body: string): string[] =>
   headingIdsOf(renderer.runSync(renderer.parse(body)) as HastNodes);
 
-// atelier는 번역 대상이 아니라 ko 원문만 있다
 const CORPUS = [
   { contentType: "writing", locale: "ko" },
   { contentType: "writing", locale: "en" },
-  { contentType: "atelier", locale: "ko" },
 ] as const;
 
 const posts = CORPUS.flatMap(({ contentType, locale }) => {

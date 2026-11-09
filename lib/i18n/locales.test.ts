@@ -38,9 +38,7 @@ describe("localizedPath", () => {
   });
 
   it("쿼리와 해시를 보존한다", () => {
-    expect(localizedPath("en", "/gallery?artist=a")).toBe(
-      "/en/gallery?artist=a",
-    );
+    expect(localizedPath("en", "/posts?page=2")).toBe("/en/posts?page=2");
     expect(localizedPath("en", "/posts/x#intro")).toBe("/en/posts/x#intro");
   });
 });
@@ -90,8 +88,8 @@ describe("languageTogglePath", () => {
       "/en/music/top-tracks",
     );
     expect(languageTogglePath("/ko", "en", translated)).toBe("/en");
-    expect(languageTogglePath("/ko/atelier/meteor", "en", translated)).toBe(
-      "/en/atelier/meteor",
+    expect(languageTogglePath("/ko/resume", "en", translated)).toBe(
+      "/en/resume",
     );
   });
 });

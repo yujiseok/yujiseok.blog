@@ -8,13 +8,11 @@ import { docToMarkdown, markdownToDoc, openForEditing } from "./markdown";
 // 에디터의 진짜 인수 기준: 이미 쓴 글을 에디터로 열었다가 그대로 저장했을 때
 // 본문 내용이 보존되어야 한다. 빈 줄·이스케이프 같은 표기 차이는 허용한다 —
 // remark-stringify가 항상 정규화하므로 바이트 동일성은 달성 불가능한 목표다.
-const files = ["writing", "atelier"].flatMap((type) => {
-  const dir = path.join(process.cwd(), "content", type);
-  return fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".mdx"))
-    .map((file) => path.join(dir, file));
-});
+const dir = path.join(process.cwd(), "content", "writing");
+const files = fs
+  .readdirSync(dir)
+  .filter((file) => file.endsWith(".mdx"))
+  .map((file) => path.join(dir, file));
 
 describe("기존 글을 열었다 저장해도 내용이 보존된다", () => {
   it.each(files)("%s", (file) => {

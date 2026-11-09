@@ -7,8 +7,6 @@ interface LlmsInput {
   ko: ContentEntry[];
   /** 번역이 있는 글만 */
   en: ContentEntry[];
-  atelier: ContentEntry[];
-  gallery: { name: string; count: number }[];
 }
 
 const describe = (summary?: string) => (summary ? `: ${summary}` : "");
@@ -22,21 +20,9 @@ const postLinks = (locale: Locale, posts: ContentEntry[]) =>
     )
     .join("\n");
 
-export const buildLlmsTxt = ({ ko, en, atelier, gallery }: LlmsInput) => {
+export const buildLlmsTxt = ({ ko, en }: LlmsInput) => {
   const { feeds } = getDictionary("ko");
   const hasEnglish = en.length > 0;
-
-  const atelierList = atelier
-    .map(
-      ({ slug, metadata }) =>
-        `- [${metadata.title}](${SITE_URL}${localizedPath("ko", `/atelier/${slug}`)})${describe(metadata.summary)}`,
-    )
-    .join("\n");
-
-  // 이미지 자체는 LLM에게 줄 게 없다. 어떤 작가를 몇 점 모아 뒀는지만 알린다.
-  const galleryList = gallery
-    .map(({ name, count }) => `- ${name}: ${feeds.pieces(count)}`)
-    .join("\n");
 
   return `# Yujiseok's Blog
 
@@ -58,16 +44,6 @@ ${postLinks("en", en)}
 `
     : ""
 }
-## Atelier
-
-${atelierList}
-
-## Gallery
-
-${feeds.llmsGallery} ${SITE_URL}${localizedPath("ko", "/gallery")}
-
-${galleryList}
-
 ## Links
 
 - [Full text of all posts](${SITE_URL}/llms-full.txt)

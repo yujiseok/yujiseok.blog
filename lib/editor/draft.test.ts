@@ -114,8 +114,7 @@ describe("저장할 메타데이터", () => {
   });
 
   it("기존 글의 키 순서를 그대로 보존한다", () => {
-    // atelier 글은 title·summary·publishedAt·image 순이라, 새로 조립하면
-    // 저장만 해도 파일이 변형된다
+    // 글마다 키 순서가 다를 수 있어, 새로 조립하면 저장만 해도 파일이 변형된다
     const draft = apply(
       blank(),
       {

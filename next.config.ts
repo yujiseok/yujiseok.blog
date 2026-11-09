@@ -3,11 +3,6 @@ import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
   images: {
-    // Next 16부터 images.qualities에 적어 둔 값만 허용된다(기본 [75]). 갤러리는
-    // 그림이라 90, 확대 뷰어는 95, atelier는 100을 쓰는데 그 값이 없으면
-    // 최적화 요청이 400 - "q" parameter (quality) of 90 is not allowed - 로
-    // 떨어진다. 이미지 수만큼 콘솔이 같은 에러로 덮인다.
-    qualities: [75, 90, 95, 100],
     remotePatterns: [
       {
         protocol: "https",

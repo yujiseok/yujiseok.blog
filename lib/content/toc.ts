@@ -22,7 +22,7 @@ export interface TocEntry {
   indent: number;
 }
 
-type ContentType = "writing" | "atelier";
+type ContentType = "writing";
 
 // h4 이하는 목차에 담지 않는다. 세 단계를 넘으면 들여쓰기만 늘고 훑기가 어렵다.
 const MAX_HEADING_DEPTH = 3;
@@ -88,7 +88,7 @@ export const getToc = async (
   }
 
   const source = await fs.readFile(
-    path.join(CONTENT_DIR, contentType, contentFileName(contentType, slug, locale)),
+    path.join(CONTENT_DIR, contentType, contentFileName(slug, locale)),
     "utf8",
   );
 

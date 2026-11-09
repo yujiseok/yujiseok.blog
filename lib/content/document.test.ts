@@ -106,13 +106,11 @@ describe("왕복", () => {
     expect(serializePost(parsePost(CANONICAL))).toBe(CANONICAL);
   });
 
-  const files = ["writing", "atelier"].flatMap((type) => {
-    const dir = path.join(process.cwd(), "content", type);
-    return fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith(".mdx"))
-      .map((f) => path.join(dir, f));
-  });
+  const dir = path.join(process.cwd(), "content", "writing");
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith(".mdx"))
+    .map((f) => path.join(dir, f));
 
   it.each(files)("실제 글을 손실 없이 왕복한다: %s", (file) => {
     const source = fs.readFileSync(file, "utf8");

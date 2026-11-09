@@ -36,7 +36,6 @@
 - `cacheComponents` 아래에서는 떠난 페이지가 `<Activity>`로 숨겨진 채 DOM에 남는다. `html:has(...)`처럼
   페이지 안의 표식으로 전역 스타일을 바꾸면 다른 라우트까지 따라온다.
 - `/editor` 는 개발 서버 전용이다. 서버 액션마다 `assertDevOnly()` 가 걸려 있다.
-- `app/[locale]/(main)/atelier` 는 살아 있는 라우트지만 내비 어디에도 링크하지 않는다.
 
 ## 관례
 

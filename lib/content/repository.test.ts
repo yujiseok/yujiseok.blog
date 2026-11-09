@@ -78,16 +78,6 @@ describe("locale별 목록", () => {
 
     expect(writings.some(({ slug }) => slug.endsWith(".en"))).toBe(false);
   });
-
-  it("atelier는 번역 대상이 아니라 en에서도 원문을 읽는다", async () => {
-    const [ko, en] = await Promise.all([
-      readAllContent("atelier", { locale: "ko" }),
-      readAllContent("atelier", { locale: "en" }),
-    ]);
-
-    expect(en.length).toBeGreaterThan(0);
-    expect(en).toEqual(ko);
-  });
 });
 
 describe("requireSource", () => {

@@ -43,21 +43,6 @@ export const ko = {
     home: "홈으로 돌아가기",
     recent: "최근 글",
   },
-  atelier: {
-    description: "인터페이스를 탐구하는 공간",
-  },
-  gallery: {
-    description: "모아 둔 그림",
-    artists: "작가",
-    all: "전체",
-    /** 클라이언트 컴포넌트로 가는 값이라 함수가 아니라 `{artist}` 자리표시자 템플릿이다 */
-    viewArtwork: "{artist} 작품 크게 보기",
-    previous: "이전",
-    next: "다음",
-    close: "닫기",
-    /** 폴더명 → 표기. 한국어는 ARTISTS의 이름을 그대로 쓴다 */
-    artistNames: {} as Record<string, string>,
-  },
   music: {
     description: "음악적 취향을 나누는 공간",
     back: "뒤로 가기",
@@ -79,7 +64,5 @@ export const ko = {
       "공부하는 것을 기록하고 공유하는 유지석의 개인 기술 블로그. 프론트엔드 개발, React, Next.js, TypeScript 등 웹 개발 기술을 다룹니다.",
     llmsIntro:
       "이 블로그는 프론트엔드 개발자 유지석이 운영하는 기술 블로그입니다. 주로 React, Next.js, TypeScript, 웹 성능 최적화 등의 주제를 다룹니다.",
-    llmsGallery: "모아 둔 그림.",
-    pieces: (count: number) => `${count}점`,
   },
 };

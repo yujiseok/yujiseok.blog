@@ -10,7 +10,6 @@ const input = {
     { slug: "b", metadata: meta },
   ],
   en: [{ slug: "a", metadata: meta }],
-  atelier: [{ slug: "meteor", metadata: meta }],
 };
 
 const find = (url: string, entries: ReturnType<typeof buildSitemap>) =>
@@ -38,15 +37,10 @@ describe("buildSitemap", () => {
   });
 
   it("목록·이력서 같은 페이지는 두 언어 모두 낸다", () => {
-    for (const path of ["", "/posts", "/resume", "/gallery", "/music"]) {
+    for (const path of ["", "/posts", "/resume", "/music"]) {
       expect(find(`/ko${path}`, entries)).toBeDefined();
       expect(find(`/en${path}`, entries)).toBeDefined();
     }
-  });
-
-  it("atelier는 번역 대상이 아니지만 두 언어 경로가 모두 열린다", () => {
-    expect(find("/ko/atelier/meteor", entries)).toBeDefined();
-    expect(find("/en/atelier/meteor", entries)).toBeDefined();
   });
 
   it("접두사 없는 URL은 내지 않는다", () => {

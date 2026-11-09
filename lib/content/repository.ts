@@ -11,7 +11,7 @@ import { listLocaleFiles, LOCALE_SUFFIX } from "./translation-path";
 
 export { listLocaleFiles };
 
-type ContentType = "writing" | "atelier";
+type ContentType = "writing";
 
 interface MdxModule {
   default: ComponentType;
@@ -20,30 +20,13 @@ interface MdxModule {
 
 const ROOT_DIR = path.join(process.cwd(), "content");
 
-/*
- * 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. atelier는 번역 대상이 아니라
- * 어느 언어로 불러도 원문을 읽는다 — en 목록이 비면 generateStaticParams가
- * 빈 배열이 되어 cacheComponents 빌드가 깨지기도 한다.
- */
-const contentLocale = (contentType: ContentType, locale: Locale): Locale =>
-  contentType === "atelier" ? DEFAULT_LOCALE : locale;
+/** `content/writing/` 아래의 파일명. 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. toc처럼 원문을 직접 읽는 쪽이 쓴다. */
+export const contentFileName = (slug: string, locale: Locale) =>
+  `${slug}${LOCALE_SUFFIX[locale]}.mdx`;
 
-/** `content/<type>/` 아래의 파일명. toc처럼 원문을 직접 읽는 쪽이 쓴다. */
-export const contentFileName = (
-  contentType: ContentType,
-  slug: string,
-  locale: Locale,
-) => `${slug}${LOCALE_SUFFIX[contentLocale(contentType, locale)]}.mdx`;
-
-// 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있어 분기한다
-export const importMdx = (
-  contentType: ContentType,
-  slug: string,
-  locale: Locale,
-): Promise<MdxModule> =>
-  contentType === "writing"
-    ? import(`@/content/writing/${slug}${LOCALE_SUFFIX[locale]}.mdx`)
-    : import(`@/content/atelier/${slug}.mdx`);
+// 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있다
+export const importMdx = (slug: string, locale: Locale): Promise<MdxModule> =>
+  import(`@/content/writing/${slug}${LOCALE_SUFFIX[locale]}.mdx`);
 
 export interface ContentEntry {
   metadata: PostMetadata;
@@ -94,12 +77,11 @@ export const readAllContent = async (
     includeDrafts = false,
   }: { locale: Locale; includeDrafts?: boolean },
 ) => {
-  const effective = contentLocale(contentType, locale);
-  const own = (await readEntries(contentType, effective)).filter(
+  const own = (await readEntries(contentType, locale)).filter(
     ({ metadata }) => includeDrafts || isPublished(metadata),
   );
   const visible =
-    effective === DEFAULT_LOCALE
+    locale === DEFAULT_LOCALE
       ? own
       : requireSource(
           own,
@@ -153,7 +135,7 @@ export const getWritingMarkdown = async (slug: string, locale: Locale) => {
   }
 
   const source = await fs.readFile(
-    path.join(ROOT_DIR, "writing", contentFileName("writing", slug, locale)),
+    path.join(ROOT_DIR, "writing", contentFileName(slug, locale)),
     "utf8",
   );
 
@@ -163,8 +145,3 @@ export const getWritingMarkdown = async (slug: string, locale: Locale) => {
     body: parsePost(source).body,
   });
 };
-
-export const getAllAtelier = () => getAllContent("atelier", DEFAULT_LOCALE);
-
-export const getAtelierBySlug = async (slug: string) =>
-  (await getAllAtelier()).find((atelier) => atelier.slug === slug);

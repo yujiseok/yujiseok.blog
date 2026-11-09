@@ -19,8 +19,8 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 100;
 
 export const serializePost = ({ metadata, body }: PostDocument): string =>
-  // 키 순서를 정렬하지 않고 받은 그대로 흘려보낸다. writing 은 title·publishedAt·summary,
-  // atelier 는 title·summary·publishedAt·image 순이라 정렬하면 기존 글이 왕복에서 변형된다.
+  // 키 순서를 정렬하지 않고 받은 그대로 흘려보낸다. 글마다 키 순서가
+  // 다를 수 있어 정렬하면 기존 글이 왕복에서 변형된다.
   // JSON.stringify 가 undefined 인 image 를 알아서 빼준다
   `export const metadata = ${JSON.stringify(metadata, null, 2)}\n\n${body.trimEnd()}\n`;
 

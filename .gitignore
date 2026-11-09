@@ -38,5 +38,3 @@ next-env.d.ts
 .vscode
 .cursorignore
 
-# 수집 스크립트가 같은 그림을 두 번 받지 않으려고 쓰는 해시 기록
-scripts/gallery/.seen.json

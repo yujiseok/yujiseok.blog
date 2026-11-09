@@ -22,7 +22,7 @@ import { callClaude } from "./claude";
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
 const LOCK_PATH = path.join(CONTENT_DIR, ".translations.json");
-// 번역 대상은 writing 만이다. atelier 는 번역하지 않는다
+// 번역 대상은 writing 만이다
 const TYPES = ["writing"] as const;
 const CONCURRENCY = 3;
 

@@ -104,7 +104,7 @@ const PostContent = async (props: PostParams) => {
   // 목차는 원문을 다시 파싱해 만든다(lib/content/toc.ts). 본문은 모듈로 컴파일돼
   // 컴포넌트로 오므로 거기서 heading을 긁을 수 없다.
   const [{ default: Content }, toc, writings] = await Promise.all([
-    importMdx("writing", slug, locale),
+    importMdx(slug, locale),
     getToc("writing", slug, locale),
     getAllWritings(locale),
   ]);
