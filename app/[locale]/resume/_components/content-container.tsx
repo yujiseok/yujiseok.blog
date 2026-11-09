@@ -11,7 +11,7 @@ const ContentContainer = ({
 }) => {
   return (
     <div className="grid gap-4 sm:gap-6">
-      <h2 className="border-b border-neutral-200/80 pb-2 text-lg font-semibold dark:border-neutral-200/20">
+      <h2 className="border-b border-neutral-200/80 pb-2 text-lg font-semibold sm:text-xl dark:border-neutral-200/20">
         {title}
       </h2>
       <div className="grid gap-4">{children}</div>

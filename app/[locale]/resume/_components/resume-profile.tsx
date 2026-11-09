@@ -20,7 +20,9 @@ const ResumeProfile = ({
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="text-2xl font-semibold">{profile.name}</h1>
+          <h1 className="text-2xl font-semibold sm:text-[26px] sm:leading-8">
+            {profile.name}
+          </h1>
           <small className="text-xs text-neutral-600 dark:text-neutral-400">
             {profile.title}
           </small>

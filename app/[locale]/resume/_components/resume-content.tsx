@@ -1,7 +1,7 @@
 const ResumeContent = ({
   title,
   period,
-  titleClassName = "text-[15px]",
+  titleClassName = "text-[15px] sm:text-base",
   children,
 }: {
   title: React.ReactNode;

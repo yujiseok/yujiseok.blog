@@ -88,7 +88,7 @@ const page = async ({ params }: LocaleParams) => {
 
   return (
     <main
-      className={`text-sm leading-6 break-keep print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
+      className={`text-sm leading-6 break-keep sm:text-[15px] print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
     >
       <section
         className={`mx-auto grid gap-10 sm:rounded-md sm:border sm:border-neutral-200/80 sm:p-8 sm:dark:border-neutral-200/20 ${PAGE_WIDTH.resume}`}
@@ -103,7 +103,7 @@ const page = async ({ params }: LocaleParams) => {
             <ResumeContent
               key={career.company}
               period={career.period}
-              titleClassName="text-base"
+              titleClassName="text-base sm:text-[17px]"
               title={
                 <span className="flex gap-0.5">
                   {career.company.split(" ").slice(0, -1).join(" ")}
@@ -123,14 +123,14 @@ const page = async ({ params }: LocaleParams) => {
                     key={project.title}
                     className="grid sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-x-4"
                   >
-                    <h4 className="text-[15px] font-semibold">
+                    <h4 className="text-[15px] font-semibold sm:text-base">
                       {project.title}
                     </h4>
                     {project.postSlug && (
                       // 좁은 화면에서는 제목과 설명 사이에 끼면 부제처럼 읽혀 항목 맨 아래로 보낸다.
                       <ExternalLink
                         href={postHref(project.postSlug)}
-                        className="order-last mt-1 justify-self-start text-xs text-neutral-600 underline underline-offset-2 sm:order-none sm:mt-0 dark:text-neutral-400"
+                        className="order-last mt-1 justify-self-start text-xs text-neutral-600 underline underline-offset-2 sm:order-none sm:mt-0 sm:text-[13px] dark:text-neutral-400"
                       >
                         {project.linkText}
                       </ExternalLink>
@@ -140,7 +140,7 @@ const page = async ({ params }: LocaleParams) => {
                         {project.summary}
                       </p>
                     )}
-                    <ul className="mt-1 list-disc space-y-1.5 pl-5 leading-[22px] sm:col-span-2">
+                    <ul className="mt-1 list-disc space-y-1.5 pl-5 leading-[22px] sm:col-span-2 sm:leading-6">
                       {project.achievements.map((achievement) => (
                         <li key={achievement}>{achievement}</li>
                       ))}
