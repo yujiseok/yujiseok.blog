@@ -31,6 +31,17 @@ export const resumeData = {
         },
         {
           title:
+            "Built a shared server auth package and moved tokens to HttpOnly cookies",
+          summary:
+            "Reduced the XSS token theft risk flagged in a security review, while cleaning up auth code duplicated across three services",
+          achievements: [
+            "Built a Route Handler-based BFF that keeps tokens in HttpOnly cookies and relays API requests, with a migration path for users already signed in",
+            "Replaced post-render useEffect access checks on protected pages, so the Next.js proxy checks sign-in state first and pages render on the server",
+            "Merged auth logic duplicated across KR, JP, and INTL into a shared package, cutting per-app auth code by 82% (826 to 148 lines), and split OAuth sign-in into provider adapters",
+          ],
+        },
+        {
+          title:
             "Optimized service performance and infrastructure efficiency by improving the Next.js rendering strategy",
           summary:
             "force-dynamic made every page render through SSR on each request, which put heavy load on the servers",

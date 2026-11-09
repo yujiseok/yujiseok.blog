@@ -69,6 +69,16 @@ export const resumeData = {
           linkText: "에이전트에게 일 맡겨보기",
         },
         {
+          title: "서버 인증 공통 패키지 구축 및 HttpOnly 쿠키 전환",
+          summary:
+            "보안 점검에서 지적된 XSS 토큰 탈취 위험을 줄이면서, 세 서비스에 복제된 인증 코드도 함께 정리한 작업",
+          achievements: [
+            "Route Handler 기반 BFF로 토큰을 HttpOnly 쿠키에 두고 API 요청을 중계, 기존 로그인 사용자 이관 경로 구현",
+            "렌더 후 useEffect로 처리하던 인증 페이지 접근 제어를, Next.js proxy에서 로그인 여부를 먼저 확인하고 서버에서 렌더되도록 개선",
+            "KR·JP·INTL에 복제된 인증 로직을 공통 패키지로 통합해 앱별 인증 코드 82% 감소 (826줄 → 148줄), OAuth 로그인은 provider 어댑터로 분리",
+          ],
+        },
+        {
           title:
             "Next.js 렌더링 전략 개선을 통한 서비스 성능 및 인프라 효율 최적화",
           summary:
