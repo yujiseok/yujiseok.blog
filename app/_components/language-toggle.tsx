@@ -33,7 +33,7 @@ export const LanguageToggle = ({
   return (
     <nav
       aria-label={labels.label}
-      className="fixed top-3 right-4 z-40 flex gap-3 text-xs text-neutral-500 dark:text-neutral-400 print:hidden"
+      className="absolute top-3 right-4 z-40 flex gap-3 text-xs text-neutral-500 dark:text-neutral-400 print:hidden"
     >
       {LOCALES.map((target) =>
         target === locale ? (
