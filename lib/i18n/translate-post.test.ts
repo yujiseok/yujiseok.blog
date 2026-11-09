@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  REVIEW_SYSTEM,
   parseReview,
   stripCodeFence,
   translatePost,
@@ -144,5 +145,12 @@ describe("translatePost", () => {
     const { claude } = fakeClaude([GOOD, GOOD], ["???", "???"]);
     const result = await translatePost(SOURCE, { claude });
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("REVIEW_SYSTEM", () => {
+  it("문제없는 항목과 원문 자체의 오류를 지적하지 않게 한다", () => {
+    expect(REVIEW_SYSTEM).toMatch(/source's own/i);
+    expect(REVIEW_SYSTEM).toMatch(/acceptable/i);
   });
 });

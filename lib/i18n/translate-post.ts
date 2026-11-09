@@ -25,8 +25,9 @@ Output ONLY the full content of the translated .mdx file. No preface, no explana
 
 Rules:
 - Keep \`export const metadata = {...}\` as valid JSON with the same keys in the same order. Translate only "title" and "summary". Leave every other value (publishedAt, published, image) exactly as is.
-- Never alter fenced code blocks or inline code, byte for byte, including Korean strings and comments inside them.
-- Keep JSX components and their props as they are. Translate only the \`alt\` prop.
+- Never alter fenced code blocks, byte for byte, including Korean strings and comments inside them.
+- Never alter inline code, except that inline code containing Korean words may be translated. Inline code the source uses as a verb stays in backticks too, spelled exactly the same: \`fetch\`해오는 becomes "to \`fetch\` new data", never "fetched".
+- Keep JSX components and their props as they are. Translate only the \`alt\` and \`text\` props, which readers see.
 - Keep every link href and image src unchanged. Translate link text.
 - Keep the heading structure (count and levels) identical.
 - Preserve the author's first-person blog voice: natural, conversational English, not stiff or machine-like. Keep emoji.
@@ -35,7 +36,9 @@ Rules:
 export const REVIEW_SYSTEM = `You review an English translation of a Korean blog post (MDX).
 The input has the Korean source and the English translation. Check for omissions, mistranslation, and awkward or unnatural English.
 Reply with ONLY a JSON object: {"score": <integer 1-5>, "issues": ["..."]}
-5 = faithful and natural, 4 = minor nits, 3 or below = real omissions/mistranslations. issues must be an empty array when there is nothing to fix.`;
+5 = faithful and natural, 4 = minor nits, 3 or below = real omissions/mistranslations. issues must be an empty array when there is nothing to fix.
+Word choice, a small added emphasis, or a slight shift in tone are minor nits. Give 3 or below only when a reader would get a wrong fact, a reversed meaning, or lose content, or when the English is broken enough to distract.
+List only real problems in the translation: never list something you consider acceptable or fine, and do not report the source's own errors or inconsistencies, since the translation must stay faithful to them.`;
 
 export const stripCodeFence = (output: string): string => {
   const match = output.match(/^\s*```[\w-]*\n([\s\S]*?)\n```\s*$/);

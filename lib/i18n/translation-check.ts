@@ -17,7 +17,8 @@ const HANGUL = /[ㄱ-ㆎ가-힣]/g;
 
 interface Facts {
   headings: string[];
-  codes: string[];
+  fences: string[];
+  inlines: string[];
   images: string[];
   components: string[];
   hrefs: string[];
@@ -32,12 +33,16 @@ interface JsxAttribute {
 
 const countHangul = (text: string) => text.match(HANGUL)?.length ?? 0;
 
+// nbsp 가 일반 공백으로 바뀌는 정도는 코드가 달라진 게 아니다
+const normalizeInline = (code: string) => code.replace(/\s+/g, " ").trim();
+
 const processor = unified().use(remarkParse).use(remarkMdx).use(remarkGfm);
 
 const collectFacts = (tree: Root): Facts => {
   const facts: Facts = {
     headings: [],
-    codes: [],
+    fences: [],
+    inlines: [],
     images: [],
     components: [],
     hrefs: [],
@@ -50,10 +55,12 @@ const collectFacts = (tree: Root): Facts => {
         facts.headings.push(String(node.depth));
         break;
       case "code":
-        facts.codes.push(`${node.lang ?? ""}|${node.meta ?? ""}|${node.value}`);
+        facts.fences.push(
+          `${node.lang ?? ""}|${node.meta ?? ""}|${node.value}`,
+        );
         return;
       case "inlineCode":
-        facts.codes.push(node.value);
+        facts.inlines.push(normalizeInline(node.value));
         return;
       case "image":
         facts.images.push(node.url);
@@ -90,12 +97,57 @@ const collectFacts = (tree: Root): Facts => {
 const sameList = (a: string[], b: string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
-const listDiff = (label: string, src: string[], dst: string[]): string[] =>
-  sameList(src, dst)
-    ? []
-    : [
-        `${label}이(가) 원문과 다릅니다. 원문 ${src.length}개 [${src.join(", ")}] / 번역 ${dst.length}개 [${dst.join(", ")}]`,
-      ];
+// 메시지는 재번역 피드백으로도 쓰인다. 코드 전체를 담으면 프롬프트만 불어난다
+const MAX_ITEM_LENGTH = 80;
+const preview = (item: string | undefined) =>
+  item === undefined
+    ? "(없음)"
+    : JSON.stringify(
+        item.length > MAX_ITEM_LENGTH
+          ? `${item.slice(0, MAX_ITEM_LENGTH)}…`
+          : item,
+      );
+
+/** 순서까지 같아야 하는 목록. 처음 어긋난 지점만 짚는다 */
+const listDiff = (label: string, src: string[], dst: string[]): string[] => {
+  if (sameList(src, dst)) return [];
+
+  const at = src.findIndex((item, index) => item !== dst[index]);
+  const index = at === -1 ? src.length : at;
+
+  return [
+    `${label}이(가) 원문과 다릅니다. 원문 ${src.length}개 / 번역 ${dst.length}개, ${index + 1}번째: 원문 ${preview(src[index])} / 번역 ${preview(dst[index])}`,
+  ];
+};
+
+/**
+ * 영어 어순으로 위치가 바뀌고 같은 이름을 더 자주 부르는 건 자연스러운 번역이라
+ * 순서·횟수는 보지 않고 어떤 항목이 있는지만 본다. allowedExtra는 번역을
+ * 허용한 항목(한글 인라인 코드)이 다른 글자로 나타날 몫이다.
+ */
+const setDiff = (
+  label: string,
+  src: string[],
+  dst: string[],
+  allowedExtra = 0,
+): string[] => {
+  const missing = [...new Set(src)].filter((item) => !dst.includes(item));
+  const added = [...new Set(dst)].filter((item) => !src.includes(item));
+  const issues: string[] = [];
+
+  if (missing.length > 0) {
+    issues.push(
+      `${label}이(가) 번역에서 빠졌습니다: ${missing.map(preview).join(", ")}`,
+    );
+  }
+  if (added.length > allowedExtra) {
+    issues.push(
+      `${label}이(가) 번역에 새로 생겼습니다: ${added.map(preview).join(", ")}`,
+    );
+  }
+
+  return issues;
+};
 
 const parseSafely = (source: string): PostDocument | Error => {
   try {
@@ -161,10 +213,16 @@ export const checkTranslation = async (
 
   issues.push(
     ...listDiff("헤딩 레벨 순서", srcFacts.headings, dstFacts.headings),
-    ...listDiff("코드(펜스·인라인)", srcFacts.codes, dstFacts.codes),
+    ...listDiff("코드블록", srcFacts.fences, dstFacts.fences),
+    ...setDiff(
+      "인라인 코드",
+      srcFacts.inlines.filter((code) => countHangul(code) === 0),
+      dstFacts.inlines,
+      new Set(srcFacts.inlines.filter((code) => countHangul(code) > 0)).size,
+    ),
     ...listDiff("이미지 src", srcFacts.images, dstFacts.images),
     ...listDiff("JSX 컴포넌트", srcFacts.components, dstFacts.components),
-    ...listDiff("링크 href", srcFacts.hrefs, dstFacts.hrefs),
+    ...setDiff("링크 href", srcFacts.hrefs, dstFacts.hrefs),
   );
 
   const hangul =

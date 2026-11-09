@@ -103,6 +103,11 @@ const runPool = async <T>(
 
 const main = async () => {
   const { force, only } = parseArgs(process.argv.slice(2));
+  // 빈 값을 "지정 안 함"으로 읽으면 한 편만 돌리려다 전체를 번역하게 된다
+  if (process.argv.includes("--only") && !only) {
+    console.error("--only 에는 slug 를 지정해야 합니다");
+    process.exit(1);
+  }
   const targets = await collectTargets(only);
   if (only && targets.length === 0) {
     console.error(`발행된 글 중 slug "${only}" 를 찾지 못했습니다`);

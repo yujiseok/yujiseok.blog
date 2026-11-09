@@ -117,7 +117,8 @@ describe("checkTranslation", () => {
       SOURCE,
       withReplace("developer.spotify.com/dashboard", "example.com"),
     );
-    expect(issues).toEqual([expect.stringContaining("링크")]);
+    expect(issues.join("\n")).toContain("developer.spotify.com/dashboard");
+    expect(issues.join("\n")).toContain("example.com");
   });
 
   it("이미지 src 가 바뀌면 알린다", async () => {
@@ -169,5 +170,107 @@ describe("checkTranslation", () => {
     expect(issues).toEqual(
       expect.arrayContaining([expect.stringContaining("컴파일")]),
     );
+  });
+});
+
+describe("checkTranslation — 번역이 자연스럽게 바꾸는 것", () => {
+  const post = (body: string) => `export const metadata = {
+  "title": "Title",
+  "publishedAt": "2025-03-15",
+  "published": true
+}
+
+${body}
+`;
+
+  it("어순 때문에 인라인 코드 순서가 바뀌어도 통과한다", async () => {
+    expect(
+      await checkTranslation(
+        post("`useQuery`와 `useMutation`을 씁니다."),
+        post("You use `useMutation` after `useQuery`."),
+      ),
+    ).toEqual([]);
+  });
+
+  it("같은 인라인 코드를 더 자주 언급해도 통과한다", async () => {
+    expect(
+      await checkTranslation(
+        post("`fetch`를 씁니다."),
+        post("Use `fetch`. Then `fetch` again."),
+      ),
+    ).toEqual([]);
+  });
+
+  it("인라인 코드 안의 특수 공백 차이는 무시한다", async () => {
+    expect(
+      await checkTranslation(post("`a b ` 입니다."), post("It is `a b `.")),
+    ).toEqual([]);
+  });
+
+  it("한글이 든 인라인 코드는 번역해도 통과한다", async () => {
+    expect(
+      await checkTranslation(
+        post("조건은 `8자 이상` 입니다."),
+        post("It must be `8 characters or more`."),
+      ),
+    ).toEqual([]);
+  });
+
+  it("어순 때문에 링크 순서가 바뀌어도 통과한다", async () => {
+    expect(
+      await checkTranslation(
+        post("[가](https://a.dev)와 [나](https://b.dev)"),
+        post("[B](https://b.dev) and [A](https://a.dev)"),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("checkTranslation — 여전히 잡아야 하는 것", () => {
+  const post = (body: string) => `export const metadata = {
+  "title": "Title",
+  "publishedAt": "2025-03-15",
+  "published": true
+}
+
+${body}
+`;
+
+  it("인라인 코드가 빠지거나 바뀌면 그 항목을 짚어 알린다", async () => {
+    const issues = await checkTranslation(
+      post("`useQuery`와 `useMutation`을 씁니다."),
+      post("You use `useQuery` and `useMutate`."),
+    );
+
+    expect(issues.join("\n")).toContain("useMutation");
+    expect(issues.join("\n")).toContain("useMutate");
+  });
+
+  it("코드펜스 순서가 바뀌면 알린다", async () => {
+    const a = "```ts\nconst a = 1;\n```";
+    const b = "```ts\nconst b = 2;\n```";
+
+    expect(
+      await checkTranslation(post(`${a}\n\n${b}`), post(`${b}\n\n${a}`)),
+    ).not.toEqual([]);
+  });
+
+  it("링크가 빠지면 알린다", async () => {
+    const issues = await checkTranslation(
+      post("[가](https://a.dev)와 [나](https://b.dev)"),
+      post("[A](https://a.dev) and B"),
+    );
+
+    expect(issues.join("\n")).toContain("https://b.dev");
+  });
+
+  it("어긋난 코드 전체를 메시지에 쏟지 않는다", async () => {
+    const huge = `const value = "${"x".repeat(5000)}";`;
+    const issues = await checkTranslation(
+      post(`\`\`\`ts\n${huge}\n\`\`\``),
+      post("```ts\nconst other = 1;\n```"),
+    );
+
+    expect(issues.join("\n").length).toBeLessThan(1000);
   });
 });
