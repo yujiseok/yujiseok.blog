@@ -248,18 +248,6 @@ const page = async ({ params }: LocaleParams) => {
               </ExternalLink>
             }
           />
-          <ResumeContent
-            leftContent="Phone"
-            rightContent={
-              <ExternalLink
-                href={`tel:+82${resumeData.contact.phone.replace(/-/g, "")}`}
-                className="group inline-flex hover:underline"
-              >
-                {resumeData.contact.phone}
-                <ArrowUpRight className="mb-1 scale-75" />
-              </ExternalLink>
-            }
-          />
         </ContentContainer>
 
         <ContentContainer title="Education">

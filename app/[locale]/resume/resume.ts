@@ -31,7 +31,7 @@ export interface Resume {
     color: string;
     details: readonly string[];
   }[];
-  contact: { email: string; github: string; blog: string; phone: string };
+  contact: { email: string; github: string; blog: string };
   education: readonly { school: string; period: string }[];
 }
 
@@ -155,7 +155,6 @@ export const resumeData = {
     email: "koesijuy@gmail.com",
     github: "https://github.com/yujiseok",
     blog: "https://yujiseok.blog",
-    phone: "010-8555-1095",
   },
   education: [
     {
