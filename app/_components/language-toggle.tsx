@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { pageWidth } from "@/app/_components/page-spacing";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
   languageTogglePath,
@@ -17,6 +18,8 @@ import {
  *
  * 누를 때만 선택을 쿠키로 남긴다. 드물게 누르는 링크라 모든 페이지에서 미리 받지
  * 않는다.
+ *
+ * 화면 끝이 아니라 그 페이지 본문의 오른쪽 끝에 맞춘다. inset-x-6은 body의 좌우 여백과 같다.
  */
 export const LanguageToggle = ({
   locale,
@@ -33,7 +36,7 @@ export const LanguageToggle = ({
   return (
     <nav
       aria-label={labels.label}
-      className="absolute top-3 right-6 z-40 flex gap-3 text-xs text-neutral-500 dark:text-neutral-400 print:hidden"
+      className={`pointer-events-none absolute inset-x-6 top-8 z-40 mx-auto flex justify-end gap-3 text-xs text-neutral-500 *:pointer-events-auto dark:text-neutral-400 print:hidden ${pageWidth(pathname)}`}
     >
       {LOCALES.map((target) =>
         target === locale ? (

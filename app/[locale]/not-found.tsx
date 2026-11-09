@@ -1,4 +1,8 @@
-import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
+import {
+  PAGE_BOTTOM,
+  PAGE_TOP,
+  PAGE_WIDTH,
+} from "@/app/_components/page-spacing";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
@@ -23,7 +27,7 @@ export default async function NotFound() {
     <>
       <main
         id="content"
-        className={`mx-auto w-full max-w-2xl ${PAGE_TOP} ${PAGE_BOTTOM}`}
+        className={`mx-auto w-full ${PAGE_WIDTH.default} ${PAGE_TOP} ${PAGE_BOTTOM}`}
       >
         <BlurContainer className="gap-10">
           <header className="flex flex-col gap-2">

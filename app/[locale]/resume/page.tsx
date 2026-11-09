@@ -1,4 +1,8 @@
-import { PAGE_BOTTOM, PAGE_TOP } from "@/app/_components/page-spacing";
+import {
+  PAGE_BOTTOM,
+  PAGE_TOP,
+  PAGE_WIDTH,
+} from "@/app/_components/page-spacing";
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
 import { SITE_URL } from "@/lib/constants";
@@ -86,7 +90,9 @@ const page = async ({ params }: LocaleParams) => {
     <main
       className={`text-sm leading-6 break-keep print:m-0 ${PAGE_TOP} ${PAGE_BOTTOM}`}
     >
-      <section className="mx-auto grid max-w-[960px] gap-10 sm:rounded-md sm:border sm:border-neutral-200/80 sm:p-8 sm:dark:border-neutral-200/20">
+      <section
+        className={`mx-auto grid gap-10 sm:rounded-md sm:border sm:border-neutral-200/80 sm:p-8 sm:dark:border-neutral-200/20 ${PAGE_WIDTH.resume}`}
+      >
         <ResumeProfile
           profile={resumeData.profile}
           contact={resumeData.contact}

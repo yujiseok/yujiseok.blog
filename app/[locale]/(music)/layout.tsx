@@ -1,4 +1,4 @@
-import { PAGE_BOTTOM } from "@/app/_components/page-spacing";
+import { PAGE_BOTTOM, PAGE_WIDTH } from "@/app/_components/page-spacing";
 import type { Metadata } from "next";
 import NavBar from "@/app/[locale]/(music)/_components/nav-bar";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -30,7 +30,7 @@ const Layout = async ({
       <NavBar locale={locale} backLabel={getDictionary(locale).music.back} />
       <main
         id="content"
-        className={`mx-auto mt-10 grid w-full max-w-2xl gap-10 ${PAGE_BOTTOM}`}
+        className={`mx-auto mt-10 grid w-full gap-10 ${PAGE_WIDTH.default} ${PAGE_BOTTOM}`}
       >
         {children}
       </main>

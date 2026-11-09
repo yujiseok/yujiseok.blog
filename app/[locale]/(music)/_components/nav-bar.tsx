@@ -1,6 +1,6 @@
 "use client";
 
-import { PAGE_TOP } from "@/app/_components/page-spacing";
+import { PAGE_TOP, PAGE_WIDTH } from "@/app/_components/page-spacing";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
@@ -22,7 +22,9 @@ const Navbar = ({
 
   return (
     <nav className={`w-full ${PAGE_TOP}`}>
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
+      <div
+        className={`mx-auto flex w-full items-center justify-between ${PAGE_WIDTH.default}`}
+      >
         <Link
           href={backHref}
           className="cursor-pointer text-neutral-600 dark:text-neutral-400"
