@@ -21,7 +21,7 @@ import { BlockDeleteButton } from "./block-delete";
 import { MENU_ITEM, POPUP, POSITIONER } from "./ui";
 
 /*
- * lib/editor/markdown.ts가 왕복시키는 GFM 파이프 표. 셀의 align attr은
+ * lib/editor/markdown이 왕복시키는 GFM 파이프 표. 셀의 align attr은
  * 익스텐션이 이미 "left"|"center"|"right"|null로 들고 있어(이미지·문단과 같은
  * 값 체계다) 따로 얹을 게 없다.
  *

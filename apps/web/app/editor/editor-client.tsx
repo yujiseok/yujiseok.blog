@@ -9,12 +9,20 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useRouter } from "next/navigation";
-import { useActionState, useReducer, useState, useTransition } from "react";
+import {
+  useActionState,
+  useReducer,
+  useState,
+  useTransition,
+  type ActionDispatch,
+} from "react";
 
 import { cn } from "@/lib/cn";
 import { isPublished } from "@/lib/content/document";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { BlockAlign } from "@/lib/editor/align";
+import { errorMessage } from "@/lib/editor/error-message";
+import { ISO_DATE_FORMAT } from "@/lib/editor/iso-date";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";
 import { DetailsNodes } from "./details-node";
@@ -28,6 +36,8 @@ import {
   isOverwrite,
   slugInvalid,
   slugNeedsManualInput,
+  type Draft,
+  type DraftAction,
   type LoadedPostInput,
 } from "@/lib/editor/draft";
 import { CaretDownIcon } from "./icons";
@@ -50,7 +60,7 @@ import {
 
 // toISOString()은 UTC로 변환한다 — KST 자정 근처에 새 글을 쓰면 발행일이
 // 하루 밀리거나 당겨진다. date-fns의 format은 로컬 기준이다.
-const today = () => format(new Date(), "yyyy-MM-dd");
+const today = () => format(new Date(), ISO_DATE_FORMAT);
 
 interface EditorClientProps {
   initialPosts: PostListItem[];
@@ -94,9 +104,11 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       : createDraft(today()),
   );
 
+  const { loaded } = draft;
+
   const editor = useEditor({
     immediatelyRender: false,
-    // 여기 등록된 노드/마크가 lib/editor/markdown.ts가 실제로 왕복시킬 수
+    // 여기 등록된 노드/마크가 lib/editor/markdown이 실제로 왕복시킬 수
     // 있는 전부다. bold·italic·strike·code·link·underline은 모두 지원되므로
     // 그대로 두고(기존 글에 이미 들어 있는 서식을 열자마자 지우면 안 된다),
     // mdxBlock은 기존 글의 <Image>·<Callout> 같은 JSX를 읽기 전용으로
@@ -124,7 +136,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         tabSize: 2,
       }),
       Underline,
-      // 문단·제목에 align attr만 얹는다. 저장하면 markdown.ts가
+      // 문단·제목에 align attr만 얹는다. 저장하면 lib/editor/markdown이
       // <div style={{ textAlign }}>로 감싼다.
       BlockAlign,
       ResizableImage,
@@ -150,9 +162,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
         // 방금 지운 글을 계속 보여 줄 수 없다. 빈 에디터로 되돌린다.
         router.push("/editor");
       } catch (error) {
-        toast.failed(
-          error instanceof Error ? error.message : "삭제하지 못했습니다.",
-        );
+        toast.failed(errorMessage(error, "삭제하지 못했습니다."));
       }
     });
 
@@ -186,9 +196,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
           router.replace(`/editor?post=${draft.slug}`);
         }
       } catch (error) {
-        toast.failed(
-          error instanceof Error ? error.message : "저장에 실패했습니다.",
-        );
+        toast.failed(errorMessage(error, "저장에 실패했습니다."));
       }
 
       return null;
@@ -201,7 +209,7 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
       <div className="flex flex-wrap items-center gap-2">
         <PostPicker
           posts={posts}
-          selectedSlug={draft.loaded?.slug ?? null}
+          selectedSlug={loaded?.slug ?? null}
           onSelect={openPost}
         />
         <button
@@ -220,108 +228,12 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
 
       {isLossy(draft) && (
         <p className="rounded-md bg-amber-100 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          이 글에는 에디터가 다루지 못하는 구문(코드블록 제목, 문장 중간의 JSX
-          등)이 있습니다. 여기서 저장하면 원문이 깎이므로 저장을 막았습니다.
-          IDE에서 편집하세요.
+          이 글에는 에디터가 다루지 못하는 구문이 있습니다. 여기서 저장하면
+          원문이 깎이므로 저장을 막았습니다. IDE에서 편집하세요.
         </p>
       )}
       <section className="flex flex-col gap-6">
-        <div className="grid gap-3">
-          <label className="grid gap-1 text-sm">
-            <span className="font-medium">제목</span>
-            <input
-              value={draft.title}
-              onChange={(event) =>
-                dispatch({ type: "title", value: event.target.value })
-              }
-              className={FIELD}
-            />
-          </label>
-
-          <label className="grid gap-1 text-sm">
-            <span className="font-medium">슬러그</span>
-            <input
-              value={draft.slug}
-              onChange={(event) =>
-                dispatch({ type: "slug", value: event.target.value })
-              }
-              aria-invalid={slugInvalid(draft)}
-              aria-describedby={
-                slugNeedsManualInput(draft) || slugInvalid(draft)
-                  ? "slug-hint"
-                  : undefined
-              }
-              className={FIELD}
-            />
-            {slugNeedsManualInput(draft) && (
-              <span
-                id="slug-hint"
-                className="text-xs text-amber-600 dark:text-amber-400"
-              >
-                한글 제목은 슬러그를 자동으로 만들 수 없습니다. 직접 입력하세요.
-              </span>
-            )}
-            {slugInvalid(draft) && (
-              <span
-                id="slug-hint"
-                className="text-xs text-red-600 dark:text-red-400"
-              >
-                소문자·숫자·하이픈만 사용할 수 있고, 하이픈으로 끝날 수
-                없습니다.
-              </span>
-            )}
-          </label>
-
-          <label className="grid gap-1 text-sm">
-            <span className="font-medium">요약 (선택)</span>
-            {/* 한 줄짜리다. serializePost가 JSON.stringify로 프론트매터를 한 줄에
-                쓰는 데다, 이 값은 meta description·RSS·og로 그대로 나가서
-                줄바꿈이 들어갈 자리가 없다. input이면 아예 못 넣는다.
-                비우면 키를 빼고, 상세 페이지·RSS·llms.txt에서도 생략된다. */}
-            <input
-              type="text"
-              value={draft.summary}
-              onChange={(event) =>
-                dispatch({
-                  type: "field",
-                  field: "summary",
-                  value: event.target.value,
-                })
-              }
-              className={FIELD}
-            />
-          </label>
-
-          <div className="grid w-fit gap-1 text-sm">
-            <label htmlFor="published-at" className="font-medium">
-              발행일
-            </label>
-            <DateField
-              id="published-at"
-              value={draft.publishedAt}
-              onChange={(value) =>
-                dispatch({ type: "field", field: "publishedAt", value })
-              }
-            />
-          </div>
-
-          <label className="flex w-fit items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={draft.published}
-              onChange={(event) =>
-                dispatch({ type: "published", value: event.target.checked })
-              }
-              className="size-4 accent-black dark:accent-white"
-            />
-            <span className="font-medium">발행</span>
-            {!draft.published && (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                끄면 초안으로 저장돼 개발 서버에서만 보입니다
-              </span>
-            )}
-          </label>
-        </div>
+        <PostMetaFields draft={draft} dispatch={dispatch} />
 
         <div className={cn(SURFACE, "relative")}>
           <EditorToolbar editor={editor} slug={draft.slug} />
@@ -358,9 +270,9 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
           {/* 저장된 글만 열 수 있다. 개발 서버의 실제 글 페이지라 shiki
               하이라이트·MDX 컴포넌트·본문 스타일이 전부 그대로다 — 초안이어도
               개발 서버에서는 보이고 프로덕션에는 나가지 않는다. */}
-          {draft.loaded && (
+          {loaded && (
             <a
-              href={`/posts/${draft.loaded.slug}`}
+              href={`/posts/${loaded.slug}`}
               target="_blank"
               rel="noreferrer"
               className={cn(CONTROL, "flex items-center font-medium")}
@@ -371,15 +283,120 @@ function EditorForm({ initialPosts, initialPost }: EditorClientProps) {
 
           {/* 이미 파일이 있는 글만 지울 수 있다. 저장한 적 없는 새 글은
               지울 대상 자체가 없다. */}
-          {draft.loaded && (
+          {loaded && (
             <DeletePostDialog
-              title={draft.loaded.metadata.title}
+              title={loaded.metadata.title}
               disabled={isDeleting}
-              onConfirm={() => removePost(draft.loaded!.slug)}
+              onConfirm={() => removePost(loaded.slug)}
             />
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+interface PostMetaFieldsProps {
+  draft: Draft;
+  dispatch: ActionDispatch<[DraftAction]>;
+}
+
+function PostMetaFields({ draft, dispatch }: PostMetaFieldsProps) {
+  return (
+    <div className="grid gap-3">
+      <label className="grid gap-1 text-sm">
+        <span className="font-medium">제목</span>
+        <input
+          value={draft.title}
+          onChange={(event) =>
+            dispatch({ type: "title", value: event.target.value })
+          }
+          className={FIELD}
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        <span className="font-medium">슬러그</span>
+        <input
+          value={draft.slug}
+          onChange={(event) =>
+            dispatch({ type: "slug", value: event.target.value })
+          }
+          aria-invalid={slugInvalid(draft)}
+          aria-describedby={
+            slugNeedsManualInput(draft) || slugInvalid(draft)
+              ? "slug-hint"
+              : undefined
+          }
+          className={FIELD}
+        />
+        {slugNeedsManualInput(draft) && (
+          <span
+            id="slug-hint"
+            className="text-xs text-amber-600 dark:text-amber-400"
+          >
+            한글 제목은 슬러그를 자동으로 만들 수 없습니다. 직접 입력하세요.
+          </span>
+        )}
+        {slugInvalid(draft) && (
+          <span
+            id="slug-hint"
+            className="text-xs text-red-600 dark:text-red-400"
+          >
+            소문자·숫자·하이픈만 사용할 수 있고, 하이픈으로 끝날 수 없습니다.
+          </span>
+        )}
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        <span className="font-medium">요약 (선택)</span>
+        {/* 한 줄짜리다. serializePost가 JSON.stringify로 프론트매터를 한 줄에
+            쓰는 데다, 이 값은 meta description·RSS·og로 그대로 나가서
+            줄바꿈이 들어갈 자리가 없다. input이면 아예 못 넣는다.
+            비우면 키를 빼고, 상세 페이지·RSS·llms.txt에서도 생략된다. */}
+        <input
+          type="text"
+          value={draft.summary}
+          onChange={(event) =>
+            dispatch({
+              type: "field",
+              field: "summary",
+              value: event.target.value,
+            })
+          }
+          className={FIELD}
+        />
+      </label>
+
+      <div className="grid w-fit gap-1 text-sm">
+        <label htmlFor="published-at" className="font-medium">
+          발행일
+        </label>
+        <DateField
+          id="published-at"
+          value={draft.publishedAt}
+          onChange={(value) =>
+            dispatch({ type: "field", field: "publishedAt", value })
+          }
+        />
+      </div>
+
+      <label className="flex w-fit items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={draft.published}
+          onChange={(event) =>
+            dispatch({ type: "published", value: event.target.checked })
+          }
+          className="size-4 accent-black dark:accent-white"
+        />
+        <span className="font-medium">발행</span>
+        {!draft.published && (
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            끄면 초안으로 저장돼 개발 서버에서만 보입니다
+          </span>
+        )}
+      </label>
     </div>
   );
 }

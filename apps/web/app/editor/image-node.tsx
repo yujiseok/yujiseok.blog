@@ -16,15 +16,16 @@ import {
 
 import { cn } from "@/lib/cn";
 import { BlockDeleteButton } from "./block-delete";
-import { toAlign, type Align } from "@/lib/editor/align";
+import { toAlign, type Align } from "@/lib/editor/align-value";
+import type { ImageAttrs } from "@/lib/editor/markdown/nodes/image";
 import { FIELD } from "./ui";
 
 /*
  * 기본 Image 익스텐션은 src/alt/title만 다루고 크기·정렬은 손댈 수 없다.
- * lib/editor/markdown.ts가 왕복시키는 attrs 계약 — width/height는 픽셀 "숫자",
+ * lib/editor/markdown이 왕복시키는 attrs 계약 — width/height는 픽셀 "숫자",
  * align은 null이 곧 가운데 — 을 그대로 두고 그 값을 편집할 수 있는 노드뷰만
  * 얹는다. 직렬화가 모르는 attr을 추가하면 저장 때 원문이 깎이므로 여기 있는
- * attr 이름과 타입은 markdown.ts와 짝이다.
+ * attr 이름과 타입은 lib/editor/markdown와 짝이다.
  *
  * setImage 커맨드·parseHTML·입력 규칙은 부모 것을 그대로 물려받는다 —
  * image-upload.ts와 슬래시 커맨드가 setImage를 부른다.
@@ -83,15 +84,6 @@ export const ResizableImage = Image.extend({
     return ReactNodeViewRenderer(ImageNodeView);
   },
 });
-
-interface ImageAttrs {
-  src: string;
-  alt: string | null;
-  title: string | null;
-  width: number | null;
-  height: number | null;
-  align: Align | null;
-}
 
 // node.attrs는 스키마가 타입을 보장하지 않는 Record<string, any>다. 노드뷰
 // 안에서 매번 확인하지 않도록 한 번만 좁힌다.

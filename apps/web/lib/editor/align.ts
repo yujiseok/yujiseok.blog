@@ -1,6 +1,7 @@
 import { Extension, type Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { toAlign, type Align } from "./align-value";
 
 /*
  * 정렬은 이미지와 문단 양쪽에 붙지만 "값이 없다(null)"의 뜻이 서로 다르다.
@@ -15,18 +16,11 @@ import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
  * 호출부마다 알고 있으면 한쪽만 고쳐 조용히 어긋난다.
  *
  * @tiptap/extension-text-align을 쓰지 않는 이유: attr 이름이 textAlign이고
- * 기본값이 "left" 문자열이라 lib/editor/markdown.ts의 왕복 계약(null이 곧
+ * 기본값이 "left" 문자열이라 lib/editor/markdown의 왕복 계약(null이 곧
  * 기본값)과 어긋나고, 자체 키맵까지 달아 온다.
  */
 
-const ALIGNS = ["left", "center", "right"] as const;
-
-export type Align = (typeof ALIGNS)[number];
-
-export const toAlign = (value: unknown): Align | null =>
-  ALIGNS.find((align) => align === value) ?? null;
-
-export interface AlignOption {
+interface AlignOption {
   value: Align;
   label: string;
 }
@@ -40,7 +34,7 @@ export const ALIGN_OPTIONS: AlignOption[] = [
 /** 정렬을 적용할 대상. null이면 지금 자리에는 정렬을 걸 수 없다. */
 export type AlignTarget = "image" | "block";
 
-export interface AlignState {
+interface AlignState {
   target: AlignTarget | null;
   /** target이 null이면 의미 없는 값이다. 표시할 때 target을 먼저 본다. */
   align: Align;
@@ -111,7 +105,7 @@ declare module "@tiptap/core" {
 }
 
 /**
- * paragraph/heading에 align attr 하나만 얹는다. lib/editor/markdown.ts가
+ * paragraph/heading에 align attr 하나만 얹는다. lib/editor/markdown이
  * 이 attr을 <div style={{ textAlign }}>로 왕복시키므로 이름과 값 체계가 짝이다.
  */
 export const BlockAlign = Extension.create({

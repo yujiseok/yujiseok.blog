@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { BlockDeleteButton } from "./block-delete";
 
 /*
- * lib/editor/markdown.ts는 에디터가 모르는 JSX 블록(<Callout>, <ShowCase> 등)을
+ * lib/editor/markdown는 에디터가 모르는 JSX 블록(<Callout>, <ShowCase> 등)을
  * "mdxBlock" 노드에 원문 그대로 담아 왕복시킨다. 에디터가 이 타입을 모르면 그런
  * 글을 열자마자 내용이 깨지거나(setContent가 노드를 버림) 저장 시
  * docToMarkdown이 "지원하지 않는 노드 타입"으로 던진다.

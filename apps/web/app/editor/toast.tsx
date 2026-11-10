@@ -1,5 +1,6 @@
 "use client";
 
+import { StrokeIcon } from "./icons";
 import { Toast } from "@base-ui/react/toast";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -137,17 +138,8 @@ function ToastList() {
 
 function CloseIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
+    <StrokeIcon>
       <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
+    </StrokeIcon>
   );
 }

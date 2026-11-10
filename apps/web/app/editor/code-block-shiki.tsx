@@ -221,7 +221,7 @@ export const CodeBlockShiki = CodeBlock.extend({
     return {
       ...this.parent?.(),
       /*
-       * ```ts title="next.config.ts" {8} 의 meta. lib/editor/markdown.ts가
+       * ```ts title="next.config.ts" {8} 의 meta. lib/editor/markdown이
        * 이 attr로 읽고 쓰는데 스키마에 없으면 setContent 단계에서 조용히
        * 사라져, 열었다 저장하기만 해도 코드블록 제목이 날아간다. 노드뷰의 제목
        * 입력칸이 이 중 title="..." 조각만 편집하고 나머지는 원문대로 보존한다.

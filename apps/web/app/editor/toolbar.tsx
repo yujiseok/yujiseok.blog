@@ -10,18 +10,15 @@ import {
   useEffect,
   useState,
   type FormEvent,
+  type ReactElement,
   type ReactNode,
 } from "react";
 
 import { cn } from "@/lib/cn";
-import {
-  ALIGN_OPTIONS,
-  applyAlign,
-  readAlign,
-  type Align,
-  type AlignTarget,
-} from "@/lib/editor/align";
+import { ALIGN_OPTIONS, applyAlign, readAlign } from "@/lib/editor/align";
+import type { Align } from "@/lib/editor/align-value";
 import { INSERT_BLOCKS } from "./blocks";
+import { StrokeIcon } from "./icons";
 import { EditorSelect, type SelectOption } from "./select";
 import {
   FIELD,
@@ -42,48 +39,17 @@ interface EditorToolbarProps {
   slug?: string;
 }
 
-interface ActiveState {
-  bold: boolean;
-  italic: boolean;
-  strike: boolean;
-  code: boolean;
-  underline: boolean;
-  link: boolean;
-  heading1: boolean;
-  heading2: boolean;
-  heading3: boolean;
-  paragraph: boolean;
-  bulletList: boolean;
-  orderedList: boolean;
-  blockquote: boolean;
-  codeBlock: boolean;
-  /** alignTarget이 null이면 의미 없는 값이다. 버튼은 target을 먼저 본다. */
-  align: Align;
-  alignTarget: AlignTarget | null;
-  canUndo: boolean;
-  canRedo: boolean;
+// 버튼·옵션 정의의 isActive/isDisabled 를 selector 가 한 번에 돌려 id별로
+// 모은다. 상태 키를 따로 선언해 맞출 필요가 없다.
+interface ItemState {
+  active: boolean;
+  disabled: boolean;
 }
 
-const INACTIVE_STATE: ActiveState = {
-  bold: false,
-  italic: false,
-  strike: false,
-  code: false,
-  underline: false,
-  link: false,
-  heading1: false,
-  heading2: false,
-  heading3: false,
-  paragraph: false,
-  bulletList: false,
-  orderedList: false,
-  blockquote: false,
-  codeBlock: false,
-  align: "left",
-  alignTarget: null,
-  canUndo: false,
-  canRedo: false,
-};
+type ToolbarState = Record<string, ItemState>;
+
+const EMPTY_STATE: ToolbarState = {};
+const OFF: ItemState = { active: false, disabled: false };
 
 interface ButtonConfig {
   id: string;
@@ -94,8 +60,8 @@ interface ButtonConfig {
   // 단축키가 없는 명령(구분선·이미지·링크 등)은 생략한다.
   shortcut?: string;
   content: ReactNode;
-  isActive?: (state: ActiveState) => boolean;
-  isDisabled?: (state: ActiveState) => boolean;
+  isActive?: (editor: Editor) => boolean;
+  isDisabled?: (editor: Editor) => boolean;
   // 업로드처럼 시간이 걸리는 명령은 Promise를 돌려준다. 그동안 버튼이 잠기고
   // 스피너가 돈다 — 진행 상태를 명령마다 따로 들고 있을 필요가 없다.
   // 반환 타입이 unknown인 건 대부분의 명령이 chain().run()의 boolean을 그대로
@@ -109,7 +75,8 @@ interface ButtonConfig {
 // 링크 항목이 라벨·아이콘을 들고 있지 않은 건 BlockTypeSelect가 BLOCK_OPTIONS를
 // 들고 있는 것과 같은 이유다: 팝오버가 자기 UI를 온전히 소유한다.
 type ToolbarButton =
-  ({ kind: "command" } & ButtonConfig) | { kind: "link"; id: string };
+  | ({ kind: "command" } & ButtonConfig)
+  | ({ kind: "link" } & Pick<ButtonConfig, "id" | "isActive">);
 
 const HISTORY_BUTTONS: ToolbarButton[] = [
   {
@@ -118,7 +85,7 @@ const HISTORY_BUTTONS: ToolbarButton[] = [
     label: "실행 취소",
     shortcut: "⌘Z",
     content: <UndoIcon />,
-    isDisabled: (state) => !state.canUndo,
+    isDisabled: (editor) => !editor.can().undo(),
     run: (editor) => editor.chain().focus().undo().run(),
   },
   {
@@ -127,58 +94,50 @@ const HISTORY_BUTTONS: ToolbarButton[] = [
     label: "다시 실행",
     shortcut: "⇧⌘Z",
     content: <RedoIcon />,
-    isDisabled: (state) => !state.canRedo,
+    isDisabled: (editor) => !editor.can().redo(),
     run: (editor) => editor.chain().focus().redo().run(),
   },
 ];
 
 const MARK_BUTTONS: ToolbarButton[] = [
+  { id: "bold", label: "굵게", shortcut: "⌘B", glyph: "B", style: "font-bold" },
   {
-    kind: "command",
-    id: "bold",
-    label: "굵게",
-    shortcut: "⌘B",
-    content: <span className="font-bold">B</span>,
-    isActive: (state) => state.bold,
-    run: (editor) => editor.chain().focus().toggleBold().run(),
-  },
-  {
-    kind: "command",
     id: "italic",
     label: "기울임",
     shortcut: "⌘I",
-    content: <span className="italic">I</span>,
-    isActive: (state) => state.italic,
-    run: (editor) => editor.chain().focus().toggleItalic().run(),
+    glyph: "I",
+    style: "italic",
   },
   {
-    kind: "command",
     id: "strike",
     label: "취소선",
     shortcut: "⇧⌘S",
-    content: <span className="line-through">S</span>,
-    isActive: (state) => state.strike,
-    run: (editor) => editor.chain().focus().toggleStrike().run(),
+    glyph: "S",
+    style: "line-through",
   },
   {
-    kind: "command",
     id: "underline",
     label: "밑줄",
     shortcut: "⌘U",
-    content: <span className="underline">U</span>,
-    isActive: (state) => state.underline,
-    run: (editor) => editor.chain().focus().toggleUnderline().run(),
+    glyph: "U",
+    style: "underline",
   },
   {
-    kind: "command",
     id: "code",
     label: "인라인 코드",
     shortcut: "⌘E",
-    content: <span className="font-mono">{"</>"}</span>,
-    isActive: (state) => state.code,
-    run: (editor) => editor.chain().focus().toggleCode().run(),
+    glyph: "</>",
+    style: "font-mono",
   },
-];
+].map(({ id, label, shortcut, glyph, style }): ToolbarButton => ({
+  kind: "command",
+  id,
+  label,
+  shortcut,
+  content: <span className={style}>{glyph}</span>,
+  isActive: (editor) => editor.isActive(id),
+  run: (editor) => editor.chain().focus().toggleMark(id).run(),
+}));
 
 // 이미지든 문단이든 정렬 버튼은 이 세 개뿐이다. 무엇에 적용할지(그리고 지금
 // 값이 무엇인지)는 align.ts가 판정하므로 여기선 같은 run을 그대로 나열한다.
@@ -187,10 +146,14 @@ const ALIGN_BUTTONS: ToolbarButton[] = ALIGN_OPTIONS.map((option) => ({
   id: `align-${option.value}`,
   label: option.label,
   content: <AlignIcon variant={option.value} />,
-  isActive: (state) =>
-    state.alignTarget !== null && state.align === option.value,
+  isActive: (editor) => {
+    // 정렬은 "무엇에 걸리는지"와 "지금 값이 무엇인지"가 한 판정에서 같이
+    // 나온다. 둘을 따로 읽으면 이미지/문단 사이에서 어긋난다.
+    const { target, align } = readAlign(editor);
+    return target !== null && align === option.value;
+  },
   // 코드블록·mdxBlock·목록 안처럼 정렬을 저장할 수 없는 자리에서는 잠근다.
-  isDisabled: (state) => state.alignTarget === null,
+  isDisabled: (editor) => readAlign(editor).target === null,
   run: (editor) => applyAlign(editor, option.value),
 }));
 
@@ -204,7 +167,7 @@ const INSERT_BUTTONS: ToolbarButton[] = [
     content: block.icon,
     run: block.run,
   })),
-  { kind: "link", id: "link" },
+  { kind: "link", id: "link", isActive: (editor) => editor.isActive("link") },
 ];
 
 type BlockValue =
@@ -218,7 +181,7 @@ type BlockValue =
 interface BlockOption {
   value: BlockValue;
   label: string;
-  isActive: (state: ActiveState) => boolean;
+  isActive: (editor: Editor) => boolean;
   run: (editor: Editor) => void;
 }
 
@@ -228,37 +191,37 @@ const BLOCK_OPTIONS: BlockOption[] = [
   {
     value: "paragraph",
     label: "본문",
-    isActive: (state) => state.paragraph,
+    isActive: (editor) => editor.isActive("paragraph"),
     run: (editor) => editor.chain().focus().setParagraph().run(),
   },
   {
     value: "heading1",
     label: "제목 1",
-    isActive: (state) => state.heading1,
+    isActive: (editor) => editor.isActive("heading", { level: 1 }),
     run: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
   },
   {
     value: "heading2",
     label: "제목 2",
-    isActive: (state) => state.heading2,
+    isActive: (editor) => editor.isActive("heading", { level: 2 }),
     run: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
   },
   {
     value: "heading3",
     label: "제목 3",
-    isActive: (state) => state.heading3,
+    isActive: (editor) => editor.isActive("heading", { level: 3 }),
     run: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
   },
   {
     value: "blockquote",
     label: "인용",
-    isActive: (state) => state.blockquote,
+    isActive: (editor) => editor.isActive("blockquote"),
     run: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
   {
     value: "codeBlock",
     label: "코드 블록",
-    isActive: (state) => state.codeBlock,
+    isActive: (editor) => editor.isActive("codeBlock"),
     run: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
 ];
@@ -268,7 +231,7 @@ type ListValue = "none" | "bulletList" | "orderedList";
 interface ListOption {
   value: ListValue;
   label: string;
-  isActive: (state: ActiveState) => boolean;
+  isActive: (editor: Editor) => boolean;
   /**
    * "목록 없음"에는 켤 명령이 없다 — 끄는 건 지금 걸린 목록의 토글이 맡는다.
    * 해제 전용 명령을 따로 두면 켜는 경로와 끄는 경로가 갈려 어긋난다.
@@ -280,18 +243,19 @@ const LIST_OPTIONS: ListOption[] = [
   {
     value: "none",
     label: "목록 없음",
-    isActive: (state) => !state.bulletList && !state.orderedList,
+    isActive: (editor) =>
+      !editor.isActive("bulletList") && !editor.isActive("orderedList"),
   },
   {
     value: "bulletList",
     label: "글머리 기호",
-    isActive: (state) => state.bulletList,
+    isActive: (editor) => editor.isActive("bulletList"),
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
   {
     value: "orderedList",
     label: "번호 매기기",
-    isActive: (state) => state.orderedList,
+    isActive: (editor) => editor.isActive("orderedList"),
     run: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
 ];
@@ -318,6 +282,30 @@ const SECTIONS: ToolbarSection[] = [
   { id: "insert", label: "삽입", kind: "buttons", buttons: INSERT_BUTTONS },
 ];
 
+interface StateItem {
+  id: string;
+  isActive?: (editor: Editor) => boolean;
+  isDisabled?: (editor: Editor) => boolean;
+}
+
+const STATE_ITEMS: StateItem[] = [
+  ...[HISTORY_BUTTONS, MARK_BUTTONS, ALIGN_BUTTONS, INSERT_BUTTONS].flat(),
+  ...BLOCK_OPTIONS.map((option) => ({ ...option, id: option.value })),
+  ...LIST_OPTIONS.map((option) => ({ ...option, id: option.value })),
+];
+
+function readState(editor: Editor): ToolbarState {
+  return Object.fromEntries(
+    STATE_ITEMS.map((item) => [
+      item.id,
+      {
+        active: item.isActive?.(editor) ?? false,
+        disabled: item.isDisabled?.(editor) ?? false,
+      },
+    ]),
+  );
+}
+
 export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
   // 슬래시 커맨드의 이미지 항목은 ProseMirror 플러그인 안에서 실행돼 이 prop이
   // 닿지 않는다. 업로드 모듈이 들고 있는 값과 동기화해 두 진입점이 같은 slug를
@@ -329,39 +317,11 @@ export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
 
   // 트랜잭션마다 필요한 불리언만 구독한다 — editor 자체를 상태로 들고 있으면
   // 타이핑 한 글자마다 이 컴포넌트가 리렌더된다.
-  const active = useEditorState({
-    editor,
-    selector: ({ editor }): ActiveState => {
-      if (!editor) return INACTIVE_STATE;
-
-      // 정렬은 "무엇에 걸리는지"와 "지금 값이 무엇인지"가 한 판정에서 같이
-      // 나온다. 둘을 따로 읽으면 이미지/문단 사이에서 어긋난다.
-      const { target, align } = readAlign(editor);
-
-      return {
-        bold: editor.isActive("bold"),
-        italic: editor.isActive("italic"),
-        strike: editor.isActive("strike"),
-        code: editor.isActive("code"),
-        underline: editor.isActive("underline"),
-        link: editor.isActive("link"),
-        heading1: editor.isActive("heading", { level: 1 }),
-        heading2: editor.isActive("heading", { level: 2 }),
-        heading3: editor.isActive("heading", { level: 3 }),
-        paragraph: editor.isActive("paragraph"),
-        bulletList: editor.isActive("bulletList"),
-        orderedList: editor.isActive("orderedList"),
-        blockquote: editor.isActive("blockquote"),
-        codeBlock: editor.isActive("codeBlock"),
-        align,
-        alignTarget: target,
-        canUndo: editor.can().undo(),
-        canRedo: editor.can().redo(),
-      };
-    },
-  });
-
-  const state = active ?? INACTIVE_STATE;
+  const state =
+    useEditorState({
+      editor,
+      selector: ({ editor }) => (editor ? readState(editor) : EMPTY_STATE),
+    }) ?? EMPTY_STATE;
 
   return (
     <Tooltip.Provider delay={400}>
@@ -385,7 +345,7 @@ export function EditorToolbar({ editor, slug }: EditorToolbarProps) {
 interface SectionContentProps {
   section: ToolbarSection;
   editor: Editor | null;
-  state: ActiveState;
+  state: ToolbarState;
 }
 
 function SectionContent({ section, editor, state }: SectionContentProps) {
@@ -411,24 +371,39 @@ function SectionContent({ section, editor, state }: SectionContentProps) {
         </Toolbar.Group>
       );
     case "block-select":
-      return <BlockTypeSelect editor={editor} state={state} />;
+      return (
+        <StateSelect
+          label="블록 종류"
+          options={BLOCK_OPTIONS}
+          fallback="paragraph"
+          editor={editor}
+          state={state}
+        />
+      );
     case "list-select":
-      return <ListSelect editor={editor} state={state} />;
+      return (
+        <StateSelect
+          label="목록"
+          options={LIST_OPTIONS}
+          fallback="none"
+          editor={editor}
+          state={state}
+        />
+      );
   }
 }
 
 interface ToolbarButtonItemProps {
   button: ButtonConfig;
   editor: Editor | null;
-  state: ActiveState;
+  state: ToolbarState;
 }
 
 function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
   const [isRunning, setIsRunning] = useState(false);
 
-  const isActive = button.isActive?.(state) ?? false;
-  const disabled =
-    !editor || isRunning || (button.isDisabled?.(state) ?? false);
+  const { active: isActive, disabled: isDisabled } = state[button.id] ?? OFF;
+  const disabled = !editor || isRunning || isDisabled;
 
   // 동기 명령이면 run이 아무 것도 돌려주지 않아 상태가 한 번도 바뀌지 않는다.
   // 업로드처럼 Promise를 돌려주는 명령만 끝날 때까지 버튼을 잠근다 — 파일
@@ -447,30 +422,53 @@ function ToolbarButtonItem({ button, editor, state }: ToolbarButtonItemProps) {
   };
 
   return (
-    <Tooltip.Root>
-      <Tooltip.Trigger
-        render={
-          <Toolbar.Button
-            aria-label={button.label}
-            aria-pressed={isActive}
-            aria-busy={isRunning}
-            disabled={disabled}
-            // 클릭이 mousedown 시점에 에디터의 selection focus를 뺏어가는 걸
-            // 막는다 — preventDefault 없이는 버튼을 누르는 순간 에디터가
-            // blur되어 다음 커맨드가 잘못된(또는 사라진) selection에 적용된다.
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={handleClick}
-            className={cn(ICON_BUTTON, isActive ? PRESSED : UNPRESSED)}
-          />
-        }
-      >
-        {isRunning ? <SpinnerIcon /> : button.content}
-      </Tooltip.Trigger>
+    <ToolbarTooltip
+      label={button.label}
+      shortcut={button.shortcut}
+      trigger={
+        <Toolbar.Button
+          aria-label={button.label}
+          aria-pressed={isActive}
+          aria-busy={isRunning}
+          disabled={disabled}
+          // 클릭이 mousedown 시점에 에디터의 selection focus를 뺏어가는 걸
+          // 막는다 — preventDefault 없이는 버튼을 누르는 순간 에디터가
+          // blur되어 다음 커맨드가 잘못된(또는 사라진) selection에 적용된다.
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={handleClick}
+          className={cn(ICON_BUTTON, isActive ? PRESSED : UNPRESSED)}
+        />
+      }
+    >
+      {isRunning ? <SpinnerIcon /> : button.content}
+    </ToolbarTooltip>
+  );
+}
+
+interface ToolbarTooltipProps {
+  label: string;
+  shortcut?: string;
+  /** 팝오버가 열려 있는 동안처럼 말풍선을 띄우면 안 될 때 */
+  disabled?: boolean;
+  trigger: ReactElement;
+  children: ReactNode;
+}
+
+function ToolbarTooltip({
+  label,
+  shortcut,
+  disabled,
+  trigger,
+  children,
+}: ToolbarTooltipProps) {
+  return (
+    <Tooltip.Root disabled={disabled}>
+      <Tooltip.Trigger render={trigger}>{children}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner sideOffset={8}>
           <Tooltip.Popup className={TOOLTIP}>
-            {button.label}
-            {button.shortcut && <kbd className={KBD}>{button.shortcut}</kbd>}
+            {label}
+            {shortcut && <kbd className={KBD}>{shortcut}</kbd>}
           </Tooltip.Popup>
         </Tooltip.Positioner>
       </Tooltip.Portal>
@@ -489,7 +487,7 @@ interface LinkDraft {
 
 interface LinkPopoverProps {
   editor: Editor | null;
-  state: ActiveState;
+  state: ToolbarState;
 }
 
 // window.prompt를 대신한다. 세 갈래 동작은 그대로다 — 그냥 닫으면 아무 일도
@@ -500,6 +498,7 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
   // 입력값이 defaultValue로 새로 채워진다.
   const [draft, setDraft] = useState<LinkDraft | null>(null);
   const isOpen = draft !== null;
+  const isActive = state.link?.active ?? false;
 
   const handleOpenChange = (open: boolean) => {
     if (!editor) return;
@@ -538,32 +537,27 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
     <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
       {/* 팝오버가 열려 있는 동안엔 툴팁을 끈다 — 같은 버튼에 말풍선과 입력창이
           겹쳐 뜨면 입력창을 가린다. */}
-      <Tooltip.Root disabled={isOpen}>
-        <Tooltip.Trigger
-          render={
-            <Popover.Trigger
-              render={
-                <Toolbar.Button
-                  aria-label="링크"
-                  aria-pressed={state.link}
-                  disabled={!editor}
-                  // 다른 버튼과 같은 이유로 mousedown을 막는다 — 여기서
-                  // 에디터가 blur되면 팝오버를 열기도 전에 selection을 잃는다.
-                  onMouseDown={(event) => event.preventDefault()}
-                  className={cn(ICON_BUTTON, state.link ? PRESSED : UNPRESSED)}
-                />
-              }
-            />
-          }
-        >
-          <LinkIcon />
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Positioner sideOffset={8}>
-            <Tooltip.Popup className={TOOLTIP}>링크</Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>
+      <ToolbarTooltip
+        label="링크"
+        disabled={isOpen}
+        trigger={
+          <Popover.Trigger
+            render={
+              <Toolbar.Button
+                aria-label="링크"
+                aria-pressed={isActive}
+                disabled={!editor}
+                // 다른 버튼과 같은 이유로 mousedown을 막는다 — 여기서
+                // 에디터가 blur되면 팝오버를 열기도 전에 selection을 잃는다.
+                onMouseDown={(event) => event.preventDefault()}
+                className={cn(ICON_BUTTON, isActive ? PRESSED : UNPRESSED)}
+              />
+            }
+          />
+        }
+      >
+        <LinkIcon />
+      </ToolbarTooltip>
       <Popover.Portal>
         <Popover.Positioner align="start" sideOffset={8} className={POSITIONER}>
           {/* 닫힐 때 Base UI가 트리거로 포커스를 되돌리면 위에서 건 에디터
@@ -608,45 +602,43 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
   );
 }
 
-interface SelectSectionProps {
+interface StateOption<Value extends string> extends SelectOption<Value> {
+  run?: (editor: Editor) => void;
+}
+
+interface StateSelectProps<Value extends string> {
+  label: string;
+  options: StateOption<Value>[];
+  /** 켜진 옵션이 없을 때 보여줄 값 */
+  fallback: Value;
   editor: Editor | null;
-  state: ActiveState;
+  state: ToolbarState;
 }
 
-function BlockTypeSelect({ editor, state }: SelectSectionProps) {
+// 블록 종류·목록처럼 옵션이 곧 에디터 상태인 드롭다운. 옵션에 켤 명령이 없으면
+// ("목록 없음") 지금 켜진 옵션의 토글을 한 번 더 불러 끈다 — 해제 전용 명령을
+// 따로 두면 켜는 경로와 끄는 경로가 갈려 어긋난다. 같은 값을 다시 고르는 경우는
+// ToolbarSelect가 이미 막았으므로 이때 current는 반드시 명령이 있는 옵션이다.
+function StateSelect<Value extends string>({
+  label,
+  options,
+  fallback,
+  editor,
+  state,
+}: StateSelectProps<Value>) {
   const current =
-    BLOCK_OPTIONS.find((option) => option.isActive(state))?.value ??
-    "paragraph";
+    options.find((option) => state[option.value]?.active)?.value ?? fallback;
 
   return (
     <ToolbarSelect
-      label="블록 종류"
-      options={BLOCK_OPTIONS}
-      value={current}
-      disabled={!editor}
-      onChange={(value) =>
-        editor && BLOCK_OPTIONS.find((o) => o.value === value)?.run(editor)
-      }
-    />
-  );
-}
-
-function ListSelect({ editor, state }: SelectSectionProps) {
-  const current =
-    LIST_OPTIONS.find((option) => option.isActive(state))?.value ?? "none";
-
-  return (
-    <ToolbarSelect
-      label="목록"
-      options={LIST_OPTIONS}
+      label={label}
+      options={options}
       value={current}
       disabled={!editor}
       onChange={(value) => {
-        // "목록 없음"은 지금 걸린 목록을 끄는 것이다 — 켜는 명령과 같은 토글을
-        // 한 번 더 부른다. 같은 값을 다시 고르는 경우는 ToolbarSelect가 이미
-        // 막았으므로 여기서 current는 반드시 목록이다.
-        const target = value === "none" ? current : value;
-        if (editor) LIST_OPTIONS.find((o) => o.value === target)?.run?.(editor);
+        const pick = (target: Value) =>
+          options.find((option) => option.value === target)?.run;
+        if (editor) (pick(value) ?? pick(current))?.(editor);
       }}
     />
   );
@@ -681,85 +673,44 @@ function ToolbarSelect<Value extends string>({
       onChange={onChange}
       trigger={<Toolbar.Button />}
       triggerClassName={cn(UNPRESSED, "w-24 min-w-24 px-2")}
-      // 툴바는 sticky라 팝업이 트리거 위로 포개지면 툴바 자신을 가린다.
     />
   );
 }
 
 function UndoIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <StrokeIcon>
       <polyline points="1 4 1 10 7 10" />
       <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-    </svg>
+    </StrokeIcon>
   );
 }
 
 function RedoIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <StrokeIcon>
       <polyline points="23 4 23 10 17 10" />
       <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-    </svg>
+    </StrokeIcon>
   );
 }
 
 function LinkIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <StrokeIcon>
       <path d="M15 7h3a5 5 0 0 1 0 10h-3" />
       <path d="M9 17H6a5 5 0 0 1 0-10h3" />
       <line x1="8" y1="12" x2="16" y2="12" />
-    </svg>
+    </StrokeIcon>
   );
 }
 
 // 회전은 CSS에 맡긴다 — 진행 표시 하나 때문에 애니메이션 루프를 돌릴 이유가 없다
 function SpinnerIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      className="animate-spin"
-      aria-hidden="true"
-    >
+    <StrokeIcon className="animate-spin">
       <path d="M12 3a9 9 0 1 0 9 9" />
-    </svg>
+    </StrokeIcon>
   );
 }
 
@@ -776,16 +727,7 @@ function AlignIcon({ variant }: { variant: Align }) {
   const start = ALIGN_LINE_START[variant];
 
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
+    <StrokeIcon>
       <line x1="3" y1="6" x2="21" y2="6" />
       <line
         x1={start}
@@ -795,6 +737,6 @@ function AlignIcon({ variant }: { variant: Align }) {
         strokeWidth="3"
       />
       <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
+    </StrokeIcon>
   );
 }

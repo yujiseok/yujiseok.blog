@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { INSERT_BLOCKS } from "./blocks";
 import { MENU_ITEM, POPUP } from "./ui";
 
-export interface SlashCommandItem {
+interface SlashCommandItem {
   title: string;
   keywords: string[];
   run: (editor: Editor, range: Range) => void;

@@ -7,7 +7,7 @@ import { markdownToDoc } from "@/lib/editor/markdown";
 import { DetailsNodes } from "./details-node";
 
 /*
- * markdown.ts가 만드는 details JSON과 에디터 스키마는 서로를 모른 채 맞물린다.
+ * lib/editor/markdown이 만드는 details JSON과 에디터 스키마는 서로를 모른 채 맞물린다.
  * 모양이 어긋나도 setContent는 조용히 노드를 버리기만 해서, 글을 열어보기
  * 전까지 아무도 모른다. 실제 스키마로 파싱해 검사한다.
  */

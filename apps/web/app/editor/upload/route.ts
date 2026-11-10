@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { isValidSlug } from "@/lib/content/document";
+import { errorMessage } from "@/lib/editor/error-message";
+import { isDevelopment, isDirectChild } from "@/lib/editor/guards";
 
 // public/images는 287MB라 함수에 넣으면 Vercel 250MB 한도를 넘는다.
 // 이 라우트는 개발 서버에서만 새 파일을 쓰므로, 있는 그림을 번들에 담지 않는다.
@@ -79,7 +81,7 @@ async function writeWithoutOverwrite(
     // 정규화를 통과한 이름이라도 디스크에 닿기 직전 최종 경로를 다시 확인한다.
     // 검증 규칙이 나중에 느슨해져도 이 검사는 남는다.
     const filePath = path.resolve(/* turbopackIgnore: true */ dir, name);
-    if (path.dirname(filePath) !== dir) {
+    if (!isDirectChild(dir, filePath)) {
       throw new Error("허용되지 않은 경로입니다.");
     }
 
@@ -105,7 +107,7 @@ async function writeWithoutOverwrite(
  * 걸리는데, 그걸 풀려면 next.config의 전역 설정을 건드려 프로덕션까지 영향을 준다.
  */
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopment()) {
     return new Response(null, { status: 404 });
   }
 
@@ -140,7 +142,7 @@ export async function POST(request: Request) {
   // isValidSlug 통과만으로 끝내지 않고, resolve된 디렉터리가 실제로 IMAGES_DIR
   // 바로 아래인지 다시 검사한다(actions.ts의 resolvePostPath와 같은 방식).
   const dir = path.resolve(/* turbopackIgnore: true */ IMAGES_DIR, slug);
-  if (path.dirname(dir) !== IMAGES_DIR) {
+  if (!isDirectChild(IMAGES_DIR, dir)) {
     return fail(400, "허용되지 않은 경로입니다.");
   }
 
@@ -154,9 +156,6 @@ export async function POST(request: Request) {
 
     return Response.json({ src: `/images/${slug}/${name}` });
   } catch (error) {
-    return fail(
-      500,
-      error instanceof Error ? error.message : "이미지를 저장하지 못했습니다.",
-    );
+    return fail(500, errorMessage(error, "이미지를 저장하지 못했습니다."));
   }
 }

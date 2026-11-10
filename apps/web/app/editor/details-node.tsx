@@ -18,7 +18,7 @@ import { CaretDownIcon } from "./icons";
 import { ICON_BUTTON, SURFACE, UNPRESSED } from "./ui";
 
 /*
- * lib/editor/markdown.ts가 왕복시키는 <details> 접기 블록. 세 노드가 한 벌이다:
+ * lib/editor/markdown이 왕복시키는 <details> 접기 블록. 세 노드가 한 벌이다:
  * details > (detailsSummary, detailsContent).
  *
  * 공식 익스텐션을 쓰는 이유는 스키마보다 키보드 동작 때문이다 — 요약에서

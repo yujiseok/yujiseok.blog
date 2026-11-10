@@ -13,6 +13,8 @@ import {
   type PostDocument,
   type PostMetadata,
 } from "@/lib/content/document";
+import { isDevelopment, isDirectChild } from "@/lib/editor/guards";
+import { ISO_DATE_PATTERN } from "@/lib/editor/iso-date";
 import { docToMarkdown, openForEditing } from "@/lib/editor/markdown";
 import {
   listLocaleFiles,
@@ -29,7 +31,7 @@ const WRITING_DIR = path.join(process.cwd(), "content", "writing");
  * 임의 파일 쓰기로 이어지므로 액션마다 같은 가드를 다시 건다.
  */
 function assertDevOnly() {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopment()) {
     throw new Error("에디터는 개발 환경에서만 사용할 수 있습니다.");
   }
 }
@@ -45,7 +47,7 @@ function resolvePostPath(slug: string): string {
   }
 
   const filePath = path.resolve(WRITING_DIR, `${slug}.mdx`);
-  if (path.dirname(filePath) !== WRITING_DIR) {
+  if (!isDirectChild(WRITING_DIR, filePath)) {
     throw new Error("허용되지 않은 경로입니다.");
   }
 
@@ -74,7 +76,7 @@ function assertValidMetadata(metadata: PostMetadata) {
   if (!metadata.title.trim()) {
     throw new Error("제목을 입력하세요.");
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.publishedAt)) {
+  if (!ISO_DATE_PATTERN.test(metadata.publishedAt)) {
     throw new Error("발행일은 YYYY-MM-DD 형식이어야 합니다.");
   }
   // 빠뜨린 채 저장되면 그 글은 프로덕션에서 조용히 사라진다
@@ -150,7 +152,7 @@ export async function listPosts(): Promise<PostListItem[]> {
   );
 }
 
-export interface ReadPostResult {
+interface ReadPostResult {
   metadata: PostMetadata;
   doc: JSONContent;
   /** 에디터를 거쳐도 본문이 그대로 복원되는지. false면 저장이 원문을 훼손한다 */
@@ -168,7 +170,7 @@ export async function readPost(slug: string): Promise<ReadPostResult> {
   return { metadata, ...openForEditing(body) };
 }
 
-export interface SavePostInput {
+interface SavePostInput {
   slug: string;
   metadata: PostMetadata;
   /** Tiptap 문서를 JSON.stringify한 것. 문자열인 이유는 parseDocument 참고 */

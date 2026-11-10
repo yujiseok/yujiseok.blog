@@ -1,3 +1,4 @@
+import { errorMessage } from "@/lib/editor/error-message";
 import type { Editor } from "@tiptap/core";
 
 import { isValidSlug } from "@/lib/content/document";
@@ -125,8 +126,6 @@ export async function insertImageByUpload(editor: Editor): Promise<void> {
       .setImage({ src, ...(size ?? {}) })
       .run();
   } catch (error) {
-    reportEditorError(
-      error instanceof Error ? error.message : "이미지를 올리지 못했습니다.",
-    );
+    reportEditorError(errorMessage(error, "이미지를 올리지 못했습니다."));
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { StrokeIcon } from "./icons";
 import { Popover } from "@base-ui/react/popover";
 import { format, isValid, parse } from "date-fns";
 import { DayPicker, type ClassNames } from "react-day-picker";
@@ -9,19 +10,17 @@ import { ko } from "react-day-picker/locale";
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
+import { ISO_DATE_FORMAT, ISO_DATE_PATTERN } from "@/lib/editor/iso-date";
 import { CONTROL, POPUP, POSITIONER } from "./ui";
 
-const ISO_DATE = "yyyy-MM-dd";
-// app/editor/actions.ts의 assertValidMetadata와 같은 형식을 강제한다 — 여기서
-// 통과시킨 문자열이 그대로 MDX 메타데이터로 직렬화된다.
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
+// 여기서 통과시킨 문자열이 그대로 MDX 메타데이터로 직렬화된다. actions.ts의
+// assertValidMetadata가 같은 형식을 서버에서 다시 검사한다.
 // new Date("2026-09-09")는 UTC 자정으로 파싱돼 KST에서 하루 당겨진 날짜로
 // 보인다. date-fns의 parse/format은 로컬 시간 기준이라 문자열↔Date를 왕복해도
 // 날짜가 흔들리지 않는다. 이 파일에서 Date를 만드는 경로는 여기 하나뿐이다.
 const parseIsoDate = (value: string): Date | null => {
   if (!ISO_DATE_PATTERN.test(value)) return null;
-  const parsed = parse(value, ISO_DATE, new Date());
+  const parsed = parse(value, ISO_DATE_FORMAT, new Date());
   // 2026-02-31처럼 형식은 맞지만 존재하지 않는 날짜를 걸러낸다.
   return isValid(parsed) ? parsed : null;
 };
@@ -53,7 +52,7 @@ const dayPickerClassNames: Partial<ClassNames> = {
   hidden: "invisible",
 };
 
-export interface DateFieldProps {
+interface DateFieldProps {
   /** yyyy-MM-dd. lib/content/document.ts의 PostMetadata.publishedAt과 같은 형식 */
   value: string;
   onChange: (value: string) => void;
@@ -95,7 +94,7 @@ export function DateField({ value, onChange, id }: DateFieldProps) {
               required
               selected={selected ?? undefined}
               onSelect={(date) => {
-                onChange(format(date, ISO_DATE));
+                onChange(format(date, ISO_DATE_FORMAT));
                 setOpen(false);
               }}
               // 값이 없거나 형식이 깨졌으면 이번 달을 연다.
@@ -113,22 +112,11 @@ export function DateField({ value, onChange, id }: DateFieldProps) {
 
 function CalendarIcon() {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="shrink-0 text-neutral-400 dark:text-neutral-600"
-    >
+    <StrokeIcon className="shrink-0 text-neutral-400 dark:text-neutral-600">
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
       <line x1="8" y1="2" x2="8" y2="6" />
       <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
+    </StrokeIcon>
   );
 }
