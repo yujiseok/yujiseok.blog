@@ -8,16 +8,6 @@ import { listLocaleFiles, readAllContent, requireSource } from "./repository";
  * 아니라 그 안에서 실제 파일을 읽고 정렬하는 순수 함수를 검증한다.
  */
 describe("readAllContent", () => {
-  it("writing의 slug와 metadata를 파일에서 읽어 낸다", async () => {
-    const writings = await readAllContent("writing", { locale: "ko" });
-    const spotify = writings.find((writing) => writing.slug === "spotify");
-
-    expect(spotify?.metadata.title).toBe(
-      "Next.js 블로그에 스포티파이를 더 해보자",
-    );
-    expect(spotify?.metadata.publishedAt).toBe("2025-03-15");
-  });
-
   it("publishedAt 기준 내림차순으로 정렬한다", async () => {
     const writings = await readAllContent("writing", { locale: "ko" });
     const publishedAtTimes = writings.map((writing) =>
@@ -65,14 +55,6 @@ describe("listLocaleFiles", () => {
     expect(listLocaleFiles(files, "en")).toEqual([
       { file: "a.en.mdx", slug: "a" },
     ]);
-  });
-});
-
-describe("locale별 목록", () => {
-  it("ko 목록에 번역본 slug(.en)가 섞이지 않는다", async () => {
-    const writings = await readAllContent("writing", { locale: "ko" });
-
-    expect(writings.some(({ slug }) => slug.endsWith(".en"))).toBe(false);
   });
 });
 

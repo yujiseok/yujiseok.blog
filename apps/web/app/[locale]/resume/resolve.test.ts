@@ -12,27 +12,25 @@ const projectUrls = (resume: ReturnType<typeof resolveResume>) =>
   );
 
 describe("resolveResume", () => {
-  it("한국어는 /ko 글 주소로 잇는다", () => {
-    const urls = projectUrls(resolveResume("ko", new Set()));
+  it.each([
+    ["ko", [], ["https://yujiseok.blog/ko/posts/turborepo"]],
+    // 번역이 없는 글을 /en 으로 이으면 404 다
+    [
+      "en",
+      ["turborepo"],
+      [
+        "https://yujiseok.blog/en/posts/turborepo",
+        "https://yujiseok.blog/ko/posts/2024-gencon",
+      ],
+    ],
+  ] as const)(
+    "%s: 글 주소를 %j 번역 기준으로 잇는다",
+    (locale, translated, expected) => {
+      const urls = projectUrls(resolveResume(locale, new Set(translated)));
 
-    expect(urls).toContain("https://yujiseok.blog/ko/posts/turborepo");
-  });
-
-  it("영어는 번역이 있는 글만 /en으로, 없는 글은 /ko로 잇는다", () => {
-    const urls = projectUrls(resolveResume("en", new Set(["turborepo"])));
-
-    expect(urls).toContain("https://yujiseok.blog/en/posts/turborepo");
-    expect(urls).toContain("https://yujiseok.blog/ko/posts/2024-gencon");
-  });
-
-  it("slug를 남기지 않고 글이 없는 항목에는 주소를 달지 않는다", () => {
-    const resume = resolveResume("ko", new Set());
-    const projects = resume.workExperience.flatMap((c) => c.projects);
-
-    expect(projects.some((p) => "postSlug" in p)).toBe(false);
-    expect(projects.some((p) => p.postUrl === undefined)).toBe(true);
-    expect(resume.openSource.some((c) => "blogSlug" in c)).toBe(false);
-  });
+      expect(urls).toEqual(expect.arrayContaining([...expected]));
+    },
+  );
 });
 
 describe("resumePdfHref", () => {

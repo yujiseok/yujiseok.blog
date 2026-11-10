@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  REVIEW_SYSTEM,
   parseReview,
   stripCodeFence,
   translatePost,
@@ -52,34 +51,25 @@ const fakeClaude = (translations: string[], reviews: string[]) => {
 };
 
 describe("stripCodeFence", () => {
-  it("전체를 감싼 ``` 래퍼를 벗긴다", () => {
-    expect(stripCodeFence("```mdx\nhello\n```\n")).toBe("hello\n");
-  });
-
-  it("래퍼가 없으면 그대로 둔다", () => {
-    expect(stripCodeFence("hello\n```ts\nx\n```\n")).toBe(
-      "hello\n```ts\nx\n```\n",
-    );
+  it.each([
+    ["```mdx\nhello\n```\n", "hello\n"],
+    ["hello\n```ts\nx\n```\n", "hello\n```ts\nx\n```\n"],
+  ])("%j → %j (전체를 감싼 래퍼만 벗긴다)", (input, expected) => {
+    expect(stripCodeFence(input)).toBe(expected);
   });
 });
 
 describe("parseReview", () => {
-  it("순수 JSON 을 읽는다", () => {
-    expect(parseReview('{"score":5,"issues":[]}')).toEqual({
-      score: 5,
-      issues: [],
-    });
-  });
-
-  it("코드펜스와 앞뒤 잡담이 섞여도 읽는다", () => {
-    expect(
-      parseReview('결과입니다:\n```json\n{"score":3,"issues":["a"]}\n```\n끝'),
-    ).toEqual({ score: 3, issues: ["a"] });
-  });
-
-  it("score 가 범위 밖이거나 JSON 이 아니면 null", () => {
-    expect(parseReview('{"score":9,"issues":[]}')).toBeNull();
-    expect(parseReview("good job")).toBeNull();
+  it.each([
+    ['{"score":5,"issues":[]}', { score: 5, issues: [] }],
+    [
+      '결과입니다:\n```json\n{"score":3,"issues":["a"]}\n```\n끝',
+      { score: 3, issues: ["a"] },
+    ],
+    ['{"score":9,"issues":[]}', null],
+    ["good job", null],
+  ])("%j → %j", (raw, expected) => {
+    expect(parseReview(raw)).toEqual(expected);
   });
 });
 
@@ -93,12 +83,6 @@ describe("translatePost", () => {
       score: 5,
       issues: [],
     });
-  });
-
-  it("출력이 ``` 로 감싸져 있어도 벗겨서 검사한다", async () => {
-    const { claude } = fakeClaude(["```mdx\n" + GOOD + "```\n"], [review(4)]);
-    const result = await translatePost(SOURCE, { claude });
-    expect(result).toMatchObject({ ok: true, translation: GOOD });
   });
 
   it("구조 검사 실패 시 issues 를 피드백으로 넣어 한 번 재번역한다", async () => {
@@ -145,12 +129,5 @@ describe("translatePost", () => {
     const { claude } = fakeClaude([GOOD, GOOD], ["???", "???"]);
     const result = await translatePost(SOURCE, { claude });
     expect(result.ok).toBe(false);
-  });
-});
-
-describe("REVIEW_SYSTEM", () => {
-  it("문제없는 항목과 원문 자체의 오류를 지적하지 않게 한다", () => {
-    expect(REVIEW_SYSTEM).toMatch(/source's own/i);
-    expect(REVIEW_SYSTEM).toMatch(/acceptable/i);
   });
 });

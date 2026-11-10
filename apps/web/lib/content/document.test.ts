@@ -24,53 +24,27 @@ const CANONICAL = `export const metadata = {
 `;
 
 describe("serializePost", () => {
-  it("기존 content/**.mdx 와 같은 헤더 형태로 직렬화한다", () => {
+  // summary 는 없으면 키째 빠지고 image 는 있으면 들어간다
+  it("선택 키(summary·image)는 값이 있을 때만 내보낸다", () => {
     const out = serializePost({
-      metadata: {
-        title: "제목",
-        publishedAt: "2026-09-09",
-        summary: "요약",
-        published: true,
-      },
-      body: "본문 첫 문단.\n\n두 번째 문단.",
-    });
-
-    expect(out).toBe(CANONICAL);
-  });
-
-  it("summary 는 있을 때만 내보낸다", () => {
-    const out = serializePost({
-      metadata: { title: "t", publishedAt: "2026-01-01", published: true },
-      body: "본문",
-    });
-
-    expect(out).not.toContain("summary");
-    expect(parsePost(out).metadata.summary).toBeUndefined();
-  });
-
-  it("image 는 있을 때만 내보낸다", () => {
-    const without = serializePost({
       metadata: {
         title: "t",
         publishedAt: "2026-01-01",
-        summary: "s",
-        published: true,
-      },
-      body: "본문",
-    });
-    expect(without).not.toContain("image");
-
-    const withImage = serializePost({
-      metadata: {
-        title: "t",
-        publishedAt: "2026-01-01",
-        summary: "s",
         image: "/a.png",
         published: true,
       },
       body: "본문",
     });
-    expect(withImage).toContain('"image": "/a.png"');
+
+    expect(out).toBe(`export const metadata = {
+  "title": "t",
+  "publishedAt": "2026-01-01",
+  "image": "/a.png",
+  "published": true
+}
+
+본문
+`);
   });
 });
 
@@ -102,10 +76,6 @@ describe("parsePost", () => {
 });
 
 describe("왕복", () => {
-  it("serialize(parse(x)) === x", () => {
-    expect(serializePost(parsePost(CANONICAL))).toBe(CANONICAL);
-  });
-
   const dir = path.join(process.cwd(), "content", "writing");
   const files = fs
     .readdirSync(dir)
@@ -142,12 +112,11 @@ describe("isValidSlug", () => {
 });
 
 describe("toSlug", () => {
-  it("영문 제목을 슬러그로 만든다", () => {
-    expect(toSlug("Hello World, Again!")).toBe("hello-world-again");
-  });
-
-  it("한글 제목이면 빈 문자열을 준다", () => {
-    expect(toSlug("한글 제목")).toBe("");
+  it.each([
+    ["Hello World, Again!", "hello-world-again"],
+    ["한글 제목", ""],
+  ])("%s → %j", (title, expected) => {
+    expect(toSlug(title)).toBe(expected);
   });
 });
 

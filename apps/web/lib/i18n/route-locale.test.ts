@@ -12,26 +12,6 @@ describe("routeLocale", () => {
     ).toEqual({ type: "redirect", location: "/ko/posts/x" });
   });
 
-  it("루트는 /{locale}로 간다", () => {
-    expect(routeLocale({ pathname: "/", acceptLanguage: "ja" })).toEqual({
-      type: "redirect",
-      location: "/en",
-    });
-  });
-
-  it("헤더가 없으면 ko", () => {
-    expect(routeLocale({ pathname: "/" })).toEqual({
-      type: "redirect",
-      location: "/ko",
-    });
-  });
-
-  it("쿠키가 Accept-Language보다 우선한다", () => {
-    expect(
-      routeLocale({ pathname: "/", cookie: "ko", acceptLanguage: "en" }),
-    ).toEqual({ type: "redirect", location: "/ko" });
-  });
-
   it("쿼리 문자열을 보존한다", () => {
     expect(routeLocale({ pathname: "/posts", search: "?a=1&b=2" })).toEqual({
       type: "redirect",

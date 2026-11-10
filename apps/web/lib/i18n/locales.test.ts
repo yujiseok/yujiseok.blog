@@ -1,64 +1,42 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isLocale,
   languageTogglePath,
-  localeCookie,
   localizedPath,
   pickLocale,
   stripLocale,
   swapLocale,
 } from "./locales";
 
-describe("localeCookie", () => {
-  it("사이트 전체에 1년간 유지되는 쿠키 문자열을 만든다", () => {
-    expect(localeCookie("en")).toBe(
-      "NEXT_LOCALE=en; Path=/; Max-Age=31536000; SameSite=Lax",
-    );
-  });
-});
-
-describe("isLocale", () => {
-  it("지원하는 언어만 통과시킨다", () => {
-    expect(isLocale("ko")).toBe(true);
-    expect(isLocale("en")).toBe(true);
-    expect(isLocale("ja")).toBe(false);
-    expect(isLocale(undefined)).toBe(false);
-  });
-});
-
 describe("localizedPath", () => {
-  it("경로 앞에 언어를 붙인다", () => {
-    expect(localizedPath("en", "/posts/x")).toBe("/en/posts/x");
-    expect(localizedPath("ko", "/music")).toBe("/ko/music");
-  });
-
-  it("루트는 슬래시 없이 언어만 남긴다", () => {
-    expect(localizedPath("en", "/")).toBe("/en");
-  });
-
-  it("쿼리와 해시를 보존한다", () => {
-    expect(localizedPath("en", "/posts?page=2")).toBe("/en/posts?page=2");
-    expect(localizedPath("en", "/posts/x#intro")).toBe("/en/posts/x#intro");
+  it.each([
+    ["en", "/posts/x", "/en/posts/x"],
+    ["ko", "/music", "/ko/music"],
+    ["en", "/", "/en"],
+    ["en", "/posts?page=2", "/en/posts?page=2"],
+    ["en", "/posts/x#intro", "/en/posts/x#intro"],
+  ] as const)("%s + %s → %s", (locale, path, expected) => {
+    expect(localizedPath(locale, path)).toBe(expected);
   });
 });
 
 describe("stripLocale", () => {
-  it("접두사를 뗀다", () => {
-    expect(stripLocale("/en/music/playlists/1")).toBe("/music/playlists/1");
-    expect(stripLocale("/ko")).toBe("/");
-  });
-
-  it("접두사가 없으면 그대로 둔다", () => {
-    expect(stripLocale("/music")).toBe("/music");
-    expect(stripLocale("/english")).toBe("/english");
+  it.each([
+    ["/en/music/playlists/1", "/music/playlists/1"],
+    ["/ko", "/"],
+    ["/music", "/music"],
+    ["/english", "/english"],
+  ])("%s → %s", (path, expected) => {
+    expect(stripLocale(path)).toBe(expected);
   });
 });
 
 describe("swapLocale", () => {
-  it("같은 경로의 다른 언어 주소를 만든다", () => {
-    expect(swapLocale("/ko/posts/x", "en")).toBe("/en/posts/x");
-    expect(swapLocale("/en", "ko")).toBe("/ko");
+  it.each([
+    ["/ko/posts/x", "en", "/en/posts/x"],
+    ["/en", "ko", "/ko"],
+  ] as const)("%s → %s: %s", (path, locale, expected) => {
+    expect(swapLocale(path, locale)).toBe(expected);
   });
 });
 

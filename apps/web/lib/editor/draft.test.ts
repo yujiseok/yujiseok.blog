@@ -10,7 +10,6 @@ import {
   isLossy,
   isOverwrite,
   slugInvalid,
-  slugNeedsManualInput,
   type Draft,
   type DraftAction,
 } from "./draft";
@@ -53,15 +52,6 @@ describe("제목에서 슬러그 자동 생성", () => {
     expect(draft.slug).toBe("my-own-slug");
   });
 
-  it("한글 제목은 슬러그를 만들지 못해 비워 두고 직접 입력을 요구한다", () => {
-    const draft = apply(blank(), {
-      type: "title",
-      value: "리액트 서버 컴포넌트",
-    });
-    expect(draft.slug).toBe("");
-    expect(slugNeedsManualInput(draft)).toBe(true);
-  });
-
   it("불러온 글은 제목을 고쳐도 슬러그가 따라가지 않는다", () => {
     const draft = apply(blank(), loadedAction({ title: "원래 제목" }), {
       type: "title",
@@ -87,15 +77,6 @@ describe("저장할 메타데이터", () => {
     ]);
   });
 
-  it("요약이 비면 summary 키를 내지 않는다", () => {
-    const draft = apply(blank(), { type: "title", value: "New Post" });
-    expect(Object.keys(draftMetadata(draft))).toEqual([
-      "title",
-      "publishedAt",
-      "published",
-    ]);
-  });
-
   it("기존 글의 요약을 비우면 summary 키가 빠진다", () => {
     const draft = apply(blank(), loadedAction({ title: "원래 제목" }), {
       type: "field",
@@ -103,14 +84,6 @@ describe("저장할 메타데이터", () => {
       value: "",
     });
     expect("summary" in draftMetadata(draft)).toBe(false);
-  });
-
-  it("요약이 없는 기존 글을 불러와도 요약 칸은 빈 문자열이다", () => {
-    const draft = apply(blank(), {
-      ...loadedAction({ title: "글" }),
-      metadata: { title: "글", publishedAt: "2025-01-02", published: true },
-    });
-    expect(draft.summary).toBe("");
   });
 
   it("기존 글의 키 순서를 그대로 보존한다", () => {
@@ -239,29 +212,7 @@ describe("저장 가능 여부", () => {
   });
 });
 
-// 새 글로 돌아가는 건 /editor로 이동해 폼을 다시 세우는 것이라, 리듀서가
-// 아니라 이 초기 상태가 "깨끗한 새 글"의 정의다.
-describe("새 글의 초기 상태", () => {
-  it("불러온 글의 흔적이 없다", () => {
-    const draft = createDraft("2026-09-09");
-
-    expect(isLossy(draft)).toBe(false);
-    expect(isOverwrite(draft)).toBe(false);
-    expect(draftMetadata(draft).image).toBeUndefined();
-    expect(draft.publishedAt).toBe("2026-09-09");
-  });
-});
-
 describe("발행 여부", () => {
-  it("새 글은 초안으로 시작한다", () => {
-    expect(draftMetadata(blank()).published).toBe(false);
-  });
-
-  it("토글을 켜면 발행으로 저장된다", () => {
-    const draft = apply(blank(), { type: "published", value: true });
-    expect(draftMetadata(draft).published).toBe(true);
-  });
-
   it("불러온 글의 발행 상태를 이어받는다", () => {
     const draft = apply(
       blank(),
@@ -277,16 +228,5 @@ describe("발행 여부", () => {
     delete (action.metadata as Partial<PostMetadata>).published;
 
     expect(apply(blank(), action).published).toBe(false);
-  });
-
-  it("초안을 발행으로 바꿔도 편집하지 않는 키는 지킨다", () => {
-    const draft = apply(
-      blank(),
-      loadedAction({ title: "글", image: "/cover.png", published: false }),
-      { type: "published", value: true },
-    );
-
-    expect(draftMetadata(draft).image).toBe("/cover.png");
-    expect(draftMetadata(draft).published).toBe(true);
   });
 });

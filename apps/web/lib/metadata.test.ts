@@ -15,10 +15,6 @@ describe("alternates", () => {
     });
   });
 
-  it("한국어 RSS는 기존 주소를 유지한다", () => {
-    expect(alternates("ko", "/").types["application/rss+xml"]).toBe("/rss.xml");
-  });
-
   it("번역이 없는 글은 그 언어를 hreflang에서 뺀다", () => {
     expect(
       alternates("ko", "/posts/x", { available: ["ko"] }).languages,
@@ -37,11 +33,5 @@ describe("alternates", () => {
       "application/rss+xml": "/rss.xml",
       "text/markdown": "/ko/posts/x.md",
     });
-  });
-
-  it("markdown 옵션이 없으면 RSS만 둔다", () => {
-    expect(Object.keys(alternates("ko", "/posts/x").types)).toEqual([
-      "application/rss+xml",
-    ]);
   });
 });

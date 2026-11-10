@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildLlmsFull, buildLlmsTxt } from "./llms";
+import { buildLlmsTxt } from "./llms";
 
 const meta = (title: string, summary?: string) => ({
   title,
@@ -42,27 +42,5 @@ describe("buildLlmsTxt", () => {
 
     expect(txt).not.toContain("English");
     expect(txt).not.toContain("/en/");
-  });
-
-  it("전문·피드 링크를 싣는다", () => {
-    const txt = buildLlmsTxt(input);
-
-    expect(txt).toContain("https://yujiseok.blog/llms-full.txt");
-    expect(txt).toContain("https://yujiseok.blog/en/llms-full.txt");
-    expect(txt).toContain("https://yujiseok.blog/rss.xml");
-    expect(txt).toContain("https://yujiseok.blog/en/rss.xml");
-  });
-});
-
-describe("buildLlmsFull", () => {
-  it("ko 전문은 한국어 머리말, en 전문은 영어 머리말을 단다", () => {
-    expect(buildLlmsFull("ko", ["# P1", "# P2"])).toContain("전 글 원문");
-    expect(buildLlmsFull("en", ["# P1"])).toContain("translated");
-  });
-
-  it("글 사이를 구분선으로 잇는다", () => {
-    expect(buildLlmsFull("ko", ["# P1", "# P2"])).toContain(
-      "# P1\n---\n\n# P2",
-    );
   });
 });

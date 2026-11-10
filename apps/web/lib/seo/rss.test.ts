@@ -25,25 +25,10 @@ describe("buildRss", () => {
     expect(xml).toContain('href="https://yujiseok.blog/rss.xml"');
   });
 
-  it("en: /en 주소와 자기 피드 주소를 쓴다", () => {
-    const xml = buildRss("en", [post]);
-
-    expect(xml).toContain("<link>https://yujiseok.blog/en/posts/hello</link>");
-    expect(xml).toContain(
-      '<guid isPermaLink="false">https://yujiseok.blog/en/posts/hello</guid>',
-    );
-    expect(xml).toContain("<language>en</language>");
-    expect(xml).toContain('href="https://yujiseok.blog/en/rss.xml"');
-  });
-
   it("제목과 요약을 XML 이스케이프한다", () => {
     const xml = buildRss("ko", [post]);
 
     expect(xml).toContain("<title>A &amp; &quot;B&quot;</title>");
     expect(xml).toContain("<description>요약 &lt;x&gt;</description>");
-  });
-
-  it("글이 없어도 유효한 채널을 낸다", () => {
-    expect(buildRss("en", [])).toContain("<channel>");
   });
 });

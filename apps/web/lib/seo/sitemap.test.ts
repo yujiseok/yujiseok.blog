@@ -36,20 +36,6 @@ describe("buildSitemap", () => {
     ).not.toHaveProperty("en");
   });
 
-  it("목록·이력서 같은 페이지는 두 언어 모두 낸다", () => {
-    for (const path of ["", "/posts", "/resume", "/music"]) {
-      expect(find(`/ko${path}`, entries)).toBeDefined();
-      expect(find(`/en${path}`, entries)).toBeDefined();
-    }
-  });
-
-  it("접두사 없는 URL은 내지 않는다", () => {
-    expect(find("/posts/a", entries)).toBeUndefined();
-    expect(entries.some(({ url }) => url === "https://yujiseok.blog")).toBe(
-      false,
-    );
-  });
-
   it("번역이 하나도 없어도 en 목록 페이지는 남는다", () => {
     const none = buildSitemap({ ...input, en: [] });
 

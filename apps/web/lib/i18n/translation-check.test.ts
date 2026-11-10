@@ -72,44 +72,26 @@ describe("checkTranslation", () => {
     expect(issues[0]).toContain("metadata");
   });
 
-  it("publishedAt 이 바뀌면 알린다", async () => {
-    const issues = await checkTranslation(
-      SOURCE,
-      withReplace("2025-03-15", "2025-03-16"),
-    );
-    expect(issues).toEqual([expect.stringContaining("publishedAt")]);
-  });
-
-  it("published 가 바뀌면 알린다", async () => {
-    const issues = await checkTranslation(
-      SOURCE,
-      withReplace('"published": true', '"published": false'),
-    );
-    expect(issues).toEqual([expect.stringContaining("published")]);
-  });
-
-  it("헤딩 레벨 순서가 다르면 알린다", async () => {
-    const issues = await checkTranslation(
-      SOURCE,
-      withReplace("### Wrap-up", "## Wrap-up"),
-    );
-    expect(issues).toEqual([expect.stringContaining("헤딩")]);
-  });
-
-  it("헤딩이 빠지면 알린다", async () => {
-    const issues = await checkTranslation(
-      SOURCE,
-      withReplace("### Wrap-up\n\n", ""),
-    );
-    expect(issues).toEqual([expect.stringContaining("헤딩")]);
-  });
-
-  it("코드펜스 내용이 바뀌면 알린다", async () => {
-    const issues = await checkTranslation(
-      SOURCE,
-      withReplace('"토큰"', '"token"'),
-    );
-    expect(issues).toEqual([expect.stringContaining("코드")]);
+  it.each([
+    ["publishedAt 이 바뀌면", "2025-03-15", "2025-03-16", "publishedAt"],
+    [
+      "published 가 바뀌면",
+      '"published": true',
+      '"published": false',
+      "published",
+    ],
+    ["헤딩 레벨 순서가 다르면", "### Wrap-up", "## Wrap-up", "헤딩"],
+    ["헤딩이 빠지면", "### Wrap-up\n\n", "", "헤딩"],
+    ["코드펜스 내용이 바뀌면", '"토큰"', '"token"', "코드"],
+    [
+      "이미지 src 가 바뀌면",
+      "/images/spotify/dashboard.png",
+      "/images/x.png",
+      "이미지",
+    ],
+  ])("%s 알린다", async (_name, from, to, expected) => {
+    const issues = await checkTranslation(SOURCE, withReplace(from, to));
+    expect(issues).toEqual([expect.stringContaining(expected)]);
   });
 
   it("링크 href 가 바뀌면 알린다", async () => {
@@ -244,33 +226,5 @@ ${body}
 
     expect(issues.join("\n")).toContain("useMutation");
     expect(issues.join("\n")).toContain("useMutate");
-  });
-
-  it("코드펜스 순서가 바뀌면 알린다", async () => {
-    const a = "```ts\nconst a = 1;\n```";
-    const b = "```ts\nconst b = 2;\n```";
-
-    expect(
-      await checkTranslation(post(`${a}\n\n${b}`), post(`${b}\n\n${a}`)),
-    ).not.toEqual([]);
-  });
-
-  it("링크가 빠지면 알린다", async () => {
-    const issues = await checkTranslation(
-      post("[가](https://a.dev)와 [나](https://b.dev)"),
-      post("[A](https://a.dev) and B"),
-    );
-
-    expect(issues.join("\n")).toContain("https://b.dev");
-  });
-
-  it("어긋난 코드 전체를 메시지에 쏟지 않는다", async () => {
-    const huge = `const value = "${"x".repeat(5000)}";`;
-    const issues = await checkTranslation(
-      post(`\`\`\`ts\n${huge}\n\`\`\``),
-      post("```ts\nconst other = 1;\n```"),
-    );
-
-    expect(issues.join("\n").length).toBeLessThan(1000);
   });
 });

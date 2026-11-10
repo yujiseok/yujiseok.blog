@@ -3,16 +3,16 @@ import { describe, expect, it } from "vitest";
 import { toMarkdown } from "./markdown";
 
 describe("toMarkdown", () => {
-  it("제목·출처·요약을 머리에 두고 본문을 잇는다", () => {
-    expect(
-      toMarkdown({
+  it.each([
+    [
+      "제목·출처·요약을 머리에 두고 본문을 잇는다",
+      {
         title: "스포티파이 붙이기",
         summary: "최근 들은 곡을 보여준다",
         publishedAt: "2025-03-15",
         url: "https://yujiseok.blog/posts/spotify",
         body: "## 시작\n\n본문",
-      }),
-    ).toBe(
+      },
       [
         "# 스포티파이 붙이기",
         "",
@@ -25,19 +25,16 @@ describe("toMarkdown", () => {
         "",
         "본문",
         "",
-      ].join("\n"),
-    );
-  });
-
-  it("요약이 없으면 인용 줄을 생략한다", () => {
-    expect(
-      toMarkdown({
+      ],
+    ],
+    [
+      "요약이 없으면 인용 줄을 생략한다",
+      {
         title: "제목",
         publishedAt: "2025-01-01",
         url: "https://yujiseok.blog/posts/a",
         body: "본문",
-      }),
-    ).toBe(
+      },
       [
         "# 제목",
         "",
@@ -46,7 +43,9 @@ describe("toMarkdown", () => {
         "",
         "본문",
         "",
-      ].join("\n"),
-    );
+      ],
+    ],
+  ])("%s", (_name, input, lines) => {
+    expect(toMarkdown(input)).toBe(lines.join("\n"));
   });
 });

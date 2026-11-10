@@ -5,254 +5,134 @@ import type { JSONContent } from "@tiptap/core";
 
 import { docToMarkdown, markdownToDoc, openForEditing } from "./markdown";
 
-describe("docToMarkdown - 블록", () => {
-  it("paragraph 를 문단으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: "본문" }] },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("본문\n");
+describe("왕복 - doc -> markdown -> doc", () => {
+  // 마크는 바깥쪽부터(link > underline > bold > ...) 적는다 — 파싱이 그 순서로 돌려준다
+  const text = (value: string, ...marks: string[]): JSONContent =>
+    marks.length === 0
+      ? { type: "text", text: value }
+      : { type: "text", text: value, marks: marks.map((type) => ({ type })) };
+  const para = (...content: JSONContent[]): JSONContent => ({
+    type: "paragraph",
+    content,
+  });
+  const item = (value: string): JSONContent => ({
+    type: "listItem",
+    content: [para(text(value))],
   });
 
-  it("heading 을 level 만큼의 # 으로 직렬화한다", () => {
+  it("모든 블록 종류와 마크가 섞인 문서가 왕복 후에도 마크·속성까지 동일하다", () => {
     const doc: JSONContent = {
       type: "doc",
       content: [
         {
           type: "heading",
           attrs: { level: 1 },
-          content: [{ type: "text", text: "h1" }],
+          content: [text("제목")],
         },
         {
           type: "heading",
           attrs: { level: 2 },
-          content: [{ type: "text", text: "h2" }],
+          content: [text("소제목")],
         },
-        {
-          type: "heading",
-          attrs: { level: 3 },
-          content: [{ type: "text", text: "h3" }],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("# h1\n\n## h2\n\n### h3\n");
-  });
-
-  it("bulletList 를 - 목록으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "bulletList",
-          content: [
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "항목1" }],
-                },
-              ],
-            },
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "항목2" }],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("- 항목1\n- 항목2\n");
-  });
-
-  it("orderedList 를 숫자 목록으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "orderedList",
-          content: [
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "하나" }],
-                },
-              ],
-            },
-            {
-              type: "listItem",
-              content: [
-                { type: "paragraph", content: [{ type: "text", text: "둘" }] },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("1. 하나\n2. 둘\n");
-  });
-
-  it("blockquote 를 > 인용으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "blockquote",
-          content: [
-            { type: "paragraph", content: [{ type: "text", text: "인용문" }] },
-          ],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("> 인용문\n");
-  });
-
-  it("codeBlock 을 언어와 함께 펜스로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "codeBlock",
-          attrs: { language: "ts" },
-          content: [{ type: "text", text: "const a = 1;" }],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("```ts\nconst a = 1;\n```\n");
-  });
-
-  it("codeBlock 언어가 없으면 language 를 null 로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "codeBlock",
-          attrs: { language: null },
-          content: [{ type: "text", text: "plain" }],
-        },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe("```\nplain\n```\n");
-  });
-
-  it("horizontalRule 을 구분선으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [{ type: "horizontalRule" }],
-    };
-    expect(docToMarkdown(doc)).toBe("---\n");
-  });
-
-  it("image 를 마크다운 이미지 문법으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        { type: "image", attrs: { src: "/a.png", alt: "설명", title: "제목" } },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe('![설명](/a.png "제목")\n');
-  });
-
-  it("hardBreak 를 줄바꿈으로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "첫줄" },
-            { type: "hardBreak" },
-            { type: "text", text: "둘째줄" },
-          ],
-        },
-      ],
-    };
-    // 이 저장소의 기존 글은 줄 끝 백슬래시가 아니라 공백 두 칸을 쓴다
-    expect(docToMarkdown(doc)).toBe("첫줄  \n둘째줄\n");
-  });
-});
-
-describe("docToMarkdown - 마크", () => {
-  const wrap = (content: JSONContent[]): JSONContent => ({
-    type: "doc",
-    content: [{ type: "paragraph", content }],
-  });
-
-  it("bold 를 ** 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([{ type: "text", text: "굵게", marks: [{ type: "bold" }] }]),
-      ),
-    ).toBe("**굵게**\n");
-  });
-
-  it("italic 을 _ 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([{ type: "text", text: "기울임", marks: [{ type: "italic" }] }]),
-      ),
-    ).toBe("_기울임_\n");
-  });
-
-  it("strike 를 ~~ 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([{ type: "text", text: "취소선", marks: [{ type: "strike" }] }]),
-      ),
-    ).toBe("~~취소선~~\n");
-  });
-
-  it("code 를 백틱으로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([{ type: "text", text: "코드", marks: [{ type: "code" }] }]),
-      ),
-    ).toBe("`코드`\n");
-  });
-
-  it("link 를 [text](href) 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([
+        para(
+          text("굵게", "bold"),
+          text(" "),
+          text("기울임", "italic"),
+          text(" "),
+          text("취소선", "strike"),
+          text(" "),
+          text("밑줄", "underline"),
+          text(" "),
+          text("코드", "code"),
+          text(" "),
           {
             type: "text",
             text: "링크",
             marks: [{ type: "link", attrs: { href: "/a" } }],
           },
-        ]),
-      ),
-    ).toBe("[링크](/a)\n");
-  });
-
-  it("underline 을 <u> 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([{ type: "text", text: "밑줄", marks: [{ type: "underline" }] }]),
-      ),
-    ).toBe("<u>밑줄</u>\n");
-  });
-
-  it("여러 마크가 중첩되면 함께 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        wrap([
-          {
-            type: "text",
-            text: "굵고밑줄",
-            marks: [{ type: "bold" }, { type: "underline" }],
+          text(" "),
+          text("굵고밑줄", "underline", "bold"),
+        ),
+        para(text("첫줄"), { type: "hardBreak" }, text("둘째줄")),
+        { type: "bulletList", content: [item("항목1"), item("항목2")] },
+        { type: "orderedList", content: [item("하나"), item("둘")] },
+        { type: "blockquote", content: [para(text("인용"))] },
+        {
+          type: "codeBlock",
+          attrs: { language: "ts" },
+          content: [text("const a = 1;")],
+        },
+        {
+          type: "codeBlock",
+          attrs: { language: null },
+          content: [text("plain")],
+        },
+        { type: "horizontalRule" },
+        {
+          type: "image",
+          attrs: {
+            src: "/a.png",
+            alt: "설명",
+            title: "제목",
+            width: null,
+            height: null,
+            align: null,
           },
-        ]),
-      ),
-    ).toBe("<u>**굵고밑줄**</u>\n");
+        },
+        {
+          type: "image",
+          attrs: {
+            src: "/b.png",
+            alt: "잡콕",
+            width: 768,
+            height: 400,
+            align: null,
+          },
+        },
+      ],
+    };
+
+    expect(markdownToDoc(docToMarkdown(doc))).toEqual(doc);
+  });
+});
+
+describe("왕복 - markdown -> doc -> markdown", () => {
+  it("직접 작성한 마크다운이 마크 표기까지 그대로 왕복한다", () => {
+    const md = [
+      "# 제목",
+      "",
+      "## 소제목",
+      "",
+      "**굵게** _기울임_ ~~취소선~~ <u>밑줄</u> `코드` [링크](/a) <u>**굵고밑줄**</u>",
+      "",
+      "첫줄  ",
+      "둘째줄",
+      "",
+      "- 항목1",
+      "- 항목2",
+      "",
+      "1. 하나",
+      "2. 둘",
+      "",
+      "> 인용문",
+      "",
+      "```ts",
+      "const a = 1;",
+      "```",
+      "",
+      "```",
+      "plain",
+      "```",
+      "",
+      "---",
+      "",
+      '![설명](/a.png "제목")',
+      "",
+      '<Image src="/b.png" alt="잡콕" width={768} height={400} />',
+      "",
+    ].join("\n");
+
+    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 });
 
@@ -294,314 +174,27 @@ describe("docToMarkdown - 이스케이프", () => {
   });
 });
 
-describe("docToMarkdown - 미지의 JSX 보존", () => {
-  it("mdxBlock 을 원문 그대로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: "앞 문단" }] },
-        {
-          type: "mdxBlock",
-          attrs: { value: '<Callout type="info">내용</Callout>' },
-        },
-        { type: "paragraph", content: [{ type: "text", text: "뒷 문단" }] },
-      ],
-    };
-    expect(docToMarkdown(doc)).toBe(
-      '앞 문단\n\n<Callout type="info">내용</Callout>\n\n뒷 문단\n',
-    );
-  });
-});
-
-describe("markdownToDoc - 블록", () => {
-  it("문단을 paragraph 로 파싱한다", () => {
-    expect(markdownToDoc("본문\n")).toEqual({
-      type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: "본문" }] },
-      ],
-    });
-  });
-
-  it("# 을 heading level 1로 파싱한다", () => {
-    expect(markdownToDoc("# 제목\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "heading",
-          attrs: { level: 1 },
-          content: [{ type: "text", text: "제목" }],
-        },
-      ],
-    });
-  });
-
-  it("- 목록을 bulletList 로 파싱한다", () => {
-    expect(markdownToDoc("- 항목1\n- 항목2\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "bulletList",
-          content: [
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "항목1" }],
-                },
-              ],
-            },
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "항목2" }],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("숫자 목록을 orderedList 로 파싱한다", () => {
-    expect(markdownToDoc("1. 하나\n2. 둘\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "orderedList",
-          content: [
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "하나" }],
-                },
-              ],
-            },
-            {
-              type: "listItem",
-              content: [
-                { type: "paragraph", content: [{ type: "text", text: "둘" }] },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("> 인용을 blockquote 로 파싱한다", () => {
-    expect(markdownToDoc("> 인용문\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "blockquote",
-          content: [
-            { type: "paragraph", content: [{ type: "text", text: "인용문" }] },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("펜스 코드블록을 codeBlock 으로 파싱한다", () => {
-    expect(markdownToDoc("```ts\nconst a = 1;\n```\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "codeBlock",
-          attrs: { language: "ts" },
-          content: [{ type: "text", text: "const a = 1;" }],
-        },
-      ],
-    });
-  });
-
-  it("언어 표시가 없는 코드블록은 language 를 null 로 파싱한다", () => {
-    expect(markdownToDoc("```\nplain\n```\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "codeBlock",
-          attrs: { language: null },
-          content: [{ type: "text", text: "plain" }],
-        },
-      ],
-    });
-  });
-
-  it("--- 를 horizontalRule 로 파싱한다", () => {
-    expect(markdownToDoc("---\n")).toEqual({
-      type: "doc",
-      content: [{ type: "horizontalRule" }],
-    });
-  });
-
-  it("마크다운 이미지를 image 노드로 파싱한다", () => {
-    // 마크다운 표기에는 크기·정렬이 없으므로 셋 다 null 로 채운다. 이 값이
-    // 그대로 남아 있어야 저장할 때 다시 마크다운 표기로 돌아간다.
-    expect(markdownToDoc('![설명](/a.png "제목")\n')).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "image",
-          attrs: {
-            src: "/a.png",
-            alt: "설명",
-            title: "제목",
-            width: null,
-            height: null,
-            align: null,
-          },
-        },
-      ],
-    });
-  });
-
-  it("역슬래시 줄바꿈을 hardBreak 로 파싱한다", () => {
-    expect(markdownToDoc("첫줄\\\n둘째줄\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "첫줄" },
-            { type: "hardBreak" },
-            { type: "text", text: "둘째줄" },
-          ],
-        },
-      ],
-    });
-  });
-});
-
-describe("markdownToDoc - 마크", () => {
-  it("** 를 bold 마크로 파싱한다", () => {
-    expect(markdownToDoc("**굵게**\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "굵게", marks: [{ type: "bold" }] }],
-        },
-      ],
-    });
-  });
-
-  it("_ 를 italic 마크로 파싱한다", () => {
-    expect(markdownToDoc("_기울임_\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "기울임", marks: [{ type: "italic" }] },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("~~ 를 strike 마크로 파싱한다", () => {
-    expect(markdownToDoc("~~취소선~~\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "취소선", marks: [{ type: "strike" }] },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("백틱을 code 마크로 파싱한다", () => {
-    expect(markdownToDoc("`코드`\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "코드", marks: [{ type: "code" }] }],
-        },
-      ],
-    });
-  });
-
-  it("[text](href) 를 link 마크로 파싱한다", () => {
-    expect(markdownToDoc("[링크](/a)\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            {
-              type: "text",
-              text: "링크",
-              marks: [{ type: "link", attrs: { href: "/a" } }],
-            },
-          ],
-        },
-      ],
-    });
-  });
-});
-
-describe("underline 왕복", () => {
-  it("<u> 를 underline 마크로 파싱한다", () => {
-    expect(markdownToDoc("<u>밑줄</u>\n")).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "밑줄", marks: [{ type: "underline" }] },
-          ],
-        },
-      ],
-    });
-  });
-
-  it("markdownToDoc(docToMarkdown(doc)) 이 underline 마크를 보존한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "밑줄", marks: [{ type: "underline" }] },
-          ],
-        },
-      ],
-    };
-    expect(markdownToDoc(docToMarkdown(doc))).toEqual(doc);
-  });
-});
-
 describe("미지의 JSX 블록 보존", () => {
-  it("Callout 블록이 markdownToDoc 을 거쳐도 원문 그대로 보존된다", () => {
-    const md = '앞 문단\n\n<Callout type="info">내용</Callout>\n\n뒷 문단\n';
+  // mdxBlock 은 에디터가 모르는 JSX 를 원문 그대로 들고 있다가 저장할 때
+  // 되돌려 놓는다. 여기가 깨지면 <Callout> 이 든 글을 열었다 저장하는 것만으로
+  // 내용이 사라진다.
+  it("한 줄·여러 줄 JSX 블록을 mdxBlock 으로 들고 있다가 바이트 단위로 되돌려 쓴다", () => {
+    const md =
+      '앞 문단\n\n<Callout type="info">내용</Callout>\n\n<Callout>\n  여러 줄에 걸친\n  내용입니다.\n</Callout>\n\n뒷 문단\n';
+
     const doc = markdownToDoc(md);
+
     expect(doc.content?.[1]).toEqual({
       type: "mdxBlock",
       attrs: { value: '<Callout type="info">내용</Callout>' },
     });
-  });
-
-  it("Callout 블록이 markdownToDoc -> docToMarkdown 을 거쳐도 바이트 단위로 동일하다", () => {
-    const md = '앞 문단\n\n<Callout type="info">내용</Callout>\n\n뒷 문단\n';
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
-  });
-
-  it("여러 줄에 걸친 JSX 블록도 바이트 단위로 보존한다", () => {
-    const md =
-      "문단.\n\n<Callout>\n  여러 줄에 걸친\n  내용입니다.\n</Callout>\n\n다음 문단.\n";
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
+    expect(doc.content?.[2]).toEqual({
+      type: "mdxBlock",
+      attrs: {
+        value: "<Callout>\n  여러 줄에 걸친\n  내용입니다.\n</Callout>",
+      },
+    });
+    expect(docToMarkdown(doc)).toBe(md);
   });
 });
 
@@ -611,8 +204,9 @@ describe("이미지 - JSX <Image>", () => {
     content: [{ type: "image", attrs }],
   });
 
-  it("속성을 전부 정적으로 읽을 수 있는 <Image> 를 image 노드로 파싱한다", () => {
-    const md = '<Image src="/a.png" width={768} height={400} alt="잡콕" />\n';
+  it("속성(align 포함)을 전부 정적으로 읽을 수 있는 <Image> 를 image 노드로 파싱한다", () => {
+    const md =
+      '<Image src="/a.png" width={768} height={400} alt="잡콕" align="left" />\n';
 
     expect(markdownToDoc(md)).toEqual(
       jsxImage({
@@ -620,41 +214,12 @@ describe("이미지 - JSX <Image>", () => {
         alt: "잡콕",
         width: 768,
         height: 400,
-        align: null,
-      }),
-    );
-  });
-
-  it("align 속성을 읽는다", () => {
-    const md =
-      '<Image src="/a.png" width={10} height={20} alt="" align="left" />\n';
-
-    expect(markdownToDoc(md)).toEqual(
-      jsxImage({
-        src: "/a.png",
-        alt: "",
-        width: 10,
-        height: 20,
         align: "left",
       }),
     );
   });
 
-  it("width/height 가 있으면 <Image> JSX 로 직렬화한다", () => {
-    expect(
-      docToMarkdown(
-        jsxImage({
-          src: "/a.png",
-          alt: "잡콕",
-          width: 768,
-          height: 400,
-          align: null,
-        }),
-      ),
-    ).toBe('<Image src="/a.png" alt="잡콕" width={768} height={400} />\n');
-  });
-
-  it("align 이 있으면 문자열 prop 으로 덧붙인다", () => {
+  it("width/height 가 있으면 <Image> JSX 로, align 이 있으면 문자열 prop 으로 직렬화한다", () => {
     expect(
       docToMarkdown(
         jsxImage({
@@ -668,26 +233,6 @@ describe("이미지 - JSX <Image>", () => {
     ).toBe(
       '<Image src="/a.png" alt="잡콕" width={768} height={400} align="right" />\n',
     );
-  });
-
-  it("크기가 없으면 마크다운 이미지로 되돌린다", () => {
-    expect(
-      docToMarkdown(
-        jsxImage({
-          src: "/a.png",
-          alt: "잡콕",
-          width: null,
-          height: null,
-          align: null,
-        }),
-      ),
-    ).toBe("![잡콕](/a.png)\n");
-  });
-
-  it("<Image> 가 왕복해도 JSX 로 남는다", () => {
-    const md = '<Image src="/a.png" alt="잡콕" width={768} height={400} />\n';
-
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 
   it("목록 안의 <Image> 도 편집 가능한 노드가 된다", () => {
@@ -712,152 +257,43 @@ describe("이미지 - JSX <Image>", () => {
       content: [{ type: "mdxBlock", attrs: { value: md } }],
     });
   });
-
-  it("Image 가 아닌 JSX 는 건드리지 않는다", () => {
-    const md = '<Callout type="info">내용</Callout>\n';
-
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
-  });
-});
-
-describe("왕복 - doc -> markdown -> doc", () => {
-  it("여러 블록과 마크가 섞인 문서가 왕복 후에도 동일하다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "heading",
-          attrs: { level: 2 },
-          content: [{ type: "text", text: "제목" }],
-        },
-        {
-          type: "paragraph",
-          content: [
-            { type: "text", text: "굵게", marks: [{ type: "bold" }] },
-            { type: "text", text: " 그리고 " },
-            {
-              type: "text",
-              text: "링크",
-              marks: [{ type: "link", attrs: { href: "/a" } }],
-            },
-          ],
-        },
-        {
-          type: "bulletList",
-          content: [
-            {
-              type: "listItem",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "항목" }],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          type: "blockquote",
-          content: [
-            { type: "paragraph", content: [{ type: "text", text: "인용" }] },
-          ],
-        },
-        {
-          type: "codeBlock",
-          attrs: { language: "ts" },
-          content: [{ type: "text", text: "const a = 1;" }],
-        },
-        { type: "horizontalRule" },
-      ],
-    };
-
-    expect(markdownToDoc(docToMarkdown(doc))).toEqual(doc);
-  });
-});
-
-describe("왕복 - markdown -> doc -> markdown", () => {
-  it("직접 작성한 마크다운 문자열이 왕복 후에도 동일하다", () => {
-    const md = [
-      "## 제목",
-      "",
-      "굵게 **강조**된 문단과 [링크](/a) 그리고 `코드`.",
-      "",
-      "- 항목1",
-      "- 항목2",
-      "",
-      "1. 하나",
-      "2. 둘",
-      "",
-      "> 인용문",
-      "",
-      "```ts",
-      "const a = 1;",
-      "```",
-      "",
-      "---",
-      "",
-    ].join("\n");
-
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
-  });
 });
 
 describe("문단 정렬 - <div style={{ textAlign }}>", () => {
   const alignDiv = (style: string, inner: string) =>
     `<div style={${style}}>\n  ${inner}\n</div>\n`;
 
-  it("가운데 정렬 div 를 문단의 align attr 로 읽는다", () => {
-    expect(
-      markdownToDoc(alignDiv('{ textAlign: "center" }', "가운데")),
-    ).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "paragraph",
-          attrs: { align: "center" },
-          content: [{ type: "text", text: "가운데" }],
-        },
-      ],
-    });
-  });
-
-  it("오른쪽 정렬 div 를 읽는다", () => {
-    expect(markdownToDoc(alignDiv('{ textAlign: "right" }', "오른쪽"))).toEqual(
-      {
-        type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            attrs: { align: "right" },
-            content: [{ type: "text", text: "오른쪽" }],
-          },
-        ],
-      },
-    );
-  });
-
-  it("제목도 정렬 대상이다", () => {
-    expect(
-      markdownToDoc(alignDiv('{ textAlign: "center" }', "## 제목")),
-    ).toEqual({
-      type: "doc",
-      content: [
-        {
-          type: "heading",
-          attrs: { level: 2, align: "center" },
-          content: [{ type: "text", text: "제목" }],
-        },
-      ],
-    });
-  });
-
-  it("textAlign: left 는 align 없는 문단으로 정규화한다", () => {
+  it.each([
+    [
+      "가운데 정렬 div 는 문단의 align attr 로",
+      '{ textAlign: "center" }',
+      "가운데",
+      { type: "paragraph", attrs: { align: "center" } },
+    ],
+    [
+      "오른쪽 정렬 div 는 문단의 align attr 로",
+      '{ textAlign: "right" }',
+      "오른쪽",
+      { type: "paragraph", attrs: { align: "right" } },
+    ],
+    [
+      "정렬 div 안의 제목도 정렬 대상으로",
+      '{ textAlign: "center" }',
+      "## 제목",
+      { type: "heading", attrs: { level: 2, align: "center" } },
+    ],
     // 왼쪽은 렌더 기본이라 attr 을 남길 이유가 없다. div 만 사라진다.
-    expect(markdownToDoc(alignDiv('{ textAlign: "left" }', "왼쪽"))).toEqual({
+    [
+      "textAlign: left 는 align 없는 문단으로",
+      '{ textAlign: "left" }',
+      "왼쪽",
+      { type: "paragraph" },
+    ],
+  ])("%s 읽는다", (_name, style, inner, node) => {
+    const expectedText = inner.replace(/^## /, "");
+    expect(markdownToDoc(alignDiv(style, inner))).toEqual({
       type: "doc",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: "왼쪽" }] },
-      ],
+      content: [{ ...node, content: [{ type: "text", text: expectedText }] }],
     });
   });
 
@@ -979,7 +415,7 @@ describe("표 - GFM 파이프 표", () => {
           }),
     }) as JSONContent;
 
-  it("헤더 한 줄과 본문 두 줄을 읽는다", () => {
+  it("헤더 한 줄과 본문 두 줄을 읽고 파이프 표기로 되돌려 쓴다", () => {
     const md = [
       "| 이름 | 값 |",
       "| - | - |",
@@ -988,7 +424,10 @@ describe("표 - GFM 파이프 표", () => {
       "",
     ].join("\n");
 
-    expect(markdownToDoc(md)).toEqual({
+    const doc = markdownToDoc(md);
+
+    expect(docToMarkdown(doc)).toBe(md);
+    expect(doc).toEqual({
       type: "doc",
       content: [
         {
@@ -1021,35 +460,6 @@ describe("표 - GFM 파이프 표", () => {
     });
   });
 
-  it("표를 파이프 표기로 직렬화한다", () => {
-    const doc: JSONContent = {
-      type: "doc",
-      content: [
-        {
-          type: "table",
-          content: [
-            {
-              type: "tableRow",
-              content: [
-                cell("tableHeader", null, "이름"),
-                cell("tableHeader", null, "값"),
-              ],
-            },
-            {
-              type: "tableRow",
-              content: [
-                cell("tableCell", null, "a"),
-                cell("tableCell", null, "1"),
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-    expect(docToMarkdown(doc)).toBe("| 이름 | 값 |\n| - | - |\n| a | 1 |\n");
-  });
-
   it("열 정렬을 셀 attr 로 읽고 구분선으로 되돌려 쓴다", () => {
     const md = [
       "| 왼 | 가운데 | 오른 |",
@@ -1066,18 +476,6 @@ describe("표 - GFM 파이프 표", () => {
       cell("tableCell", "right", "c"),
     ]);
     expect(docToMarkdown(doc)).toBe(md);
-  });
-
-  it("셀 안의 굵게·링크·인라인 코드를 보존한다", () => {
-    const md = [
-      "| 서식 | 값 |",
-      "| - | - |",
-      "| **굵게** | `코드` |",
-      "| [링크](/a) | 보통 |",
-      "",
-    ].join("\n");
-
-    expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });
 
   it("셀 안의 파이프 문자를 이스케이프해 왕복시킨다", () => {
@@ -1149,15 +547,6 @@ describe("접기 - <details>", () => {
     });
   });
 
-  it("요약의 마크도 그대로 읽는다", () => {
-    expect(markdownToDoc(details("**굵게**", "본문")).content?.[0]).toEqual(
-      detailsNode(
-        [{ type: "text", text: "굵게", marks: [{ type: "bold" }] }],
-        [{ type: "paragraph", content: [{ type: "text", text: "본문" }] }],
-      ),
-    );
-  });
-
   it("본문에 코드블록 같은 블록이 여러 개 있어도 전부 담는다", () => {
     const md =
       "<details>\n  <summary>코드</summary>\n\n  설명\n\n  ```ts\n  const a = 1;\n  ```\n</details>\n";
@@ -1193,17 +582,13 @@ describe("접기 - <details>", () => {
     );
   });
 
-  it("닫힌 상태는 속성 없이 쓴다", () => {
+  it.each([
     // 닫힘이 <details> 의 렌더 기본이라 open={false} 를 적으면 원문에 없던
     // 속성이 생긴다.
-    expect(docToMarkdown(markdownToDoc(details("제목", "본문")))).toBe(
-      details("제목", "본문"),
-    );
-  });
-
-  it("열린 상태는 JSX 불리언 단축으로 쓴다", () => {
-    const md =
-      "<details open>\n  <summary>제목</summary>\n\n  본문\n</details>\n";
+    ["닫힌 상태는 속성 없이", "<details>"],
+    ["열린 상태는 JSX 불리언 단축으로", "<details open>"],
+  ])("%s 쓴다", (_name, tag) => {
+    const md = `${tag}\n  <summary>제목</summary>\n\n  본문\n</details>\n`;
 
     expect(docToMarkdown(markdownToDoc(md))).toBe(md);
   });

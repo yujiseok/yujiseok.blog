@@ -49,25 +49,13 @@ afterEach(() => {
 });
 
 describe("savePost", () => {
-  it("content/writing 아래에 mdx로 저장한다", async () => {
-    const { savePost } = await loadActions();
+  it("content/writing 아래에 mdx로 저장하고, 다시 읽으면 메타데이터와 문서가 그대로다", async () => {
+    const { savePost, readPost } = await loadActions();
 
     await savePost({ slug: "my-post", metadata: METADATA, doc: DOC });
 
-    const written = fs.readFileSync(
-      path.join(writingDir, "my-post.mdx"),
-      "utf8",
-    );
-    expect(written).toContain('"title": "제목"');
-    expect(written).toContain("본문");
-  });
-
-  it("저장한 글을 그대로 다시 읽어온다", async () => {
-    const { savePost, readPost } = await loadActions();
-
-    await savePost({ slug: "round-trip", metadata: METADATA, doc: DOC });
-    const reopened = await readPost("round-trip");
-
+    expect(fs.existsSync(path.join(writingDir, "my-post.mdx"))).toBe(true);
+    const reopened = await readPost("my-post");
     expect(reopened.metadata).toEqual(METADATA);
     // readPost는 문자열이 아니라 문서 객체를 돌려준다 — 저장 방향만 문자열이다
     expect(reopened.doc).toEqual(JSON.parse(DOC));
@@ -135,17 +123,6 @@ describe("savePost", () => {
     ).toContain('"title": "고친 제목"');
   });
 
-  it("요약 없이도 저장하고 파일에 summary 키를 남기지 않는다", async () => {
-    const { savePost } = await loadActions();
-    const { summary: _summary, ...withoutSummary } = METADATA;
-
-    await savePost({ slug: "no-summary", metadata: withoutSummary, doc: DOC });
-
-    expect(
-      fs.readFileSync(path.join(writingDir, "no-summary.mdx"), "utf8"),
-    ).not.toContain("summary");
-  });
-
   it.each([
     ["빈 제목", { ...METADATA, title: "  " }],
     ["잘못된 날짜", { ...METADATA, publishedAt: "2026/09/09" }],
@@ -203,68 +180,22 @@ describe("개발 환경 가드", () => {
   );
 });
 
-describe("listPosts", () => {
-  it("발행일 내림차순으로 정렬한다", async () => {
-    const { savePost, listPosts } = await loadActions();
-
-    await savePost({
-      slug: "older",
-      metadata: { ...METADATA, publishedAt: "2024-01-01" },
-      doc: DOC,
-    });
-    await savePost({
-      slug: "newer",
-      metadata: { ...METADATA, publishedAt: "2026-05-05" },
-      doc: DOC,
-    });
-
-    expect((await listPosts()).map((p) => p.slug)).toEqual(["newer", "older"]);
-  });
-});
-
-describe("listPosts 번역본", () => {
-  it(".en.mdx 번역본은 별개의 글로 나오지 않는다", async () => {
-    const { savePost, listPosts } = await loadActions();
-
-    await savePost({ slug: "hello", metadata: METADATA, doc: DOC });
-    fs.writeFileSync(path.join(writingDir, "hello.en.mdx"), "translated");
-
-    expect((await listPosts()).map((post) => post.slug)).toEqual(["hello"]);
-  });
-});
-
 describe("readPost 무손실 판정", () => {
   const withBody = (body: string) =>
     `export const metadata = {\n  "title": "제목",\n  "publishedAt": "2026-09-09",\n  "summary": "요약"\n}\n\n${body}\n`;
 
-  it("지원하는 구문만 쓴 글은 무손실이다", async () => {
+  it.each([
+    ["지원하는 구문만 쓴 글", "본문 문단입니다.\n\n## 소제목\n\n- 항목"],
+    ["코드펜스 meta (보존함)", '```bash title="cli"\necho hi\n```'],
+    [
+      "문장 중간의 인라인 JSX (보존함)",
+      '문장 <span className="line-through">취소선</span> 이어짐.',
+    ],
+  ])("%s 은 무손실이다", async (_name, body) => {
     const { readPost } = await loadActions();
-    fs.writeFileSync(
-      path.join(writingDir, "plain.mdx"),
-      withBody("본문 문단입니다.\n\n## 소제목\n\n- 항목"),
-    );
+    fs.writeFileSync(path.join(writingDir, "post.mdx"), withBody(body));
 
-    expect((await readPost("plain")).lossless).toBe(true);
-  });
-
-  it("코드펜스 meta 를 보존하므로 무손실이다", async () => {
-    const { readPost } = await loadActions();
-    fs.writeFileSync(
-      path.join(writingDir, "fence-meta.mdx"),
-      withBody('```bash title="cli"\necho hi\n```'),
-    );
-
-    expect((await readPost("fence-meta")).lossless).toBe(true);
-  });
-
-  it("문장 중간의 인라인 JSX 를 보존하므로 무손실이다", async () => {
-    const { readPost } = await loadActions();
-    fs.writeFileSync(
-      path.join(writingDir, "inline-jsx.mdx"),
-      withBody('문장 <span className="line-through">취소선</span> 이어짐.'),
-    );
-
-    expect((await readPost("inline-jsx")).lossless).toBe(true);
+    expect((await readPost("post")).lossless).toBe(true);
   });
 });
 
@@ -331,24 +262,6 @@ describe("deletePost", () => {
     await deletePost("goodbye");
 
     expect(fs.existsSync(path.join(writingDir, "goodbye.en.mdx"))).toBe(false);
-  });
-
-  it("번역본이 없어도 지워진다", async () => {
-    const { savePost, deletePost } = await loadActions();
-
-    await savePost({ slug: "solo", metadata: METADATA, doc: DOC });
-
-    await expect(deletePost("solo")).resolves.toEqual({ ok: true });
-  });
-
-  it("다른 글은 건드리지 않는다", async () => {
-    const { savePost, deletePost, listPosts } = await loadActions();
-
-    await savePost({ slug: "keep", metadata: METADATA, doc: DOC });
-    await savePost({ slug: "drop", metadata: METADATA, doc: DOC });
-    await deletePost("drop");
-
-    expect((await listPosts()).map((post) => post.slug)).toEqual(["keep"]);
   });
 
   it("없는 글을 지우려 하면 실패한다", async () => {

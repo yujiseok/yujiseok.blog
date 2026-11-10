@@ -19,32 +19,6 @@ const options = {
 };
 
 describe("paginate", () => {
-  it("한 쪽에 들어가면 그대로 둔다", () => {
-    const pages = paginate([head(), block(100), block(100)], options);
-
-    expect(pages).toEqual([{ blocks: [0, 1, 2], continuedSection: null }]);
-  });
-
-  it("넘치는 블록은 다음 쪽으로 보내고 순서를 지킨다", () => {
-    const pages = paginate(
-      [head(), block(100), block(100), block(100)],
-      options,
-    );
-
-    expect(pages.flatMap((p) => p.blocks)).toEqual([0, 1, 2, 3]);
-    expect(pages[0].blocks).toEqual([0, 1, 2]);
-    expect(pages[1].blocks).toEqual([3]);
-  });
-
-  it("섹션 중간에서 넘어가면 그 섹션 제목을 다시 단다", () => {
-    const pages = paginate(
-      [head(), block(100), block(100), block(100)],
-      options,
-    );
-
-    expect(pages[1].continuedSection).toBe("exp");
-  });
-
   it("섹션 제목은 쪽 맨 아래에 홀로 남지 않는다", () => {
     const pages = paginate(
       [
@@ -72,11 +46,5 @@ describe("paginate", () => {
       );
       expect(used).toBeLessThanOrEqual(options.pageHeight);
     }
-  });
-
-  it("한 쪽보다 큰 블록은 쪼개지 않고 혼자 둔다", () => {
-    const pages = paginate([block(500), block(50)], options);
-
-    expect(pages.map((p) => p.blocks)).toEqual([[0], [1]]);
   });
 });

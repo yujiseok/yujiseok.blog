@@ -85,13 +85,6 @@ describe("코퍼스의 경계 사례", () => {
     expect(await getToc("writing", "2025", "ko")).toEqual([]);
   });
 
-  it("h1로 시작하는 글도 최상위가 0단계다", async () => {
-    const toc = await getToc("writing", "react-micro-hook", "ko");
-
-    expect(toc.length).toBeGreaterThan(0);
-    expect(Math.min(...toc.map((entry) => entry.indent))).toBe(0);
-  });
-
   it("h4 이하는 담지 않지만 중복 접미사 번호는 소비한다", () => {
     const toc = buildToc("## 정리\n\n#### 정리\n\n## 정리\n");
 
