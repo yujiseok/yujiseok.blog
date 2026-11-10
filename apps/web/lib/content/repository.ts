@@ -47,7 +47,9 @@ export const requireSource = <T extends ContentEntry>(
   translations.filter(({ slug }) => {
     const source = sources.find((entry) => entry.slug === slug);
 
-    return source !== undefined && (includeDrafts || isPublished(source.metadata));
+    return (
+      source !== undefined && (includeDrafts || isPublished(source.metadata))
+    );
   });
 
 const readEntries = (contentType: ContentType, locale: Locale) =>

@@ -1,19 +1,19 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -40,4 +40,7 @@ next-env.d.ts
 
 
 # Figma 플러그인 빌드 결과물. bun run resume:plugin으로 만든다.
-figma/resume-sync/code.js
+apps/figma-resume-sync/code.js
+
+# turbo 로컬 캐시
+.turbo

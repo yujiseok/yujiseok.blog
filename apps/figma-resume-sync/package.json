@@ -1,0 +1,15 @@
+{
+  "name": "@repo/figma-resume-sync",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/code.ts --outfile code.js --target browser",
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.142.0",
+    "typescript": "^7",
+    "vitest": "^5.0.0"
+  }
+}

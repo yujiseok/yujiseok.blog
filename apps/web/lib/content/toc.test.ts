@@ -47,14 +47,12 @@ const CORPUS = [
 const posts = CORPUS.flatMap(({ contentType, locale }) => {
   const dir = path.join(process.cwd(), "content", contentType);
 
-  return listLocaleFiles(fs.readdirSync(dir), locale).map(
-    ({ file, slug }) => ({
-      contentType,
-      locale,
-      slug,
-      file: path.join(dir, file),
-    }),
-  );
+  return listLocaleFiles(fs.readdirSync(dir), locale).map(({ file, slug }) => ({
+    contentType,
+    locale,
+    slug,
+    file: path.join(dir, file),
+  }));
 });
 
 const bodyOf = (file: string) => parsePost(fs.readFileSync(file, "utf8")).body;
@@ -63,7 +61,7 @@ describe("목차 id가 rehype-slug가 박는 id와 일치한다", () => {
   it.each(posts)(
     "$locale $contentType/$slug",
     async ({ contentType, locale, slug, file }) => {
-    const toc = await getToc(contentType, slug, locale);
+      const toc = await getToc(contentType, slug, locale);
 
       expect(toc.map((entry) => entry.id)).toEqual(renderedIds(bodyOf(file)));
     },

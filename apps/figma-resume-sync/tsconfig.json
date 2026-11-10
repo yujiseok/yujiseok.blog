@@ -7,8 +7,7 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "typeRoots": ["../../node_modules/@figma"],
-    "types": ["plugin-typings"]
+    "types": ["@figma/plugin-typings"]
   },
   "include": ["src/**/*.ts"]
 }

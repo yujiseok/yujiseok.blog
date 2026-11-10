@@ -26,5 +26,7 @@ export const listLocaleFiles = (files: string[], locale: Locale) =>
     const slug = isTranslation ? name.slice(0, -LOCALE_SUFFIX.en.length) : name;
 
     // 번역본은 기본 언어가 아닌 쪽의 파일이다
-    return isTranslation === (locale !== DEFAULT_LOCALE) ? [{ file, slug }] : [];
+    return isTranslation === (locale !== DEFAULT_LOCALE)
+      ? [{ file, slug }]
+      : [];
   });
