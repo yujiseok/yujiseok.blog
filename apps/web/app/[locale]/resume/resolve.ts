@@ -18,6 +18,16 @@ export const SECTION_TITLES = {
 export const resumePdfPath = (locale: Locale) =>
   locale === "ko" ? "/resume.pdf" : `/resume.${locale}.pdf`;
 
+/*
+ * public에 PDF를 넣은 언어. 넣지 않은 언어까지 링크를 내면 404로 이어진다.
+ * 런타임에 파일을 확인하지 않는 건 Vercel 함수 번들에 public이 없어서다.
+ * 목록과 실제 파일이 맞는지는 resolve.test.ts가 지킨다.
+ */
+const PUBLISHED_PDF_LOCALES: readonly Locale[] = ["ko"];
+
+export const resumePdfHref = (locale: Locale) =>
+  PUBLISHED_PDF_LOCALES.includes(locale) ? resumePdfPath(locale) : undefined;
+
 type Project = Resume["workExperience"][number]["projects"][number];
 type Contribution = Resume["openSource"][number];
 

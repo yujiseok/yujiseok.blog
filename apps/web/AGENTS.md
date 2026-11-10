@@ -40,8 +40,10 @@
   2. 개발 서버를 켠 채 Figma 데스크톱 앱에서 Resume Sync 플러그인을 실행한다. 처음 한 번은 루트에서
      `bun run resume:plugin`으로 빌드한 뒤 `apps/figma-resume-sync/manifest.json`을 가져온다.
   3. `bun run resume:pdf`로 `public/resume.pdf`, `public/resume.en.pdf`를 만든다(`.env`의 `FIGMA_TOKEN` 필요).
-  4. PDF까지 함께 커밋한다.
+  4. 새 언어의 PDF를 처음 넣었으면 `resolve.ts`의 `PUBLISHED_PDF_LOCALES`에 추가하고, PDF까지 함께 커밋한다.
 - 플러그인이 읽는 `/resume.json`은 개발 서버에서만 열린다.
+- 플러그인(`apps/figma-resume-sync/src/code.ts`)은 이력서 타입을 복사해 쓴다. resume.ts의 필드 구조를
+  바꾸면 그쪽 타입도 같이 고친다. 어긋나도 컴파일은 통과하고 동기화할 때 깨진다.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

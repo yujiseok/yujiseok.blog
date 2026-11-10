@@ -10,14 +10,16 @@ const ResumeProfile = ({
 }: {
   profile: Resume["profile"];
   contact: Resume["contact"];
-  pdfHref: string;
+  pdfHref?: string;
 }) => {
   const links = [
     { href: `mailto:${contact.email}`, label: contact.email },
     { href: contact.github, label: "GitHub" },
     { href: contact.blog, label: "Blog" },
     // 인쇄본에는 자기 자신을 가리키는 링크라 뺀다.
-    { href: pdfHref, label: "PDF", className: "print:hidden" },
+    ...(pdfHref
+      ? [{ href: pdfHref, label: "PDF", className: "print:hidden" }]
+      : []),
   ];
 
   return (

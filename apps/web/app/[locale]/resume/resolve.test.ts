@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 
-import { resolveResume } from "./resolve";
+import { LOCALES } from "@/lib/i18n/locales";
+
+import { resolveResume, resumePdfHref, resumePdfPath } from "./resolve";
 
 const projectUrls = (resume: ReturnType<typeof resolveResume>) =>
   resume.workExperience.flatMap((career) =>
@@ -28,5 +32,27 @@ describe("resolveResume", () => {
     expect(projects.some((p) => "postSlug" in p)).toBe(false);
     expect(projects.some((p) => p.postUrl === undefined)).toBe(true);
     expect(resume.openSource.some((c) => "blogSlug" in c)).toBe(false);
+  });
+});
+
+describe("resumePdfHref", () => {
+  it.each(LOCALES)("%s: 링크를 내는 PDF는 public에 실제로 있다", (locale) => {
+    const href = resumePdfHref(locale);
+    if (href === undefined) return;
+
+    expect(fs.existsSync(path.join(process.cwd(), "public", href))).toBe(true);
+  });
+
+  it("PDF가 아직 없는 언어는 링크를 내지 않는다", () => {
+    const missing = LOCALES.filter(
+      (locale) =>
+        !fs.existsSync(
+          path.join(process.cwd(), "public", resumePdfPath(locale)),
+        ),
+    );
+
+    for (const locale of missing) {
+      expect(resumePdfHref(locale)).toBeUndefined();
+    }
   });
 });

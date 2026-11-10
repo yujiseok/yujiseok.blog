@@ -5,7 +5,7 @@ import {
 } from "@/app/_components/page-spacing";
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
-import { resolveResume, resumePdfPath, SECTION_TITLES } from "./resolve";
+import { resolveResume, resumePdfHref, SECTION_TITLES } from "./resolve";
 import { SITE_URL } from "@/lib/constants";
 import ResumeProfile from "./_components/resume-profile";
 import ResumeContent from "./_components/resume-content";
@@ -26,7 +26,8 @@ export async function generateMetadata({ params }: LocaleParams) {
   const title = `${profile.name} | ${profile.title}`;
 
   return {
-    title,
+    // 이름이 곧 사이트 이름이라 레이아웃 템플릿("%s | Yujiseok")을 붙이면 중복된다.
+    title: { absolute: title },
     description: profile.introduction[0],
     keywords: [
       profile.title,
@@ -92,7 +93,7 @@ const page = async ({ params }: LocaleParams) => {
         <ResumeProfile
           profile={resumeData.profile}
           contact={resumeData.contact}
-          pdfHref={resumePdfPath(locale)}
+          pdfHref={resumePdfHref(locale)}
         />
 
         <ContentContainer title={SECTION_TITLES.experience}>
