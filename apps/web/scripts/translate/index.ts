@@ -35,11 +35,16 @@ interface Target {
 
 const parseArgs = (argv: string[]) => {
   const onlyIndex = argv.indexOf("--only");
+  const value = onlyIndex === -1 ? undefined : argv[onlyIndex + 1];
   return {
     force: argv.includes("--force"),
-    only: onlyIndex === -1 ? undefined : argv[onlyIndex + 1],
+    // `--only --force` 에서 --force 를 slug 로 읽지 않는다
+    only: value?.startsWith("--") ? undefined : value,
   };
 };
+
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
 
 const readLock = async (): Promise<TranslationLock> => {
   try {
@@ -75,7 +80,7 @@ const collectTargets = async (only?: string): Promise<Target[]> => {
         const { metadata } = parsePost(await fs.readFile(sourcePath, "utf8"));
         if (!isPublished(metadata)) continue;
       } catch (error) {
-        console.warn(`건너뜀 ${type}/${file}: ${(error as Error).message}`);
+        console.warn(`건너뜀 ${type}/${file}: ${errorMessage(error)}`);
         continue;
       }
       targets.push({
@@ -102,6 +107,66 @@ const runPool = async <T>(
   );
 };
 
+type Pending = Target & { hash: string; source: string };
+
+const findPending = async (
+  targets: Target[],
+  lock: TranslationLock,
+  force: boolean,
+) => {
+  const pending: Pending[] = [];
+  for (const target of targets) {
+    const source = await fs.readFile(target.sourcePath, "utf8");
+    const hash = hashSource(source);
+    const status = translationStatus({
+      key: target.key,
+      hash,
+      exists: await exists(target.outPath),
+      lock,
+    });
+    if (status !== "fresh" || force) pending.push({ ...target, hash, source });
+  }
+  return pending;
+};
+
+const reportCi = (pending: Pending[]) => {
+  for (const t of pending) {
+    console.warn(`경고: ${t.key} 의 영어 번역이 없거나 원문과 어긋나 있습니다`);
+  }
+  console.log(`번역 건너뜀(CI/Vercel). 확인 필요 ${pending.length}편`);
+};
+
+const translateAll = async (pending: Pending[], lock: TranslationLock) => {
+  const written: string[] = [];
+  const failures: { key: string; issues: string[] }[] = [];
+  // 동시에 끝난 편들이 파일을 겹쳐 쓰지 않도록 쓰기를 한 줄로 잇는다
+  let lockWrites = Promise.resolve();
+
+  await runPool(pending, CONCURRENCY, async (t) => {
+    const started = Date.now();
+    try {
+      const result = await translatePost(t.source, { claude: callClaude });
+      const seconds = Math.round((Date.now() - started) / 1000);
+      if (!result.ok) {
+        failures.push({ key: t.key, issues: result.issues });
+        console.error(`실패 ${t.key} (${seconds}s)`);
+        return;
+      }
+      await fs.writeFile(t.outPath, result.translation);
+      lock[t.key] = t.hash;
+      lockWrites = lockWrites.then(() => writeLock(lock));
+      await lockWrites;
+      written.push(path.relative(process.cwd(), t.outPath));
+      console.log(`완료 ${t.key} (리뷰 ${result.score}/5, ${seconds}s)`);
+    } catch (error) {
+      failures.push({ key: t.key, issues: [errorMessage(error)] });
+      console.error(`오류 ${t.key}: ${errorMessage(error)}`);
+    }
+  });
+
+  return { written, failures };
+};
+
 const main = async () => {
   const { force, only } = parseArgs(process.argv.slice(2));
   // 빈 값을 "지정 안 함"으로 읽으면 한 편만 돌리려다 전체를 번역하게 된다
@@ -116,28 +181,9 @@ const main = async () => {
   }
 
   const lock = await readLock();
-  const pending: (Target & { hash: string; source: string })[] = [];
-  for (const target of targets) {
-    const source = await fs.readFile(target.sourcePath, "utf8");
-    const hash = hashSource(source);
-    const status = translationStatus({
-      key: target.key,
-      hash,
-      exists: await exists(target.outPath),
-      lock,
-    });
-    if (status !== "fresh" || force) pending.push({ ...target, hash, source });
-  }
+  const pending = await findPending(targets, lock, force);
 
-  if (process.env.VERCEL || process.env.CI) {
-    for (const t of pending) {
-      console.warn(
-        `경고: ${t.key} 의 영어 번역이 없거나 원문과 어긋나 있습니다`,
-      );
-    }
-    console.log(`번역 건너뜀(CI/Vercel). 확인 필요 ${pending.length}편`);
-    return;
-  }
+  if (process.env.VERCEL || process.env.CI) return reportCi(pending);
 
   if (pending.length === 0) {
     console.log(`번역할 글이 없습니다 (대상 ${targets.length}편, 모두 최신)`);
@@ -145,29 +191,7 @@ const main = async () => {
   }
   console.log(`번역 ${pending.length}편 시작 (동시 ${CONCURRENCY})`);
 
-  const written: string[] = [];
-  const failures: { key: string; issues: string[] }[] = [];
-
-  await runPool(pending, CONCURRENCY, async (t) => {
-    const started = Date.now();
-    try {
-      const result = await translatePost(t.source, { claude: callClaude });
-      const seconds = Math.round((Date.now() - started) / 1000);
-      if (!result.ok) {
-        failures.push({ key: t.key, issues: result.issues });
-        console.error(`실패 ${t.key} (${seconds}s)`);
-        return;
-      }
-      await fs.writeFile(t.outPath, result.translation);
-      lock[t.key] = t.hash;
-      await writeLock(lock);
-      written.push(path.relative(process.cwd(), t.outPath));
-      console.log(`완료 ${t.key} (리뷰 ${result.score}/5, ${seconds}s)`);
-    } catch (error) {
-      failures.push({ key: t.key, issues: [(error as Error).message] });
-      console.error(`오류 ${t.key}: ${(error as Error).message}`);
-    }
-  });
+  const { written, failures } = await translateAll(pending, lock);
 
   if (written.length > 0) {
     console.log("\n커밋할 파일:");
