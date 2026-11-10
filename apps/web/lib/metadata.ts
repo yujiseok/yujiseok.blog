@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
+
+import { SITE_URL } from "@/lib/constants";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LOCALES, localizedPath, type Locale } from "@/lib/i18n/locales";
+
+export const postPath = (slug: string) => `/posts/${slug}`;
+
+export const absoluteUrl = (locale: Locale, path: string) =>
+  `${SITE_URL}${localizedPath(locale, path)}`;
 
 // 기존 구독자를 위해 한국어 피드는 옛 주소를 그대로 둔다.
 export const rssPath = (locale: Locale) =>
@@ -42,4 +50,42 @@ export const siteOg = (locale: Locale) => {
   const { site } = getDictionary(locale);
 
   return { siteName: site.name, locale: site.ogLocale } as const;
+};
+
+interface PageMetadataInput {
+  locale: Locale;
+  path: string;
+  title: Metadata["title"];
+  description?: string;
+  /** openGraph에 덮어쓸 값. 지정하지 않은 title은 페이지 title(템플릿 포함)에서 채워진다 */
+  og?: NonNullable<Metadata["openGraph"]>;
+  alternates?: AlternatesOptions;
+}
+
+/*
+ * 페이지마다 같은 alternates·openGraph 조립을 한곳에 둔다. og:url은 canonical과
+ * 같은 상대 경로이고, 루트 레이아웃의 metadataBase가 절대 주소로 바꿔 렌더한다.
+ */
+export const pageMetadata = ({
+  locale,
+  path,
+  title,
+  description,
+  og,
+  alternates: alternatesOptions,
+}: PageMetadataInput): Metadata => {
+  const links = alternates(locale, path, alternatesOptions);
+
+  return {
+    title,
+    description,
+    alternates: links,
+    openGraph: {
+      description,
+      url: links.canonical,
+      type: "website",
+      ...siteOg(locale),
+      ...og,
+    },
+  };
 };

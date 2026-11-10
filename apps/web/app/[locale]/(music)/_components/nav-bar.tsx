@@ -16,9 +16,11 @@ const Navbar = ({
 }) => {
   // 활성 표시는 접두사 없는 경로로 견준다. NAV_ITEMS의 href도 접두사가 없다.
   const pathname = stripLocale(usePathname());
-  const playlistId =
-    pathname.includes("/music/playlists/") && pathname.split("/").at(-1);
-  const backHref = localizedPath(locale, playlistId ? "/music/playlists" : "/");
+  const isPlaylistDetail = pathname.startsWith("/music/playlists/");
+  const backHref = localizedPath(
+    locale,
+    isPlaylistDetail ? "/music/playlists" : "/",
+  );
 
   return (
     <nav className={`w-full ${PAGE_TOP}`}>
@@ -37,8 +39,7 @@ const Navbar = ({
           {NAV_ITEMS.map(({ name, href }) => {
             const isActive =
               pathname === href ||
-              (href === "/music/playlists" &&
-                pathname.startsWith("/music/playlists/"));
+              (href === "/music/playlists" && isPlaylistDetail);
 
             return (
               <li key={name} className="relative">

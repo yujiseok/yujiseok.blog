@@ -1,12 +1,10 @@
+import type { SECTION_TITLES } from "../resolve";
+
 const ContentContainer = ({
   title,
   children,
 }: {
-  title:
-    | "Experience"
-    | "Open Source Contributions"
-    | "Education"
-    | "Other Experience";
+  title: (typeof SECTION_TITLES)[keyof typeof SECTION_TITLES];
   children: React.ReactNode;
 }) => {
   return (

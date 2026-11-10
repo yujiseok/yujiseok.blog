@@ -6,9 +6,10 @@ import { cn } from "@/lib/cn";
 import type { TocEntry } from "@/lib/content/toc";
 
 // Lenis의 scrollTo는 요소의 scroll-margin-top을 이미 반영한다. 여기에 또
-// 여백을 더하면 해시로 진입했을 때(32px)와 클릭했을 때(64px)의 착지가
-// 어긋난다. 여백은 article의 prose-headings:scroll-mt 한 곳이 정한다.
-const SCROLL_OFFSET = 0;
+// 여백을 더하면 해시로 진입했을 때와 클릭했을 때의 착지가 어긋난다. 그래서
+// scrollTo에 offset을 주지 않고, 여백은 article의 prose-headings:scroll-mt 한
+// 곳이 정한다. 착지 확인용 값은 그 scroll-mt-8(2rem)과 같다.
+const HEADING_SCROLL_MARGIN = 32;
 
 // 이 비율 위로 올라간 제목을 "지나갔다"고 본다
 const SPY_LINE = 0.3;
@@ -112,13 +113,13 @@ export const TableOfContents = ({
 
     event.preventDefault();
     lenis.scrollTo(target, {
-      offset: SCROLL_OFFSET,
       // 이동 중에 본문 높이가 바뀌면 목적지가 밀린 채 멈춘다. 끝난 뒤 한 번만
       // 다시 재서 어긋났으면 즉시 맞춘다 — 두 번째는 애니메이션 없이.
       onComplete: () => {
-        const drift = Math.abs(target.getBoundingClientRect().top - 32);
-        if (drift > 8)
-          lenis.scrollTo(target, { offset: SCROLL_OFFSET, immediate: true });
+        const drift = Math.abs(
+          target.getBoundingClientRect().top - HEADING_SCROLL_MARGIN,
+        );
+        if (drift > 8) lenis.scrollTo(target, { immediate: true });
       },
     });
     // preventDefault로 사라진 해시를 되돌려 준다. push하면 뒤로 가기가 목차
@@ -129,8 +130,8 @@ export const TableOfContents = ({
   return (
     /*
      * 본문 칼럼(max-w-2xl)을 grid로 바꾸면 (main) 아래 다른 라우트의 정렬이
-     * 전부 흔들린다. fixedBackLink.tsx와 같은 기법 — 더 넓은 중앙 정렬 레일
-     * 안에 fixed로 띄워 본문 폭은 건드리지 않는다.
+     * 전부 흔들린다. 더 넓은 중앙 정렬 레일 안에 fixed로 띄워 본문 폭은
+     * 건드리지 않는다.
      */
     <aside
       aria-label={label}

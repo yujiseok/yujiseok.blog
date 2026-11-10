@@ -3,16 +3,14 @@ import path from "node:path";
 import type { ComponentType } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
-import { SITE_URL } from "@/lib/constants";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
+import { absoluteUrl, postPath } from "@/lib/metadata";
 
 import { isPublished, parsePost, type PostMetadata } from "./document";
 import { toMarkdown } from "./markdown";
 import { listLocaleFiles, LOCALE_SUFFIX } from "./translation-path";
 
-export { listLocaleFiles };
-
-type ContentType = "writing";
+export type ContentType = "writing";
 
 interface MdxModule {
   default: ComponentType;
@@ -21,9 +19,16 @@ interface MdxModule {
 
 const ROOT_DIR = path.join(process.cwd(), "content");
 
-/** `content/writing/` 아래의 파일명. 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. toc처럼 원문을 직접 읽는 쪽이 쓴다. */
-export const contentFileName = (slug: string, locale: Locale) =>
-  `${slug}${LOCALE_SUFFIX[locale]}.mdx`;
+/** 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. toc처럼 컴파일된 모듈이 아니라 원문이 필요한 쪽이 쓴다. */
+export const readSource = (
+  contentType: ContentType,
+  slug: string,
+  locale: Locale,
+) =>
+  fs.readFile(
+    path.join(ROOT_DIR, contentType, `${slug}${LOCALE_SUFFIX[locale]}.mdx`),
+    "utf8",
+  );
 
 // 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있다
 export const importMdx = (slug: string, locale: Locale): Promise<MdxModule> =>
@@ -145,14 +150,11 @@ export const getWritingMarkdown = async (slug: string, locale: Locale) => {
     return;
   }
 
-  const source = await fs.readFile(
-    path.join(ROOT_DIR, "writing", contentFileName(slug, locale)),
-    "utf8",
-  );
+  const source = await readSource("writing", slug, locale);
 
   return toMarkdown({
     ...writing.metadata,
-    url: `${SITE_URL}/${locale}/posts/${writing.slug}`,
+    url: absoluteUrl(locale, postPath(writing.slug)),
     body: parsePost(source).body,
   });
 };

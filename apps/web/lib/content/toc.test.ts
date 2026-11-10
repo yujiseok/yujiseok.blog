@@ -14,7 +14,7 @@ import type { Nodes as HastNodes } from "hast";
 vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 
 import { parsePost } from "./document";
-import { listLocaleFiles } from "./repository";
+import { listLocaleFiles } from "./translation-path";
 import { buildToc, getToc } from "./toc";
 
 /*

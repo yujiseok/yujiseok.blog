@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { isPublished } from "./document";
-import { listLocaleFiles, readAllContent, requireSource } from "./repository";
+import { readAllContent, requireSource } from "./repository";
+import { listLocaleFiles } from "./translation-path";
 
 /*
  * "use cache"는 vitest 환경에서 동작하지 않으므로 캐시 래퍼(getAllContent)가

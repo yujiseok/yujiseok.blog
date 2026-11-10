@@ -1,8 +1,9 @@
 import { cacheLife } from "next/cache";
 import { extractTrack, extractTopTrack } from "./extract";
-import {
+import type {
+  RawPlaylistTrack,
   RawSpotifyTrack,
-  SpotifyTopTrack,
+  SpotifyTrack,
   TypeSpotifyPlaylist,
 } from "@/types/spotify";
 
@@ -17,6 +18,12 @@ const getAccessToken = async () => {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } =
     process.env;
 
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET || !SPOTIFY_REFRESH_TOKEN) {
+    throw new Error(
+      "SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN 환경변수가 필요합니다",
+    );
+  }
+
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
@@ -27,7 +34,7 @@ const getAccessToken = async () => {
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
-      refresh_token: SPOTIFY_REFRESH_TOKEN ?? "",
+      refresh_token: SPOTIFY_REFRESH_TOKEN,
     }),
   });
 
@@ -37,12 +44,17 @@ const getAccessToken = async () => {
     );
   }
 
-  const { access_token } = await res.json();
+  const { access_token }: { access_token: string } = await res.json();
 
-  return access_token as string;
+  return access_token;
 };
 
-const spotifyFetch = async <T>(endpoint: string): Promise<T> => {
+const spotifyFetch = async <T>(
+  path: string,
+  params: Record<string, string> = {},
+): Promise<T> => {
+  const query = new URLSearchParams(params).toString();
+  const endpoint = query ? `${path}?${query}` : path;
   const res = await fetch(`https://api.spotify.com/v1${endpoint}`, {
     headers: { Authorization: `Bearer ${await getAccessToken()}` },
   });
@@ -68,14 +80,9 @@ const fetchAllPages = async <T>(
   const items: T[] = [];
 
   for (let offset = 0; ; offset += PAGE_LIMIT) {
-    const query = new URLSearchParams({
-      ...params,
-      limit: String(PAGE_LIMIT),
-      offset: String(offset),
-    });
-
     const page = await spotifyFetch<{ items: (T | null)[]; total: number }>(
-      `${path}?${query}`,
+      path,
+      { ...params, limit: String(PAGE_LIMIT), offset: String(offset) },
     );
 
     // 삭제되거나 지역 제한에 걸린 트랙은 null로 온다.
@@ -112,8 +119,9 @@ export const getTopTracks = async () => {
   "use cache";
   cacheLife("days");
 
-  const { items } = await spotifyFetch<{ items: SpotifyTopTrack[] }>(
-    `/me/top/tracks?limit=${PAGE_LIMIT}&time_range=short_term`,
+  const { items } = await spotifyFetch<{ items: SpotifyTrack[] }>(
+    "/me/top/tracks",
+    { limit: String(PAGE_LIMIT), time_range: "short_term" },
   );
 
   return items.map(extractTopTrack);
@@ -124,7 +132,7 @@ export const getPlaylistTrack = async (playlistId: string) => {
   cacheLife("days");
 
   // fields를 쓰면 응답이 그 목록으로 잘리므로 total도 함께 요청해야 한다.
-  const items = await fetchAllPages<RawSpotifyTrack>(
+  const items = await fetchAllPages<RawPlaylistTrack>(
     `/playlists/${playlistId}/tracks`,
     {
       fields:
@@ -132,6 +140,7 @@ export const getPlaylistTrack = async (playlistId: string) => {
     },
   );
 
-  // 삭제된 트랙은 항목이 아니라 그 안의 track이 null로 온다.
-  return items.filter((item) => item.track != null).map(extractTrack);
+  return items
+    .filter((item): item is RawSpotifyTrack => item.track != null)
+    .map(extractTrack);
 };

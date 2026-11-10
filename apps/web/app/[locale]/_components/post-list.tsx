@@ -3,24 +3,19 @@ import { formatPostDate } from "@/lib/content/date";
 import { isPublished, type PostMetadata } from "@/lib/content/document";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
+import { postPath } from "@/lib/metadata";
 
-const PostRow = ({
-  metadata,
-  slug,
-  locale,
-}: {
+interface Writing {
   metadata: PostMetadata;
   slug: string;
-  locale: Locale;
-}) => {
+}
+
+const PostRow = ({ metadata, slug, locale }: Writing & { locale: Locale }) => {
   return (
     // 호버는 행 아래 구분선이 진해지는 것이다. 위아래 둘 다 바꾸면 행이
     // 상자처럼 갇혀 보여서 아래 선 하나만 반응한다.
     <li className="border-b border-neutral-200 transition-colors hover:border-neutral-900 dark:border-neutral-800 dark:hover:border-neutral-100">
-      <Link
-        href={localizedPath(locale, `/posts/${slug}`)}
-        className="block py-4"
-      >
+      <Link href={localizedPath(locale, postPath(slug))} className="block py-4">
         <h2 className="text-[17px] leading-7 font-medium tracking-[-0.01em] break-keep">
           {metadata.title}
           {/* 초안은 개발 서버에서만 목록에 닿는다(lib/content/repository.ts). 표시가 목록의
@@ -43,4 +38,19 @@ const PostRow = ({
     </li>
   );
 };
-export default PostRow;
+
+const PostList = ({
+  writings,
+  locale,
+}: {
+  writings: Writing[];
+  locale: Locale;
+}) => (
+  <ul>
+    {writings.map(({ metadata, slug }) => (
+      <PostRow key={slug} metadata={metadata} slug={slug} locale={locale} />
+    ))}
+  </ul>
+);
+
+export default PostList;

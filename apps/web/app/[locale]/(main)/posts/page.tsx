@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 
 import BlurContainer from "@/app/_components/blur-container";
-import PostRow from "@/app/[locale]/(main)/_components/post-row";
-import { SITE_URL } from "@/lib/constants";
+import PostList from "@/app/[locale]/_components/post-list";
 import { getAllWritings } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
-import { localizedPath } from "@/lib/i18n/locales";
-import { alternates, siteOg } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 
 const TITLE = "Posts";
 
@@ -17,18 +15,13 @@ export async function generateMetadata({
   const locale = await requireLocale(params);
   const description = getDictionary(locale).posts.description;
 
-  return {
+  return pageMetadata({
+    locale,
+    path: "/posts",
     title: TITLE,
     description,
-    alternates: alternates(locale, "/posts"),
-    openGraph: {
-      title: TITLE,
-      description,
-      url: `${SITE_URL}${localizedPath(locale, "/posts")}`,
-      type: "website",
-      ...siteOg(locale),
-    },
-  };
+    og: { title: TITLE },
+  });
 }
 
 async function PostPage({ params }: LocaleParams) {
@@ -44,16 +37,7 @@ async function PostPage({ params }: LocaleParams) {
           {TITLE}
         </h1>
 
-        <ul>
-          {writings.map(({ metadata, slug }) => (
-            <PostRow
-              key={slug}
-              metadata={metadata}
-              slug={slug}
-              locale={locale}
-            />
-          ))}
-        </ul>
+        <PostList writings={writings} locale={locale} />
       </BlurContainer>
     </>
   );

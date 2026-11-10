@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BlurContainer from "@/app/_components/blur-container";
 import HomeArtwork from "@/app/[locale]/(home)/_components/home-artwork";
-import PostRow from "@/app/[locale]/(main)/_components/post-row";
+import PostList from "@/app/[locale]/_components/post-list";
 import { getAllWritings } from "@/lib/content/repository";
 import ArrowUpRight from "@/app/_components/arrow-up-right";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -50,16 +50,7 @@ export default async function Home({ params }: LocaleParams) {
         </header>
 
         <div>
-          <ul>
-            {writings.map(({ metadata, slug }) => (
-              <PostRow
-                key={slug}
-                metadata={metadata}
-                slug={slug}
-                locale={locale}
-              />
-            ))}
-          </ul>
+          <PostList writings={writings} locale={locale} />
           <div className="flex justify-end">
             <Link
               href={localizedPath(locale, "/posts")}

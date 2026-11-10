@@ -1,6 +1,6 @@
 /*
  * 한국어(resume.ts)와 영어(resume.en.ts)가 같은 모양을 지키게 하는 계약이다.
- * 글 링크는 URL이 아니라 slug로 적는다 — 언어별 주소와 번역 유무는 page.tsx가 정한다.
+ * 글 링크는 URL이 아니라 slug로 적는다 — 언어별 주소와 번역 유무는 resolve.ts가 정한다.
  */
 export interface Resume {
   profile: {

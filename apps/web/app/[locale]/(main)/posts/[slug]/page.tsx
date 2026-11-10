@@ -15,16 +15,13 @@ import PostNav from "@/app/[locale]/(main)/_components/post-nav";
 import { getToc } from "@/lib/content/toc";
 import { formatPostDate } from "@/lib/content/date";
 import { getNeighbours } from "@/lib/content/neighbours";
-import { SITE_URL } from "@/lib/constants";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { requireLocale } from "@/lib/i18n/params";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
-import { alternates, siteOg } from "@/lib/metadata";
+import { pageMetadata, postPath } from "@/lib/metadata";
 import { blogPostingJsonLd } from "@/lib/seo/json-ld";
 
-interface PostParams {
-  params: Promise<{ locale: string; slug: string }>;
-}
+type PostProps = PageProps<"/[locale]/posts/[slug]">;
 
 /*
  * locale과 slug를 한 번에 낸다. 번역이 하나도 없어도 ko 글이 있으므로 비지 않는다
@@ -44,7 +41,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata(
-  props: PostParams,
+  props: PostProps,
 ): Promise<Metadata | undefined> {
   const locale = await requireLocale(props.params);
   const { slug } = await props.params;
@@ -59,29 +56,23 @@ export async function generateMetadata(
     publishedAt: publishedTime,
     summary: description,
   } = writing.metadata;
-  const path = `/posts/${writing.slug}`;
   // 번역이 없는 글을 hreflang에 올리면 404를 가리킨다
   const translated = (await getTranslatedSlugs()).has(slug);
 
-  return {
+  return pageMetadata({
+    locale,
+    path: postPath(writing.slug),
     title,
     description,
-    alternates: alternates(locale, path, {
+    alternates: {
       available: translated ? ["ko", "en"] : ["ko"],
       markdown: true,
-    }),
-    openGraph: {
-      title: { absolute: title },
-      description,
-      type: "article",
-      publishedTime,
-      url: `${SITE_URL}${localizedPath(locale, path)}`,
-      ...siteOg(locale),
     },
-  };
+    og: { title: { absolute: title }, type: "article", publishedTime },
+  });
 }
 
-const Post = (props: PostParams) => {
+const Post = (props: PostProps) => {
   // slug는 링크마다 달라 경로 공통 껍데기에 넣을 수 없다. 본문을 Suspense
   // 안에서 읽어야 이동이 그 값을 기다리며 막히지 않는다.
   return (
@@ -91,7 +82,7 @@ const Post = (props: PostParams) => {
   );
 };
 
-const PostContent = async (props: PostParams) => {
+const PostContent = async (props: Pick<PostProps, "params">) => {
   const locale = await requireLocale(props.params);
   const { slug } = await props.params;
   const writing = await getWritingBySlug(slug, locale);
@@ -161,7 +152,7 @@ const PostContent = async (props: PostParams) => {
         {locale === "en" && <TranslationNotice slug={slug} locale={locale} />}
 
         {/* scroll-mt는 해시 이동 시 제목이 화면 맨 위에 붙지 않게 한다.
-            tableOfContents.tsx의 SCROLL_OFFSET(-32px)과 같은 값이다. */}
+            table-of-contents.tsx의 HEADING_SCROLL_MARGIN(32px)과 같은 값이다. */}
         <article className="prose dark:prose-invert prose-headings:scroll-mt-8 mx-auto mt-10 max-w-2xl">
           <Content />
         </article>
@@ -187,7 +178,7 @@ const TranslationNotice = ({
       {posts.translatedNotice}{" "}
       {/* 언어 선택을 바꾸는 링크가 아니라서 쿠키를 남기지 않는다 */}
       <Link
-        href={localizedPath("ko", `/posts/${slug}`)}
+        href={localizedPath("ko", postPath(slug))}
         hrefLang="ko"
         prefetch={false}
         className="underline underline-offset-2"

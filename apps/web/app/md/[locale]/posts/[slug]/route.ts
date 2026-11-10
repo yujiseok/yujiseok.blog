@@ -9,7 +9,7 @@ import { CACHE_CONTROL } from "@/lib/seo/responses";
 // 떼어 둔 것이다. 번역이 없는 slug 는 getWritingMarkdown 이 못 찾아 404 다.
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ locale: string; slug: string }> },
+  { params }: RouteContext<"/md/[locale]/posts/[slug]">,
 ) {
   const locale = await requireLocale(params);
   const { slug } = await params;
@@ -22,7 +22,7 @@ export async function GET(
 
   return new Response(markdown, {
     headers: {
-      "Content-Type": "text/markdown; charset=utf-8",
+      "content-type": "text/markdown; charset=utf-8",
       // llms.txt 와 같은 이유로 CDN 캐시에 맡긴다
       "cache-control": CACHE_CONTROL,
     },

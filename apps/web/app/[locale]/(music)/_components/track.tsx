@@ -16,8 +16,8 @@ const Track = ({
         <Image
           src={track.albumCover.url}
           alt={track.trackName}
-          width={track.albumCover.width}
-          height={track.albumCover.height}
+          width={track.albumCover.width ?? 640}
+          height={track.albumCover.height ?? 640}
           className="pointer-events-none aspect-square size-14 rounded-lg border border-neutral-200 shadow-xs dark:border-neutral-800"
         />
       )}

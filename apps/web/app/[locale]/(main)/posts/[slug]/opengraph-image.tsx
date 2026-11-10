@@ -1,9 +1,10 @@
 import { ImageResponse } from "next/og";
 import { getWritingBySlug } from "@/lib/content/repository";
-import { SITE_URL } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
+import { ogCard } from "@/lib/og-card";
 import { requireLocale } from "@/lib/i18n/params";
 
-export const alt = "Yujiseok's Blog Post";
+export const alt = `${SITE_NAME} Post`;
 export const size = {
   width: 1920,
   height: 1080,
@@ -12,9 +13,7 @@ export const contentType = "image/png";
 
 export default async function Image({
   params,
-}: {
-  params: Promise<{ locale: string; slug: string }>;
-}) {
+}: PageProps<"/[locale]/posts/[slug]">) {
   const locale = await requireLocale(params);
   const { slug } = await params;
   const writing = await getWritingBySlug(slug, locale);
@@ -40,39 +39,5 @@ export default async function Image({
     );
   }
 
-  const postTitle = writing.metadata.title;
-
-  return new ImageResponse(
-    <div
-      style={{
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        backgroundImage: `url(${SITE_URL}/og-bg.png)`,
-      }}
-    >
-      <div
-        style={{
-          marginLeft: 205,
-          marginRight: 205,
-          marginBottom: 205,
-          display: "flex",
-          fontSize: 105,
-          letterSpacing: "-0.025em",
-          fontStyle: "normal",
-          color: "white",
-          lineHeight: "110px",
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {postTitle}
-      </div>
-    </div>,
-    {
-      ...size,
-    },
-  );
+  return ogCard(writing.metadata.title, size);
 }

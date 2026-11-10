@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ViewTransition } from "react";
 import type { Metadata } from "next";
-import { alternates, siteOg } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
 import { localizedPath, type Locale } from "@/lib/i18n/locales";
@@ -14,14 +14,13 @@ export const generateMetadata = async ({
   params,
 }: LocaleParams): Promise<Metadata> => {
   const locale = await requireLocale(params);
-  const alt = alternates(locale, "/music/playlists");
 
-  return {
+  return pageMetadata({
+    locale,
+    path: "/music/playlists",
     title: "Playlists",
     description: getDictionary(locale).music.playlistsDescription,
-    alternates: alt,
-    openGraph: { url: alt.canonical, type: "website", ...siteOg(locale) },
-  };
+  });
 };
 
 const page = async ({ params }: LocaleParams) => {

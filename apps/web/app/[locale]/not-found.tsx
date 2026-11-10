@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 
 import BlurContainer from "@/app/_components/blur-container";
-import PostRow from "@/app/[locale]/(main)/_components/post-row";
+import PostList from "@/app/[locale]/_components/post-list";
 import { getAllWritings } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { DEFAULT_LOCALE, isLocale, localizedPath } from "@/lib/i18n/locales";
@@ -47,16 +47,7 @@ export default async function NotFound() {
             <h2 className="text-sm text-neutral-500 dark:text-neutral-400">
               {notFound.recent}
             </h2>
-            <ul>
-              {writings.map(({ metadata, slug }) => (
-                <PostRow
-                  key={slug}
-                  metadata={metadata}
-                  slug={slug}
-                  locale={locale}
-                />
-              ))}
-            </ul>
+            <PostList writings={writings} locale={locale} />
           </div>
         </BlurContainer>
       </main>

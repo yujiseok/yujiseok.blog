@@ -1,6 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import GithubSlugger from "github-slugger";
 import { toString as mdastToString } from "mdast-util-to-string";
 import remarkGfm from "remark-gfm";
@@ -13,7 +10,7 @@ import type { Heading, Nodes } from "mdast";
 import type { Locale } from "@/lib/i18n/locales";
 
 import { isValidSlug, parsePost } from "./document";
-import { CONTENT_CACHE_TAG, contentFileName } from "./repository";
+import { CONTENT_CACHE_TAG, readSource, type ContentType } from "./repository";
 
 export interface TocEntry {
   /** rehype-slug가 렌더 시 heading에 박는 id와 같은 값 */
@@ -23,12 +20,8 @@ export interface TocEntry {
   indent: number;
 }
 
-type ContentType = "writing";
-
 // h4 이하는 목차에 담지 않는다. 세 단계를 넘으면 들여쓰기만 늘고 훑기가 어렵다.
 const MAX_HEADING_DEPTH = 3;
-
-const CONTENT_DIR = path.join(process.cwd(), "content");
 
 /*
  * MDX는 모듈로 컴파일돼 본문이 React 컴포넌트로 온다 — 서버에서 HTML을 긁을
@@ -90,10 +83,5 @@ export const getToc = async (
     return [];
   }
 
-  const source = await fs.readFile(
-    path.join(CONTENT_DIR, contentType, contentFileName(slug, locale)),
-    "utf8",
-  );
-
-  return buildToc(parsePost(source).body);
+  return buildToc(parsePost(await readSource(contentType, slug, locale)).body);
 };

@@ -1,10 +1,12 @@
-import { SITE_URL } from "@/lib/constants";
-import { localizedPath, type Locale } from "@/lib/i18n/locales";
+import type { Locale } from "@/lib/i18n/locales";
+import { absoluteUrl, postPath } from "@/lib/metadata";
 
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
 
 const RESUME: Record<Locale, Resume> = { ko, en };
+
+export const getResume = (locale: Locale) => RESUME[locale];
 
 /* 섹션 제목은 두 언어 모두 영어로 둔다. 블로그와 Figma 플러그인이 같은 값을 쓴다. */
 export const SECTION_TITLES = {
@@ -14,7 +16,7 @@ export const SECTION_TITLES = {
   education: "Education",
 } as const;
 
-/* Figma에서 만든 PDF가 놓이는 public 경로. `bun run resume:pdf`가 여기에 쓴다. */
+/* Figma에서 만든 PDF가 놓이는 public 경로. 손으로 여기에 넣는다. */
 export const resumePdfPath = (locale: Locale) =>
   locale === "ko" ? "/resume.pdf" : `/resume.${locale}.pdf`;
 
@@ -48,13 +50,16 @@ export const postUrl = (
   slug: string,
   translated: ReadonlySet<string>,
 ) =>
-  `${SITE_URL}${localizedPath(locale === "en" && !translated.has(slug) ? "ko" : locale, `/posts/${slug}`)}`;
+  absoluteUrl(
+    locale === "en" && !translated.has(slug) ? "ko" : locale,
+    postPath(slug),
+  );
 
 export const resolveResume = (
   locale: Locale,
   translated: ReadonlySet<string>,
 ): ResolvedResume => {
-  const resume = RESUME[locale];
+  const resume = getResume(locale);
 
   return {
     ...resume,

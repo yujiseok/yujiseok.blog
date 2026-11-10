@@ -1,8 +1,8 @@
 import { SITE_URL } from "@/lib/constants";
 import type { ContentEntry } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { localizedPath, type Locale } from "@/lib/i18n/locales";
-import { rssPath } from "@/lib/metadata";
+import type { Locale } from "@/lib/i18n/locales";
+import { absoluteUrl, postPath, rssPath } from "@/lib/metadata";
 
 const escapeXml = (str: string): string =>
   str
@@ -21,7 +21,7 @@ const escapeXml = (str: string): string =>
 const guid = (locale: Locale, slug: string) =>
   locale === "ko"
     ? `${SITE_URL}/writing/${slug}`
-    : `${SITE_URL}${localizedPath(locale, `/posts/${slug}`)}`;
+    : absoluteUrl(locale, postPath(slug));
 
 export const buildRss = (locale: Locale, posts: ContentEntry[]): string => {
   const { feeds, site } = getDictionary(locale);
@@ -30,7 +30,7 @@ export const buildRss = (locale: Locale, posts: ContentEntry[]): string => {
     .map(
       ({ slug, metadata }) => `<item>
           <title>${escapeXml(metadata.title)}</title>
-          <link>${SITE_URL}${localizedPath(locale, `/posts/${slug}`)}</link>
+          <link>${absoluteUrl(locale, postPath(slug))}</link>
           <guid isPermaLink="false">${guid(locale, slug)}</guid>
           ${metadata.summary ? `<description>${escapeXml(metadata.summary)}</description>` : ""}
           <author>yujiseok</author>
@@ -43,7 +43,7 @@ export const buildRss = (locale: Locale, posts: ContentEntry[]): string => {
    <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
       <channel>
         <title>${escapeXml(feeds.rssTitle)}</title>
-        <link>${SITE_URL}${localizedPath(locale, "/")}</link>
+        <link>${absoluteUrl(locale, "/")}</link>
         <description>${escapeXml(site.description)}</description>
         <language>${feeds.rssLanguage}</language>
         <atom:link href="${SITE_URL}${rssPath(locale)}" rel="self" type="application/rss+xml"/>

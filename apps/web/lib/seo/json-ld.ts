@@ -1,14 +1,15 @@
-import { SITE_URL } from "@/lib/constants";
+import { GITHUB_URL, SITE_URL } from "@/lib/constants";
 import type { PostMetadata } from "@/lib/content/document";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { localizedPath, type Locale } from "@/lib/i18n/locales";
+import type { Locale } from "@/lib/i18n/locales";
+import { absoluteUrl, postPath } from "@/lib/metadata";
 
 export const blogPostingJsonLd = (
   locale: Locale,
   slug: string,
   { title, summary, publishedAt }: PostMetadata,
 ) => {
-  const url = `${SITE_URL}${localizedPath(locale, `/posts/${slug}`)}`;
+  const url = absoluteUrl(locale, postPath(slug));
 
   return {
     "@context": "https://schema.org",
@@ -25,7 +26,7 @@ export const blogPostingJsonLd = (
       "@type": "Person",
       name: getDictionary(locale).site.name,
       url: SITE_URL,
-      sameAs: ["https://github.com/yujiseok"],
+      sameAs: [GITHUB_URL],
     },
   };
 };

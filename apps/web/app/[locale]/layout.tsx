@@ -16,9 +16,9 @@ import { LocaleProvider } from "@/app/_components/locale-provider";
 import { SITE_URL } from "@/lib/constants";
 import { getTranslatedSlugs } from "@/lib/content/repository";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { isLocale, LOCALES, localizedPath } from "@/lib/i18n/locales";
+import { isLocale, LOCALES } from "@/lib/i18n/locales";
 import { requireLocale, type LocaleParams } from "@/lib/i18n/params";
-import { alternates, siteOg } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 
 export const generateStaticParams = () => LOCALES.map((locale) => ({ locale }));
 
@@ -35,19 +35,16 @@ export async function generateMetadata({
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: {
-      default: "Yujiseok",
-      template: "%s | Yujiseok",
-    },
-    description: site.description,
-    alternates: alternates(locale, "/"),
-    openGraph: {
-      title: site.name,
+    ...pageMetadata({
+      locale,
+      path: "/",
+      title: {
+        default: "Yujiseok",
+        template: "%s | Yujiseok",
+      },
       description: site.description,
-      url: `${SITE_URL}${localizedPath(locale, "/")}`,
-      type: "website",
-      ...siteOg(locale),
-    },
+      og: { title: site.name },
+    }),
     // title/description는 postProcessMetadata가 openGraph → title 순으로 자동 채운다.
     twitter: {
       card: "summary_large_image",

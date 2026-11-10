@@ -1,7 +1,7 @@
 import { getAllWritings, getWritingMarkdown } from "@/lib/content/repository";
 import type { Locale } from "@/lib/i18n/locales";
 
-import { buildLlmsFull } from "./llms";
+import { buildLlmsFull, buildLlmsTxt } from "./llms";
 import { buildRss } from "./rss";
 
 // cacheComponents 아래에서 라우트 핸들러는 동적이라 매 요청 재생성된다.
@@ -17,6 +17,20 @@ export const rssResponse = async (locale: Locale) =>
     },
   });
 
+export const llmsResponse = async () => {
+  const [ko, en] = await Promise.all([
+    getAllWritings("ko"),
+    getAllWritings("en"),
+  ]);
+
+  return new Response(buildLlmsTxt({ ko, en }), {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": CACHE_CONTROL,
+    },
+  });
+};
+
 // llms.txt 는 목차, 이쪽은 전 글 본문. 에이전트가 블로그를 한 번에 읽어 갈 때 쓴다.
 export const llmsFullResponse = async (locale: Locale) => {
   const writings = await getAllWritings(locale);
@@ -31,7 +45,7 @@ export const llmsFullResponse = async (locale: Locale) => {
     ),
     {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        "content-type": "text/plain; charset=utf-8",
         "cache-control": CACHE_CONTROL,
       },
     },

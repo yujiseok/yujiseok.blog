@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import BlurContainer from "@/app/_components/blur-container";
 import ArrowUpRight from "@/app/_components/arrow-up-right";
 import type { Metadata } from "next";
-import { alternates, siteOg } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { requireLocale } from "@/lib/i18n/params";
 import ExternalLink from "@/app/_components/external-link";
@@ -30,30 +30,26 @@ export const instant = false;
 
 export const generateMetadata = async ({
   params,
-}: {
-  params: Promise<{ locale: string; id: string }>;
-}): Promise<Metadata | undefined> => {
+}: PageProps<"/[locale]/music/playlists/[id]">): Promise<
+  Metadata | undefined
+> => {
   const locale = await requireLocale(params);
   const { id } = await params;
   const playlist = await getPlaylistById(id);
 
   if (!playlist) return;
 
-  const alt = alternates(locale, `/music/playlists/${id}`);
-
-  return {
+  return pageMetadata({
+    locale,
+    path: `/music/playlists/${id}`,
     title: playlist.name,
     description: getDictionary(locale).music.playlistTracks(playlist.name),
-    alternates: alt,
-    openGraph: { url: alt.canonical, type: "website", ...siteOg(locale) },
-  };
+  });
 };
 
 const page = async ({
   params,
-}: {
-  params: Promise<{ locale: string; id: string }>;
-}) => {
+}: PageProps<"/[locale]/music/playlists/[id]">) => {
   const locale = await requireLocale(params);
   const playlistId = (await params).id;
   const playlist = await getPlaylistById(playlistId);
