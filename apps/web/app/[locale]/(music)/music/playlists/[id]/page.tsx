@@ -65,6 +65,8 @@ const page = async ({
       <ViewTransition name={`playlist-${playlist.id}`}>
         {playlist.images[0] && (
           <Image
+            // Spotify가 이미 크기별로 준다. 최적화를 거치면 Vercel 이미지 사용량만 는다.
+            unoptimized
             src={playlist.images[0].url}
             alt={playlist.name}
             width={playlist.images[0].width ?? 640}

@@ -14,6 +14,8 @@ const Track = ({
     >
       {track.albumCover && (
         <Image
+          // Spotify가 이미 크기별로 준다. 최적화를 거치면 Vercel 이미지 사용량만 는다.
+          unoptimized
           src={track.albumCover.url}
           alt={track.trackName}
           width={track.albumCover.width ?? 640}

@@ -3,6 +3,9 @@ import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
   images: {
+    // public/ 이미지는 Vercel이 max-age=0으로 내보내 기본값(4시간)마다 다시 변환된다.
+    // 파일은 배포 사이에 바뀌지 않으므로 길게 둬서 Image Optimization 사용량을 줄인다.
+    minimumCacheTTL: 2678400, // 31일
     remotePatterns: [
       {
         protocol: "https",
