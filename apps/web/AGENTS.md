@@ -31,19 +31,13 @@
 
 ## 이력서
 
-- 내용의 원본은 `app/[locale]/resume/resume.ts`, `resume.en.ts` 하나다. 블로그, Figma, PDF가 모두 여기서
-  나온다. Figma에서 글자를 직접 고치면 다음 동기화 때 덮어써진다.
-- 디자인의 원본은 Figma 파일의 「Resume Template」 페이지(컴포넌트, 텍스트 스타일 `Resume/*`, 간격 변수
-  `Resume/space/*`)다. 플러그인은 이 페이지가 없을 때만 만들고, 이후로는 손대지 않는다.
-- 갱신 순서:
-  1. resume.ts를 고친다.
-  2. 개발 서버를 켠 채 Figma 데스크톱 앱에서 Resume Sync 플러그인을 실행한다. 처음 한 번은 루트에서
-     `bun run resume:plugin`으로 빌드한 뒤 `apps/figma-resume-sync/manifest.json`을 가져온다.
-  3. `bun run resume:pdf`로 `public/resume.pdf`, `public/resume.en.pdf`를 만든다(`.env`의 `FIGMA_TOKEN` 필요).
-  4. 새 언어의 PDF를 처음 넣었으면 `resolve.ts`의 `PUBLISHED_PDF_LOCALES`에 추가하고, PDF까지 함께 커밋한다.
-- 플러그인이 읽는 `/resume.json`은 개발 서버에서만 열린다.
-- 플러그인(`apps/figma-resume-sync/src/code.ts`)은 이력서 타입을 복사해 쓴다. resume.ts의 필드 구조를
-  바꾸면 그쪽 타입도 같이 고친다. 어긋나도 컴파일은 통과하고 동기화할 때 깨진다.
+- 페이지 내용의 원본은 `app/[locale]/resume/resume.ts`, `resume.en.ts`다.
+- PDF(`public/resume.pdf`)는 지금 손으로 만들어 넣는다. 페이지 내용을 고쳤으면 PDF도 다시 만들어 함께
+  커밋한다. 새 언어의 PDF를 처음 넣으면 `resolve.ts`의 `PUBLISHED_PDF_LOCALES`에 추가한다(빠뜨리면 링크가
+  안 나오고, 파일 없이 추가하면 테스트가 깨진다).
+- Figma 동기화(`apps/figma-resume-sync` 플러그인, `/resume.json`, `bun run resume:pdf`)는 코드만 두고 쓰지
+  않는다. 실제 Figma에서 돌려 본 적이 없으니 다시 쓸 때는 검증부터 한다. 플러그인은 이력서 타입을 복사해
+  쓰므로 resume.ts의 필드 구조가 바뀌었으면 그쪽 타입도 맞춘다.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -5,7 +5,7 @@
 ## 구조
 
 - `apps/web`: 블로그(Next.js). 글(`content/`), 번역·PDF 스크립트도 여기 있다. 규칙은 `apps/web/AGENTS.md`.
-- `apps/figma-resume-sync`: 이력서를 Figma에 그리는 플러그인. 앱과는 개발 서버의 `/resume.json`으로만 잇는다.
+- `apps/figma-resume-sync`: 이력서를 Figma에 그리는 플러그인. 지금은 쓰지 않고 코드만 둔다(`apps/web/AGENTS.md` 이력서 절).
 - 공유 패키지(`packages/`)는 두지 않는다. 앱이 하나라 필요해질 때 만든다.
 
 ## 명령
