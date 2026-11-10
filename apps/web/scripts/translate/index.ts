@@ -11,6 +11,7 @@ import {
   listLocaleFiles,
   toTranslationPath,
 } from "@/lib/content/translation-path";
+import { errorMessage } from "@/lib/error-message";
 import { translatePost } from "@/lib/i18n/translate-post";
 import {
   hashSource,
@@ -42,9 +43,6 @@ const parseArgs = (argv: string[]) => {
     only: value?.startsWith("--") ? undefined : value,
   };
 };
-
-const errorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
 
 const readLock = async (): Promise<TranslationLock> => {
   try {
@@ -154,7 +152,8 @@ const translateAll = async (pending: Pending[], lock: TranslationLock) => {
       }
       await fs.writeFile(t.outPath, result.translation);
       lock[t.key] = t.hash;
-      lockWrites = lockWrites.then(() => writeLock(lock));
+      // 앞선 쓰기가 실패해도 체인이 거부 상태로 굳지 않게 끊는다. 그 실패는 그 편이 이미 받았다.
+      lockWrites = lockWrites.catch(() => {}).then(() => writeLock(lock));
       await lockWrites;
       written.push(path.relative(process.cwd(), t.outPath));
       console.log(`완료 ${t.key} (리뷰 ${result.score}/5, ${seconds}s)`);

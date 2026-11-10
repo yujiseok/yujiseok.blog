@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { MdxJsxAttribute, MdxJsxFlowElement } from "mdast-util-mdx-jsx";
 import { toAlign, type Align } from "../../align-value";
-import { convertBlockToTiptap } from "../parse";
+import type { ToTiptap } from "./recurse";
 import type { MdastBlock } from "../serialize";
 
 // ----------------------------------------------------------------------------
@@ -52,6 +52,7 @@ function readTextAlign(value: MdxJsxAttribute["value"]): Align | null {
 export function convertAlignDivToTiptap(
   node: MdxJsxFlowElement,
   source: string,
+  to: ToTiptap,
 ): JSONContent | null {
   if (node.name !== "div" || node.attributes.length !== 1) return null;
 
@@ -63,7 +64,7 @@ export function convertAlignDivToTiptap(
   const align = readTextAlign(attribute.value);
   if (align === null || node.children.length !== 1) return null;
 
-  const child = convertBlockToTiptap(node.children[0], source);
+  const child = to.block(node.children[0], source);
   // 이미지나 중첩 JSX 가 나오면 align attr 의 뜻이 달라진다(이미지는 null 이
   // 가운데다). 문단·제목으로 읽힌 것만 받는다.
   if (child.type !== "paragraph" && child.type !== "heading") return null;

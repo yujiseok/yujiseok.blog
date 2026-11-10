@@ -48,6 +48,16 @@ interface ItemState {
 
 type ToolbarState = Record<string, ItemState>;
 
+// 여러 항목이 같이 쓰는 판정은 selector 한 번에 한 번만 계산해 넘긴다.
+// 정렬 버튼 셋이 각자 readAlign을 부르면 트랜잭션마다 같은 판정을 여섯 번 한다.
+interface ReadContext {
+  align: ReturnType<typeof readAlign>;
+}
+
+type Predicate = (editor: Editor, ctx: ReadContext) => boolean;
+
+const LINK_ID = "link";
+
 const EMPTY_STATE: ToolbarState = {};
 const OFF: ItemState = { active: false, disabled: false };
 
@@ -60,8 +70,8 @@ interface ButtonConfig {
   // 단축키가 없는 명령(구분선·이미지·링크 등)은 생략한다.
   shortcut?: string;
   content: ReactNode;
-  isActive?: (editor: Editor) => boolean;
-  isDisabled?: (editor: Editor) => boolean;
+  isActive?: Predicate;
+  isDisabled?: Predicate;
   // 업로드처럼 시간이 걸리는 명령은 Promise를 돌려준다. 그동안 버튼이 잠기고
   // 스피너가 돈다 — 진행 상태를 명령마다 따로 들고 있을 필요가 없다.
   // 반환 타입이 unknown인 건 대부분의 명령이 chain().run()의 boolean을 그대로
@@ -146,14 +156,12 @@ const ALIGN_BUTTONS: ToolbarButton[] = ALIGN_OPTIONS.map((option) => ({
   id: `align-${option.value}`,
   label: option.label,
   content: <AlignIcon variant={option.value} />,
-  isActive: (editor) => {
-    // 정렬은 "무엇에 걸리는지"와 "지금 값이 무엇인지"가 한 판정에서 같이
-    // 나온다. 둘을 따로 읽으면 이미지/문단 사이에서 어긋난다.
-    const { target, align } = readAlign(editor);
-    return target !== null && align === option.value;
-  },
+  // 정렬은 "무엇에 걸리는지"와 "지금 값이 무엇인지"가 한 판정에서 같이
+  // 나온다. 둘을 따로 읽으면 이미지/문단 사이에서 어긋난다.
+  isActive: (_editor, { align }) =>
+    align.target !== null && align.align === option.value,
   // 코드블록·mdxBlock·목록 안처럼 정렬을 저장할 수 없는 자리에서는 잠근다.
-  isDisabled: (editor) => readAlign(editor).target === null,
+  isDisabled: (_editor, { align }) => align.target === null,
   run: (editor) => applyAlign(editor, option.value),
 }));
 
@@ -167,7 +175,7 @@ const INSERT_BUTTONS: ToolbarButton[] = [
     content: block.icon,
     run: block.run,
   })),
-  { kind: "link", id: "link", isActive: (editor) => editor.isActive("link") },
+  { kind: "link", id: LINK_ID, isActive: (editor) => editor.isActive("link") },
 ];
 
 type BlockValue =
@@ -284,8 +292,8 @@ const SECTIONS: ToolbarSection[] = [
 
 interface StateItem {
   id: string;
-  isActive?: (editor: Editor) => boolean;
-  isDisabled?: (editor: Editor) => boolean;
+  isActive?: Predicate;
+  isDisabled?: Predicate;
 }
 
 const STATE_ITEMS: StateItem[] = [
@@ -294,13 +302,24 @@ const STATE_ITEMS: StateItem[] = [
   ...LIST_OPTIONS.map((option) => ({ ...option, id: option.value })),
 ];
 
+// 상태는 id로 모으므로 id가 겹치면 한쪽이 조용히 덮인다. 타입으로는 못 막아
+// 모듈을 읽을 때 바로 터뜨린다.
+const duplicateId = STATE_ITEMS.map(({ id }) => id).find(
+  (id, index, ids) => ids.indexOf(id) !== index,
+);
+if (duplicateId !== undefined) {
+  throw new Error(`툴바 항목 id가 겹칩니다: ${duplicateId}`);
+}
+
 function readState(editor: Editor): ToolbarState {
+  const ctx: ReadContext = { align: readAlign(editor) };
+
   return Object.fromEntries(
     STATE_ITEMS.map((item) => [
       item.id,
       {
-        active: item.isActive?.(editor) ?? false,
-        disabled: item.isDisabled?.(editor) ?? false,
+        active: item.isActive?.(editor, ctx) ?? false,
+        disabled: item.isDisabled?.(editor, ctx) ?? false,
       },
     ]),
   );
@@ -498,7 +517,7 @@ function LinkPopover({ editor, state }: LinkPopoverProps) {
   // 입력값이 defaultValue로 새로 채워진다.
   const [draft, setDraft] = useState<LinkDraft | null>(null);
   const isOpen = draft !== null;
-  const isActive = state.link?.active ?? false;
+  const isActive = state[LINK_ID]?.active ?? false;
 
   const handleOpenChange = (open: boolean) => {
     if (!editor) return;

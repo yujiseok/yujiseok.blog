@@ -8,8 +8,9 @@ import type { TocEntry } from "@/lib/content/toc";
 // Lenis의 scrollTo는 요소의 scroll-margin-top을 이미 반영한다. 여기에 또
 // 여백을 더하면 해시로 진입했을 때와 클릭했을 때의 착지가 어긋난다. 그래서
 // scrollTo에 offset을 주지 않고, 여백은 article의 prose-headings:scroll-mt 한
-// 곳이 정한다. 착지 확인용 값은 그 scroll-mt-8(2rem)과 같다.
-const HEADING_SCROLL_MARGIN = 32;
+// 곳이 정한다. 착지 확인도 그 값을 제목에서 직접 읽는다.
+const scrollMargin = (target: Element) =>
+  parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
 
 // 이 비율 위로 올라간 제목을 "지나갔다"고 본다
 const SPY_LINE = 0.3;
@@ -117,7 +118,7 @@ export const TableOfContents = ({
       // 다시 재서 어긋났으면 즉시 맞춘다 — 두 번째는 애니메이션 없이.
       onComplete: () => {
         const drift = Math.abs(
-          target.getBoundingClientRect().top - HEADING_SCROLL_MARGIN,
+          target.getBoundingClientRect().top - scrollMargin(target),
         );
         if (drift > 8) lenis.scrollTo(target, { immediate: true });
       },

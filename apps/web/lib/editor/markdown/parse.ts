@@ -5,6 +5,7 @@ import { MARK_OF_NODE, type TiptapMark } from "./marks";
 import { convertAlignDivToTiptap } from "./nodes/align-div";
 import { convertDetailsToTiptap } from "./nodes/details";
 import { convertImageJsxToTiptap, convertImageToTiptap } from "./nodes/image";
+import type { ToTiptap } from "./nodes/recurse";
 import { convertTableToTiptap } from "./nodes/table";
 
 // ----------------------------------------------------------------------------
@@ -126,7 +127,7 @@ export function convertBlockToTiptap(
       return result;
     }
     case "table":
-      return convertTableToTiptap(node, source);
+      return convertTableToTiptap(node, source, toTiptap);
     case "thematicBreak":
       return { type: "horizontalRule" };
     case "image":
@@ -136,8 +137,8 @@ export function convertBlockToTiptap(
       // 노드로 승격한다. 나머지 JSX는 아래로 흘러 원문 그대로 보존된다.
       return (
         convertImageJsxToTiptap(node) ??
-        convertAlignDivToTiptap(node, source) ??
-        convertDetailsToTiptap(node, source) ??
+        convertAlignDivToTiptap(node, source, toTiptap) ??
+        convertDetailsToTiptap(node, source, toTiptap) ??
         rawBlock(node, source)
       );
     default:
@@ -217,3 +218,12 @@ function textNode(text: string, marks: TiptapMark[]): JSONContent {
     ),
   };
 }
+
+// 노드 모듈이 안쪽 내용을 변환할 때 쓰는 재귀 진입점(nodes/recurse.ts). 화살표로 감싸
+// 호출 시점에 찾게 해 선언 순서와 무관하게 둔다.
+const toTiptap: ToTiptap = {
+  block: (node, source) => convertBlockToTiptap(node, source),
+  blocks: (children, source) => convertBlocks(children, source),
+  inline: (children, marks, source) =>
+    convertInlineChildren(children, marks, source),
+};

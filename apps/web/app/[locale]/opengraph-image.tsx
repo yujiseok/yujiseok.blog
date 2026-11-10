@@ -1,5 +1,5 @@
 import { SITE_NAME } from "@/lib/constants";
-import { ogCard } from "@/lib/og-card";
+import { ogCard } from "@/app/[locale]/_components/og-card";
 
 export const alt = SITE_NAME;
 export const size = {

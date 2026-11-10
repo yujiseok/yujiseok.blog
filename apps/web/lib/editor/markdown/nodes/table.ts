@@ -1,8 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Table } from "mdast";
 import { toAlign } from "../../align-value";
-import { convertInlineChildren } from "../parse";
-import { convertInlineToMdast } from "../serialize";
+import type { ToMdast, ToTiptap } from "./recurse";
 
 // ----------------------------------------------------------------------------
 // 표
@@ -17,7 +16,11 @@ import { convertInlineToMdast } from "../serialize";
 const cellParagraph = (content: JSONContent[]): JSONContent =>
   content.length === 0 ? { type: "paragraph" } : { type: "paragraph", content };
 
-export function convertTableToTiptap(node: Table, source: string): JSONContent {
+export function convertTableToTiptap(
+  node: Table,
+  source: string,
+  to: ToTiptap,
+): JSONContent {
   const align = node.align ?? [];
 
   return {
@@ -29,15 +32,13 @@ export function convertTableToTiptap(node: Table, source: string): JSONContent {
         // 존재하지 않으므로 행 번호만으로 판정할 수 있다.
         type: rowIndex === 0 ? "tableHeader" : "tableCell",
         attrs: { align: align[columnIndex] ?? null },
-        content: [
-          cellParagraph(convertInlineChildren(cell.children, [], source)),
-        ],
+        content: [cellParagraph(to.inline(cell.children, [], source))],
       })),
     })),
   };
 }
 
-export function tableToMdast(node: JSONContent): Table {
+export function tableToMdast(node: JSONContent, to: ToMdast): Table {
   const rows = node.content ?? [];
 
   return {
@@ -51,7 +52,7 @@ export function tableToMdast(node: JSONContent): Table {
         type: "tableCell",
         // GFM 셀에는 블록을 담을 수 없다. 셀 안 문단들의 인라인만 이어 붙인다.
         children: (cell.content ?? []).flatMap((block) =>
-          convertInlineToMdast(block.content ?? []),
+          to.inline(block.content ?? []),
         ),
       })),
     })),

@@ -1,8 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { RootContent as MdastNode } from "mdast";
 import type { MdxJsxFlowElement } from "mdast-util-mdx-jsx";
-import { convertBlocks, convertInlineChildren } from "../parse";
-import { convertBlockToMdast, convertInlineToMdast } from "../serialize";
+import type { ToMdast, ToTiptap } from "./recurse";
 
 // ----------------------------------------------------------------------------
 // 접기 블록
@@ -40,6 +39,7 @@ function readDetailsOpen(node: MdxJsxFlowElement): boolean | null {
 function readDetailsSummary(
   node: MdastNode,
   source: string,
+  to: ToTiptap,
 ): JSONContent[] | null {
   // 내용이 없는 <summary /> 는 remark 가 문단이 아니라 flow 요소로 읽는다.
   // 잃을 내용 자체가 없으므로 빈 요약으로 받는다 — 그래야 제목을 비워 둔
@@ -61,7 +61,7 @@ function readDetailsSummary(
     return null;
   }
 
-  const content = convertInlineChildren(element.children, [], source);
+  const content = to.inline(element.children, [], source);
   return content.every((child) => child.type === "text") ? content : null;
 }
 
@@ -81,6 +81,7 @@ const detailsSummaryNode = (content: JSONContent[]): JSONContent =>
 export function convertDetailsToTiptap(
   node: MdxJsxFlowElement,
   source: string,
+  to: ToTiptap,
 ): JSONContent | null {
   if (node.name !== "details") return null;
 
@@ -88,7 +89,7 @@ export function convertDetailsToTiptap(
   if (open === null) return null;
 
   const [first, ...rest] = node.children;
-  const summary = first ? readDetailsSummary(first, source) : null;
+  const summary = first ? readDetailsSummary(first, source, to) : null;
   if (summary === null || rest.length === 0) return null;
 
   return {
@@ -96,12 +97,15 @@ export function convertDetailsToTiptap(
     attrs: { open },
     content: [
       detailsSummaryNode(summary),
-      { type: "detailsContent", content: convertBlocks(rest, source) },
+      { type: "detailsContent", content: to.blocks(rest, source) },
     ],
   };
 }
 
-export function detailsToMdast(node: JSONContent): MdxJsxFlowElement {
+export function detailsToMdast(
+  node: JSONContent,
+  to: ToMdast,
+): MdxJsxFlowElement {
   const [summary, body] = node.content ?? [];
 
   return {
@@ -121,11 +125,11 @@ export function detailsToMdast(node: JSONContent): MdxJsxFlowElement {
             type: "mdxJsxTextElement",
             name: "summary",
             attributes: [],
-            children: convertInlineToMdast(summary?.content ?? []),
+            children: to.inline(summary?.content ?? []),
           },
         ],
       },
-      ...(body?.content ?? []).map(convertBlockToMdast),
+      ...(body?.content ?? []).map(to.block),
     ],
   };
 }

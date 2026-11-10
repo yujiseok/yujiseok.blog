@@ -13,6 +13,7 @@ import { NODE_OF_MARK, WRAP_ORDER_INNER_TO_OUTER } from "./marks";
 import { alignDivToMdast } from "./nodes/align-div";
 import { detailsToMdast } from "./nodes/details";
 import { imageToMdast, inlineImageToMdast } from "./nodes/image";
+import type { ToMdast } from "./nodes/recurse";
 import { tableToMdast } from "./nodes/table";
 import { stringifier } from "./processor";
 
@@ -93,13 +94,13 @@ export function convertBlockToMdast(node: JSONContent): MdastBlock {
         value: (node.content ?? []).map((t) => t.text ?? "").join(""),
       };
     case "table":
-      return tableToMdast(node);
+      return tableToMdast(node, toMdast);
     case "horizontalRule":
       return { type: "thematicBreak" };
     case "image":
       return imageToMdast(node);
     case "details":
-      return detailsToMdast(node);
+      return detailsToMdast(node, toMdast);
     case "mdxBlock":
       return { type: "mdxRaw", value: asString(node.attrs?.value) ?? "" };
     default:
@@ -203,3 +204,9 @@ function wrapWithMark(
       return { type: NODE_OF_MARK[markType], children };
   }
 }
+
+// 노드 모듈이 안쪽 내용을 되돌릴 때 쓰는 재귀 진입점(nodes/recurse.ts).
+const toMdast: ToMdast = {
+  block: (node) => convertBlockToMdast(node),
+  inline: (content) => convertInlineToMdast(content),
+};

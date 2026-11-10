@@ -6,7 +6,12 @@ import { cacheLife, cacheTag } from "next/cache";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
 import { absoluteUrl, postPath } from "@/lib/metadata";
 
-import { isPublished, parsePost, type PostMetadata } from "./document";
+import {
+  isPublished,
+  isValidSlug,
+  parsePost,
+  type PostMetadata,
+} from "./document";
 import { toMarkdown } from "./markdown";
 import { listLocaleFiles, LOCALE_SUFFIX } from "./translation-path";
 
@@ -20,15 +25,21 @@ interface MdxModule {
 const ROOT_DIR = path.join(process.cwd(), "content");
 
 /** 원문은 `slug.mdx`(ko), 번역은 `slug.en.mdx`. toc처럼 컴파일된 모듈이 아니라 원문이 필요한 쪽이 쓴다. */
-export const readSource = (
+export const readSource = async (
   contentType: ContentType,
   slug: string,
   locale: Locale,
-) =>
-  fs.readFile(
+) => {
+  // slug는 URL에서 온다. 호출하는 쪽이 검사했더라도 경로에 잇는 이 자리에서 한 번 더 막는다.
+  if (!isValidSlug(slug)) {
+    throw new Error(`잘못된 slug 입니다: ${slug}`);
+  }
+
+  return fs.readFile(
     path.join(ROOT_DIR, contentType, `${slug}${LOCALE_SUFFIX[locale]}.mdx`),
     "utf8",
   );
+};
 
 // 템플릿 리터럴의 앞부분이 정적이어야 번들러가 모듈을 찾을 수 있다
 export const importMdx = (slug: string, locale: Locale): Promise<MdxModule> =>

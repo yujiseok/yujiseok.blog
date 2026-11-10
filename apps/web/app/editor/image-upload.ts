@@ -1,4 +1,4 @@
-import { errorMessage } from "@/lib/editor/error-message";
+import { errorMessage } from "@/lib/error-message";
 import type { Editor } from "@tiptap/core";
 
 import { isValidSlug } from "@/lib/content/document";

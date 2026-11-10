@@ -21,7 +21,7 @@ import { cn } from "@/lib/cn";
 import { isPublished } from "@/lib/content/document";
 import { deletePost, listPosts, savePost, type PostListItem } from "./actions";
 import { BlockAlign } from "@/lib/editor/align";
-import { errorMessage } from "@/lib/editor/error-message";
+import { errorMessage } from "@/lib/error-message";
 import { ISO_DATE_FORMAT } from "@/lib/editor/iso-date";
 import { CodeBlockShiki } from "./code-block-shiki";
 import { DateField } from "./date-field";

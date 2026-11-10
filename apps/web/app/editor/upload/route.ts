@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { isValidSlug } from "@/lib/content/document";
-import { errorMessage } from "@/lib/editor/error-message";
+import { errorMessage } from "@/lib/error-message";
 import { isDevelopment, isDirectChild } from "@/lib/editor/guards";
 
 // public/images는 287MB라 함수에 넣으면 Vercel 250MB 한도를 넘는다.

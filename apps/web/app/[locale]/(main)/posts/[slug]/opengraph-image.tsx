@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getWritingBySlug } from "@/lib/content/repository";
 import { SITE_NAME } from "@/lib/constants";
-import { ogCard } from "@/lib/og-card";
+import { ogCard } from "@/app/[locale]/_components/og-card";
 import { requireLocale } from "@/lib/i18n/params";
 
 export const alt = `${SITE_NAME} Post`;

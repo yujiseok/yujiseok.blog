@@ -136,7 +136,7 @@ export const getPlaylistTrack = async (playlistId: string) => {
     `/playlists/${playlistId}/tracks`,
     {
       fields:
-        "total,items(track(id,name,external_urls.spotify,album(name,images),artists(name)))",
+        "total,items(track(id,name,external_urls.spotify,album(images),artists(name)))",
     },
   );
 
