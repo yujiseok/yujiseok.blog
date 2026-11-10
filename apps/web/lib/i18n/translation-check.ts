@@ -25,12 +25,6 @@ interface Facts {
   hangul: number;
 }
 
-interface JsxAttribute {
-  type: string;
-  name?: string;
-  value?: unknown;
-}
-
 const countHangul = (text: string) => text.match(HANGUL)?.length ?? 0;
 
 // nbsp 가 일반 공백으로 바뀌는 정도는 코드가 달라진 게 아니다
@@ -75,7 +69,8 @@ const collectFacts = (tree: Root): Facts => {
       case "mdxJsxFlowElement":
       case "mdxJsxTextElement": {
         if (node.name) facts.components.push(node.name);
-        for (const attr of node.attributes as JsxAttribute[]) {
+        for (const attr of node.attributes) {
+          if (attr.type !== "mdxJsxAttribute") continue;
           if (typeof attr.value !== "string") continue;
           if (attr.name === "src") facts.images.push(attr.value);
           if (attr.name === "href") facts.hrefs.push(attr.value);

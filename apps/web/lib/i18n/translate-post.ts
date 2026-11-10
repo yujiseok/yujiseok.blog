@@ -18,7 +18,7 @@ export interface Review {
 
 export type TranslatePostResult =
   | { ok: true; translation: string; score: number; issues: [] }
-  | { ok: false; translation?: string; issues: string[] };
+  | { ok: false; translation: string; issues: string[] };
 
 export const TRANSLATE_SYSTEM = `You translate a Korean personal tech blog post (MDX file) into English.
 Output ONLY the full content of the translated .mdx file. No preface, no explanation, no surrounding \`\`\` fence.
@@ -71,11 +71,15 @@ export const parseReview = (output: string): Review | null => {
 const withFeedback = (source: string, issues: string[]) =>
   `${source}\n\n---\n[REVIEWER FEEDBACK] The previous attempt had these problems. Fix them and output the full file again:\n${issues.map((i) => `- ${i}`).join("\n")}\n`;
 
+type Attempt =
+  | { ok: true; translation: string; score: number }
+  | { ok: false; translation: string; issues: string[] };
+
 const attempt = async (
   source: string,
   claude: ClaudeCall,
   feedback: string[] | undefined,
-): Promise<{ translation: string; issues: string[]; score?: number }> => {
+): Promise<Attempt> => {
   const raw = await claude({
     kind: "translate",
     system: TRANSLATE_SYSTEM,
@@ -84,7 +88,8 @@ const attempt = async (
   const translation = stripCodeFence(raw);
 
   const structural = await checkTranslation(source, translation);
-  if (structural.length > 0) return { translation, issues: structural };
+  if (structural.length > 0)
+    return { ok: false, translation, issues: structural };
 
   const reviewRaw = await claude({
     kind: "review",
@@ -93,16 +98,20 @@ const attempt = async (
   });
   const review = parseReview(reviewRaw);
   if (!review) {
-    return { translation, issues: ["리뷰 응답을 JSON 으로 읽지 못했습니다"] };
+    return {
+      ok: false,
+      translation,
+      issues: ["리뷰 응답을 JSON 으로 읽지 못했습니다"],
+    };
   }
   if (review.score < MIN_REVIEW_SCORE) {
     return {
+      ok: false,
       translation,
-      score: review.score,
       issues: [`리뷰 점수 ${review.score}/5`, ...review.issues],
     };
   }
-  return { translation, score: review.score, issues: [] };
+  return { ok: true, translation, score: review.score };
 };
 
 /** 번역 → 구조 검사 → LLM 리뷰. 실패하면 issues 를 피드백으로 한 번만 재시도한다 */
@@ -110,24 +119,7 @@ export const translatePost = async (
   source: string,
   { claude }: { claude: ClaudeCall },
 ): Promise<TranslatePostResult> => {
-  const first = await attempt(source, claude, undefined);
-  if (first.issues.length === 0 && first.score !== undefined) {
-    return {
-      ok: true,
-      translation: first.translation,
-      score: first.score,
-      issues: [],
-    };
-  }
-
-  const second = await attempt(source, claude, first.issues);
-  if (second.issues.length === 0 && second.score !== undefined) {
-    return {
-      ok: true,
-      translation: second.translation,
-      score: second.score,
-      issues: [],
-    };
-  }
-  return { ok: false, translation: second.translation, issues: second.issues };
+  let result = await attempt(source, claude, undefined);
+  if (!result.ok) result = await attempt(source, claude, result.issues);
+  return result.ok ? { ...result, issues: [] } : result;
 };
