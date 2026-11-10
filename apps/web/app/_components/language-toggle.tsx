@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { pageWidth } from "@/app/_components/page-spacing";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import {
+  hasLanguageToggle,
   languageTogglePath,
   localeCookie,
   LOCALES,
@@ -31,6 +32,10 @@ export const LanguageToggle = ({
   labels: Dictionary["languageToggle"];
 }) => {
   const pathname = usePathname();
+  if (!hasLanguageToggle(pathname)) {
+    return null;
+  }
+
   const translatedSet = new Set(translated);
 
   return (

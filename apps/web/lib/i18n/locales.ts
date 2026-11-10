@@ -48,6 +48,13 @@ export const languageTogglePath = (
     : swapLocale(pathname, target);
 };
 
+/*
+ * 음악 페이지에는 언어 토글을 두지 않는다. 곡·플레이리스트는 Spotify 데이터이고
+ * 탭 이름도 영어라, 언어를 바꿔도 화면에 보이는 것이 거의 같다.
+ */
+export const hasLanguageToggle = (pathname: string) =>
+  !/^\/music(\/|$)/.test(stripLocale(pathname));
+
 /** q=0이 아닌 태그 중에 한국어가 있는가. `ko`, `ko-KR` 모두 해당한다. */
 const acceptsKorean = (header: string) =>
   header.split(",").some((part) => {
