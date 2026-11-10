@@ -1,0 +1,13 @@
+{
+  "name": "Resume Sync",
+  "id": "yujiseok-resume-sync",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "devAllowedDomains": ["http://localhost:3000"],
+    "reasoning": "개발 서버의 /resume.json에서 이력서 원본을 읽는다"
+  }
+}

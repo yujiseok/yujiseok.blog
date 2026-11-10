@@ -5,6 +5,7 @@ import {
 } from "@/app/_components/page-spacing";
 import { resumeData as ko, type Resume } from "./resume";
 import { resumeData as en } from "./resume.en";
+import { resolveResume, resumePdfPath, SECTION_TITLES } from "./resolve";
 import { SITE_URL } from "@/lib/constants";
 import ResumeProfile from "./_components/resume-profile";
 import ResumeContent from "./_components/resume-content";
@@ -79,11 +80,7 @@ export async function generateMetadata({ params }: LocaleParams) {
 
 const page = async ({ params }: LocaleParams) => {
   const locale = await requireLocale(params);
-  const resumeData = RESUME[locale];
-  const translated = await getTranslatedSlugs();
-  // 영어 이력서는 /en 글로 잇되, 번역이 아직 없는 글은 404 대신 한국어 원문으로 간다.
-  const postHref = (slug: string) =>
-    `${SITE_URL}${localizedPath(locale === "en" && !translated.has(slug) ? "ko" : locale, `/posts/${slug}`)}`;
+  const resumeData = resolveResume(locale, await getTranslatedSlugs());
 
   return (
     <main
@@ -95,9 +92,10 @@ const page = async ({ params }: LocaleParams) => {
         <ResumeProfile
           profile={resumeData.profile}
           contact={resumeData.contact}
+          pdfHref={resumePdfPath(locale)}
         />
 
-        <ContentContainer title="Experience">
+        <ContentContainer title={SECTION_TITLES.experience}>
           {resumeData.workExperience.map((career) => (
             <ResumeContent
               key={career.company}
@@ -125,10 +123,10 @@ const page = async ({ params }: LocaleParams) => {
                     <h4 className="text-[15px] font-semibold sm:text-base">
                       {project.title}
                     </h4>
-                    {project.postSlug && (
+                    {project.postUrl && (
                       // 좁은 화면에서는 제목과 설명 사이에 끼면 부제처럼 읽혀 항목 맨 아래로 보낸다.
                       <ExternalLink
-                        href={postHref(project.postSlug)}
+                        href={project.postUrl}
                         className="order-last mt-1 justify-self-start text-xs text-neutral-600 underline underline-offset-2 sm:order-none sm:mt-0 sm:text-[13px] dark:text-neutral-400"
                       >
                         {project.linkText}
@@ -151,7 +149,7 @@ const page = async ({ params }: LocaleParams) => {
           ))}
         </ContentContainer>
 
-        <ContentContainer title="Open Source Contributions">
+        <ContentContainer title={SECTION_TITLES.openSource}>
           {resumeData.openSource.map((contribution) => (
             <ResumeContent
               key={contribution.title}
@@ -166,11 +164,11 @@ const page = async ({ params }: LocaleParams) => {
                 >
                   PR #{contribution.link.split("/").pop()}
                 </ExternalLink>
-                {contribution.blogSlug && (
+                {contribution.blogUrl && (
                   <>
                     {" · "}
                     <ExternalLink
-                      href={postHref(contribution.blogSlug)}
+                      href={contribution.blogUrl}
                       className="underline underline-offset-2"
                     >
                       {contribution.blogLinkText}
@@ -183,7 +181,7 @@ const page = async ({ params }: LocaleParams) => {
           ))}
         </ContentContainer>
 
-        <ContentContainer title="Other Experience">
+        <ContentContainer title={SECTION_TITLES.otherExperience}>
           {resumeData.otherExperience.map((item) => (
             <ResumeContent
               key={item.title}
@@ -210,7 +208,7 @@ const page = async ({ params }: LocaleParams) => {
           ))}
         </ContentContainer>
 
-        <ContentContainer title="Education">
+        <ContentContainer title={SECTION_TITLES.education}>
           {resumeData.education.map((edu) => (
             <ResumeContent
               key={edu.school}

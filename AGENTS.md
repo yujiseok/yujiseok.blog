@@ -51,3 +51,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## 이력서
+
+- 내용의 원본은 `app/[locale]/resume/resume.ts`, `resume.en.ts` 하나다. 블로그, Figma, PDF가 모두 여기서
+  나온다. Figma에서 글자를 직접 고치면 다음 동기화 때 덮어써진다.
+- 디자인의 원본은 Figma 파일의 「Resume Template」 페이지(컴포넌트, 텍스트 스타일 `Resume/*`, 간격 변수
+  `Resume/space/*`)다. 플러그인은 이 페이지가 없을 때만 만들고, 이후로는 손대지 않는다.
+- 갱신 순서:
+  1. resume.ts를 고친다.
+  2. 개발 서버를 켠 채 Figma 데스크톱 앱에서 Resume Sync 플러그인을 실행한다. 처음 한 번은
+     `bun run resume:plugin`으로 빌드한 뒤 `figma/resume-sync/manifest.json`을 가져온다.
+  3. `bun run resume:pdf`로 `public/resume.pdf`, `public/resume.en.pdf`를 만든다(`.env`의 `FIGMA_TOKEN` 필요).
+  4. PDF까지 함께 커밋한다.
+- 플러그인이 읽는 `/resume.json`은 개발 서버에서만 열린다.

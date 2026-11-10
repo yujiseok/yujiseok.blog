@@ -38,3 +38,6 @@ next-env.d.ts
 .vscode
 .cursorignore
 
+
+# Figma 플러그인 빌드 결과물. bun run resume:plugin으로 만든다.
+figma/resume-sync/code.js

@@ -6,14 +6,18 @@ import type { Resume } from "../resume";
 const ResumeProfile = ({
   profile,
   contact,
+  pdfHref,
 }: {
   profile: Resume["profile"];
   contact: Resume["contact"];
+  pdfHref: string;
 }) => {
   const links = [
     { href: `mailto:${contact.email}`, label: contact.email },
     { href: contact.github, label: "GitHub" },
     { href: contact.blog, label: "Blog" },
+    // 인쇄본에는 자기 자신을 가리키는 링크라 뺀다.
+    { href: pdfHref, label: "PDF", className: "print:hidden" },
   ];
 
   return (
@@ -28,8 +32,8 @@ const ResumeProfile = ({
           </small>
         </div>
         <ul className="flex flex-wrap gap-x-3 text-[13px] text-neutral-600 dark:text-neutral-400">
-          {links.map(({ href, label }) => (
-            <li key={href}>
+          {links.map(({ href, label, className }) => (
+            <li key={href} className={className}>
               <ExternalLink
                 href={href}
                 className="group inline-flex items-center hover:underline"
