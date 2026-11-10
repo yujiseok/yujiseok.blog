@@ -7,12 +7,13 @@ import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Heading, Nodes } from "mdast";
 
 import type { Locale } from "@/lib/i18n/locales";
 
 import { isValidSlug, parsePost } from "./document";
-import { contentFileName } from "./repository";
+import { CONTENT_CACHE_TAG, contentFileName } from "./repository";
 
 export interface TocEntry {
   /** rehype-slug가 렌더 시 heading에 박는 id와 같은 값 */
@@ -81,6 +82,8 @@ export const getToc = async (
   locale: Locale,
 ): Promise<TocEntry[]> => {
   "use cache";
+  cacheLife("max");
+  cacheTag(CONTENT_CACHE_TAG);
 
   // slug는 URL에서 온다. 검증 없이 경로에 이으면 상위 디렉터리를 읽힐 수 있다.
   if (!isValidSlug(slug)) {

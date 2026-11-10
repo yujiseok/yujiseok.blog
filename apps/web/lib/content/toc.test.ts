@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -9,6 +9,9 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Nodes as HastNodes } from "hast";
+
+// cacheLife·cacheTag는 cacheComponents 빌드 밖에서 던진다. 캐싱은 여기서 검증 대상이 아니다.
+vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 
 import { parsePost } from "./document";
 import { listLocaleFiles } from "./repository";

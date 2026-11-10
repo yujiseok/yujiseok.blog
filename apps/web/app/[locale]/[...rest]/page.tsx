@@ -9,6 +9,12 @@ import { notFound } from "next/navigation";
  * 서버 HTML 본문이 비고(<html id="__next_error__">) not-found 화면은 하이드레이션
  * 뒤에 그려진다. 응답이 200이 되는 Suspense 안 호출과 맞바꾼 선택이다.
  */
+/*
+ * 항상 notFound()를 던지는 페이지라 instant 검증이 그릴 대상이 없다. 켜 두면
+ * 개발 서버가 요청마다 "Could not validate `instant`" 에러를 찍는다.
+ */
+export const instant = false;
+
 export default function CatchAll() {
   notFound();
 }

@@ -3,11 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import type { PostMetadata } from "@/lib/content/document";
+import { CONTENT_CACHE_TAG } from "@/lib/content/repository";
 
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 
 const METADATA: PostMetadata = {
   title: "제목",
@@ -287,6 +288,15 @@ describe("캐시 재검증", () => {
         "/en/posts/fresh",
       ]),
     );
+  });
+
+  it("저장하면 글 목록 캐시 태그를 무효화한다 — 레이아웃·not-found처럼 글 경로가 아닌 곳도 갱신된다", async () => {
+    const { savePost } = await loadActions();
+    vi.mocked(updateTag).mockClear();
+
+    await savePost({ slug: "tagged", metadata: METADATA, doc: DOC });
+
+    expect(updateTag).toHaveBeenCalledWith(CONTENT_CACHE_TAG);
   });
 
   it("삭제하면 두 언어의 상세를 모두 갱신한다", async () => {

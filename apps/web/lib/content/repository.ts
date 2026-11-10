@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { ComponentType } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { SITE_URL } from "@/lib/constants";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locales";
@@ -105,8 +106,16 @@ export const readAllContent = async (
  */
 const INCLUDE_DRAFTS = process.env.NODE_ENV === "development";
 
+/*
+ * 글은 배포 단위로 고정이라 최대로 캐싱한다. 개발 서버의 에디터가 글을 저장하면
+ * 이 태그로 무효화한다(app/editor/actions.ts).
+ */
+export const CONTENT_CACHE_TAG = "content";
+
 const getAllContent = async (contentType: ContentType, locale: Locale) => {
   "use cache";
+  cacheLife("max");
+  cacheTag(CONTENT_CACHE_TAG);
 
   return readAllContent(contentType, {
     locale,

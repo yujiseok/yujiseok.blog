@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { JSONContent } from "@tiptap/core";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import {
   isValidSlug,
@@ -19,6 +19,7 @@ import {
   toTranslationPath,
 } from "@/lib/content/translation-path";
 import { LOCALES, localizedPath } from "@/lib/i18n/locales";
+import { CONTENT_CACHE_TAG } from "@/lib/content/repository";
 
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
 
@@ -56,10 +57,12 @@ const translationPath = (slug: string) =>
   toTranslationPath(resolvePostPath(slug));
 
 /**
- * getAllWritings가 "use cache"로 캐싱돼 있어 재검증 없이는 홈·목록·상세 어디에도
- * 반영되지 않는다. 언어마다 별개의 경로라 둘 다 갱신한다.
+ * 글 목록과 목차는 "use cache"로 캐싱돼 있다. 태그로 그 데이터를 바로 무효화해야
+ * 레이아웃·not-found처럼 저장한 글의 경로가 아닌 곳에도 반영된다. 경로 재검증은
+ * 이미 렌더된 페이지를 갱신한다. 언어마다 별개의 경로라 둘 다 갱신한다.
  */
 function revalidateWriting(slug: string) {
+  updateTag(CONTENT_CACHE_TAG);
   for (const locale of LOCALES) {
     revalidatePath(localizedPath(locale, "/"));
     revalidatePath(localizedPath(locale, "/posts"));
