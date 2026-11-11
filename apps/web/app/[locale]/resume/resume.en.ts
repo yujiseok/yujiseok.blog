@@ -7,7 +7,8 @@ export const resumeData = {
     name: "Yu Jiseok",
     title: "Frontend Developer",
     introduction: [
-      "I build the frontend for Coloso's global commerce service. I use agents to raise productivity, and I think a lot about how to keep quality high while doing it.",
+      "I build the frontend for Coloso's global commerce service. I like finding a better way, applying it, and checking what changed.\nI improve the user experience and service performance, and write the technical decisions and what I learned along the way on this blog.",
+      "I want a culture where we share what we learn with each other.",
     ],
   },
   workExperience: [
@@ -20,11 +21,11 @@ export const resumeData = {
         {
           title: "Built and operated the new Creator Membership",
           summary:
-            "A service built from scratch, including subscription and one-time payments and refunds, on a deadline set by the card payment review",
+            "Built a creator membership service that supports subscription and one-time payments through refunds",
           achievements: [
-            "Designed an agent-based workflow that carried work from requirements review through implementation, QA, and release, and shipped 20 customer-facing screens and 34 admin screens together, on schedule, in about 75 working days",
-            "Verified QA's expected test-case results with Vitest and Playwright before QA began, which cut first-round QA defect density by about 56% (8.5 to 3.7 per 1,000 lines) even though the codebase was 2.5x the size of the previous project (the portfolio service)",
-            "Automated recurring procedures with 8 Claude Code skills and designed a harness for areas where transactions and data consistency matter, such as payments, capacity, and refunds",
+            "Carried the work from requirements review through implementation, QA, and release, and shipped 20 customer-facing screens and 34 admin screens in about 75 working days",
+            "Checked the expected results of QA test cases with Vitest and Playwright beforehand, cutting first-round QA defect density by about 56% compared with the previous project (8.5 to 3.7 per 1,000 lines)",
+            "Automated recurring development procedures with 8 agent skills, and built a harness that checks transaction consistency for payments, capacity, and refunds",
           ],
           postSlug: "delegate-to-agents",
           linkText: "Trying Out Delegating Work to Agents",
@@ -33,20 +34,20 @@ export const resumeData = {
           title:
             "Built a shared server auth package and moved tokens to HttpOnly cookies",
           summary:
-            "Reduced the XSS token theft risk flagged in a security review, while cleaning up auth code duplicated across three services",
+            "Reduced the risk of token theft through XSS, and improved client-side auth handling and the duplicated auth logic across three services",
           achievements: [
-            "Built a Route Handler-based BFF that keeps tokens in HttpOnly cookies and relays API requests, with a migration path for users already signed in",
-            "Replaced post-render useEffect access checks on protected pages, so the Next.js proxy checks sign-in state first and pages render on the server",
-            "Merged auth logic duplicated across KR, JP, and INTL into a shared package, cutting per-app auth code by 82% (826 to 148 lines), and split OAuth sign-in into provider adapters",
+            "Moved auth tokens managed on the client into HttpOnly cookies, and relayed API requests through a Route Handler-based BFF",
+            "Moved auth checks and page access control off the client and into the Next.js proxy, so the server checks whether the user is signed in",
+            "Merged KR, JP, and INTL auth logic into a shared package, cutting per-app auth code by 82% (826 to 148 lines), and split OAuth into a provider adapter",
           ],
         },
         {
           title:
             "Optimized service performance and infrastructure efficiency by improving the Next.js rendering strategy",
           summary:
-            "force-dynamic made every page render through SSR on each request, which put heavy load on the servers",
+            "force-dynamic rendered every page dynamically on each request, which put heavy load on the servers",
           achievements: [
-            "Replaced the SSR-for-every-page setup with a mixed SSG/SSR/ISR strategy chosen per page, and introduced the Next.js cache",
+            "Split the dynamic rendering forced on every page into SSG, SSR, or ISR by page, and applied the Next.js cache",
             "Cut p95 response time by 75% with caching (800ms to 200ms)",
             "Reduced GCP infrastructure costs by cutting network traffic by 80% and active containers by 60%",
           ],
@@ -57,11 +58,11 @@ export const resumeData = {
           title:
             "Migrated to a Turborepo monorepo and optimized CI build performance",
           summary:
-            "CI slowed down as packages grew, while the cache broke on every rebase and couldn't be shared across branches",
+            "CI builds slowed as packages grew, and cache reuse was limited because the cache was tied to commits and branches",
           achievements: [
-            "Introduced Turborepo and a tsdown-based build setup to manage dependencies between packages more efficiently",
-            "Built a Turborepo Remote Cache on GCS to get around the GitHub Actions cache limits (keys tied to the commit SHA, and restrictions on sharing across branches)",
-            "Cut CI build time by 96% on a full cache hit (FULL TURBO), from 146s to 6s",
+            "Introduced Turborepo and tsdown, and built a pipeline that builds packages according to their dependencies",
+            "Replaced the GitHub Actions cache with a GCS-based Remote Cache so the cache can be reused across branches",
+            "Cut CI build time by about 96% on a full cache hit (FULL TURBO), from 146s to 6.5s",
           ],
           postSlug: "turborepo",
           linkText: "Adopting Turborepo Remote Cache",
@@ -69,19 +70,22 @@ export const resumeData = {
         {
           title: "Portfolio service development and performance tuning",
           summary:
-            "Stacking portfolios of different sizes in a masonry layout while keeping infinite scroll fast",
+            "Placing works of different sizes in a masonry layout while reducing the render cost as the data grew",
           achievements: [
-            "Added virtual scrolling to the infinite-scroll view, reducing rendering time by 46% and long-task time by 41%",
-            "Prevented unnecessary re-renders with memoization, cutting script execution time while scrolling by 42%",
+            "Built a masonry layout that follows a placement policy per viewport and each image's aspect ratio",
+            "Added virtual scrolling, reducing rendering time by 47% and long-task duration by 41%",
+            "Reduced unnecessary re-renders with memoization, cutting script execution time while scrolling by 42%",
           ],
           postSlug: "how-to-implement-portfolio",
           linkText: "Looking Back on Implementing the Service's Masonry Layout",
         },
         {
           title: "Switching to client-side navigation",
+          summary:
+            "Internal links in HTML injected by the CMS reloaded the whole page",
           achievements: [
-            "Fixed internal links in dynamically rendered HTML that caused full page reloads (server-side navigation) by building an interception hook that catches link clicks and routes them on the client",
-            "Cut script execution time by 78% and total execution time by 46% by removing unnecessary page loads",
+            "Built a shared hook that catches internal link clicks with event delegation and routes them through the Next.js router as client-side navigation",
+            "Removed full page reloads, cutting script execution time by 78% and total time in the measured range by 46%",
           ],
           postSlug: "improve-navigation",
           linkText: "Improving Server-Side Navigation in Our Service",
@@ -89,7 +93,7 @@ export const resumeData = {
         {
           title: "Designed and built the foundation of Coloso's design system",
           achievements: [
-            "Designed a variants-based architecture and merged the components that had been split by KR/JP/INTL service into one set, for UI consistency",
+            "Merged the shared UI components of KR, JP, and INTL, and designed the per-service differences to be managed as variants",
             "Automated design tokens with the Figma MCP, documented components in Storybook, and set up a Vitest test environment",
           ],
         },

@@ -49,7 +49,9 @@ const ResumeProfile = ({
       </div>
       <div className="grid gap-2">
         {profile.introduction.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
+          <p key={paragraph} className="whitespace-pre-line">
+            {paragraph}
+          </p>
         ))}
       </div>
     </div>
